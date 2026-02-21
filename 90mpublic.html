@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Perfection's Perfect Prison</title>
+<style>
+body {
+    margin: 0;
+    background: black;
+    color: white;
+    font-family: Arial, sans-serif;
+    overflow: hidden;
+}
+#timer {
+    position: fixed;
+    top: 10px;
+    left: 15px;
+    font-size: 14px;
+    color: #777;
+}
+#prompt {
+    font-size: 32px;
+    color: red;
+    text-align: center;
+    margin-top: 40vh;
+}
+#status {
+    text-align: center;
+    margin-top: 20px;
+    color: #aaa;
+}
+.stat {
+    margin: 8px 0;
+    color: #aaa;
+}
+#startScreen {
+    position: fixed;
+    inset: 0;
+    background: black;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+}
+#startScreen button {
+    margin-top: 20px;
+    padding: 10px 20px;
+    font-size: 16px;
+}
+</style>
+</head>
+<body>
+
+<div id="startScreen">
+    <h2>Perfection's Perfect Prison</h2>
+    <div style="margin-top:15px; color:#aaa;">
+        Total Time: 5400 seconds<br><br>
+        Time Between Prompts: 10 - 120 seconds<br><br>
+        Must Respond Within: 2 seconds<br><br>
+        When the prompt appears, push the space bar.<br>
+        If you do not respond within the given timeframe, the game will restart.
+    </div>
+    <button onclick="beginGame()">Start</button>
+</div>
+
+<div id="timer"></div>
+<div id="prompt"></div>
+<div id="status">Stay ready...</div>
+
+<script>
+
+let totalTime = 5400;
+let minInterval = 10;
+let maxInterval = 120;
+let responseTime = 2;
+let completionMessage = "Well done! The secret word is: Horitculture";
+let hideTimer = false;
+
+let gameStart;
+let nextPrompt;
+let promptActive = false;
+let promptStart;
+
+let failureCount = 0;
+let totalResponses = 0;
+let responseTimes = [];
+let overallStart;
+let spamCount = 0;
+let gamePaused = true;
+
+function beginGame() {
+    document.getElementById("startScreen").style.display = "none";
+    overallStart = Date.now();
+    gamePaused = false;
+    startGame();
+}
+
+function startGame() {
+    gameStart = Date.now();
+    scheduleNextPrompt();
+    promptActive = false;
+    spamCount = 0;
+    document.getElementById("prompt").innerText = "";
+    document.getElementById("status").innerText = "Stay ready...";
+}
+
+function scheduleNextPrompt() {
+
+    let range = maxInterval - minInterval;
+
+    let shortMax = minInterval + range * 0.20;
+    let mediumMin = shortMax;
+    let mediumMax = minInterval + range * 0.80;
+    let longMin = mediumMax;
+
+    let roll = Math.random();
+    let chosenInterval;
+
+    if (roll < 1/3) {
+        chosenInterval = Math.random() * (shortMax - minInterval) + minInterval;
+    } else if (roll < 2/3) {
+        chosenInterval = Math.random() * (mediumMax - mediumMin) + mediumMin;
+    } else {
+        chosenInterval = Math.random() * (maxInterval - longMin) + longMin;
+    }
+
+    nextPrompt = Date.now() + chosenInterval * 1000;
+}
+
+if (hideTimer) {
+    document.getElementById("timer").style.display = "none";
+}
+
+document.addEventListener("visibilitychange", function() {
+    if (document.hidden && !gamePaused) {
+        document.getElementById("status").innerText = "Focus lost";
+        failGame();
+    }
+});
+
+window.addEventListener("blur", function() {
+    if (!gamePaused) {
+        document.getElementById("status").innerText = "Focus lost";
+        failGame();
+    }
+});
+
+document.addEventListener("keydown", function(event) {
+
+    if (gamePaused) return;
+    if (event.code !== "Space") return;
+
+    if (!promptActive) {
+        spamCount++;
+        if (spamCount >= 3) {
+            document.getElementById("status").innerText = "Spam detected";
+            failGame();
+        }
+        return;
+    }
+
+    let reaction = (Date.now() - promptStart) / 1000;
+    responseTimes.push(reaction);
+    totalResponses++;
+
+    promptActive = false;
+    spamCount = 0;
+    document.getElementById("prompt").innerText = "";
+    document.getElementById("status").innerText = "Attention Required...";
+    scheduleNextPrompt();
+});
+
+document.addEventListener("touchstart", function() {
+
+    if (gamePaused) return;
+
+    if (!promptActive) {
+        spamCount++;
+        if (spamCount >= 3) {
+            document.getElementById("status").innerText = "Spam detected";
+            failGame();
+        }
+        return;
+    }
+
+    let reaction = (Date.now() - promptStart) / 1000;
+    responseTimes.push(reaction);
+    totalResponses++;
+
+    promptActive = false;
+    spamCount = 0;
+    document.getElementById("prompt").innerText = "";
+    document.getElementById("status").innerText = "Attention Required...";
+    scheduleNextPrompt();
+});
+
+function failGame() {
+
+    gamePaused = true;
+    failureCount++;
+    responseTimes = [];
+    totalResponses = 0;
+    spamCount = 0;
+
+    document.getElementById("prompt").innerText = "";
+    document.getElementById("status").innerText = "Failed. Restarting in 5 seconds...";
+
+    setTimeout(function() {
+        gamePaused = false;
+        startGame();
+    }, 5000);
+}
+
+let gameLoop = setInterval(function() {
+
+    if (gamePaused) return;
+
+    let now = Date.now();
+    let elapsed = (now - gameStart) / 1000;
+    let remaining = Math.max(0, totalTime - elapsed);
+
+    if (!hideTimer) {
+        document.getElementById("timer").innerText =
+            "Time Remaining: " + remaining.toFixed(1) + "s";
+    }
+
+    if (remaining <= 0) {
+        completeGame();
+        return;
+    }
+
+    if (!promptActive && now >= nextPrompt) {
+        promptActive = true;
+        spamCount = 0;
+        promptStart = now;
+        document.getElementById("prompt").innerText = "OBEY";
+        document.getElementById("status").innerText = "";
+    }
+
+    if (promptActive) {
+        if ((now - promptStart) / 1000 > responseTime) {
+            failGame();
+        }
+    }
+
+}, 50);
+
+function completeGame() {
+
+    clearInterval(gameLoop);
+
+    let totalTimeSpent = (Date.now() - overallStart) / 1000;
+    let avgResponse = responseTimes.length > 0
+        ? (responseTimes.reduce((a,b)=>a+b,0) / responseTimes.length).toFixed(3)
+        : 0;
+
+    document.body.innerHTML =
+        "<div style='text-align:center;margin-top:30vh;'>" +
+        "<h2>SUCCESS</h2>" +
+        "<div style='margin:20px 0;'>" + completionMessage + "</div>" +
+        "<div class='stat'>Total time spent: " + totalTimeSpent.toFixed(1) + "s</div>" +
+        "<div class='stat'>Number of responses: " + totalResponses + "</div>" +
+        "<div class='stat'>Average response time: " + avgResponse + "s</div>" +
+        "<div class='stat'>Games failed before completion: " + failureCount + "</div>" +
+        "</div>";
+}
+
+</script>
+
+</body>
+</html>
