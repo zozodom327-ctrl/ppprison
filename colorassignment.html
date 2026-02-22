@@ -1,0 +1,360 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Color Identification Assignment</title>
+
+<style>
+    body {
+        font-family: Arial, sans-serif;
+        background: black;
+        color: white;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 100vh;
+        margin: 0;
+    }
+
+    .container {
+        width: 500px;
+        text-align: center;
+    }
+
+    h1, h2, h3 {
+        font-weight: bold;
+        letter-spacing: 1px;
+    }
+
+    input {
+        padding: 10px;
+        margin: 15px 0;
+        width: 80%;
+        font-size: 18px;
+        background: black;
+        color: white;
+        border: 2px solid white;
+        text-align: center;
+    }
+
+    button {
+        padding: 10px 20px;
+        font-size: 18px;
+        background: white;
+        color: black;
+        border: none;
+        cursor: pointer;
+        font-weight: bold;
+    }
+
+    button:disabled {
+        background: grey;
+        cursor: not-allowed;
+    }
+
+    #feedback {
+        color: red;
+        height: 25px;
+        font-weight: bold;
+        margin-top: 10px;
+    }
+
+    #timer {
+        font-size: 28px;
+        margin-bottom: 20px;
+        color: red;
+        font-weight: bold;
+    }
+
+    #progress {
+        margin-bottom: 15px;
+    }
+
+    #loadingMessage {
+        color: grey;
+        margin-top: 15px;
+        height: 25px;
+    }
+</style>
+</head>
+<body>
+
+<div class="container" id="startScreen">
+    <h2>I HAVE BEEN ASSIGNED TO IDENTIFY</h2>
+    <input type="number" id="quantityInput" min="1" max="1000" placeholder="ENTER NUMBER (1-1000)">
+    <h2>COLORED THINGS.</h2>
+    <button onclick="startGame()">BEGIN ASSIGNMENT</button>
+    <div id="startError" style="color:red;"></div>
+</div>
+
+<div class="container" id="gameScreen" style="display:none;">
+    <div id="timer">TIME: 0s</div>
+    <div id="progress"></div>
+    <h2 id="questionText"></h2>
+    <input type="text" id="answerInput" placeholder="ENTER COLOR">
+    <button id="submitButton" onclick="submitAnswer()">SUBMIT</button>
+    <div id="feedback"></div>
+    <div id="loadingMessage"></div>
+</div>
+
+<div class="container" id="endScreen" style="display:none;">
+    <h1>ASSIGNMENT COMPLETE</h1>
+    <p id="stats"></p>
+    <button onclick="location.reload()">RESTART</button>
+</div>
+
+<audio id="buzzSound">
+    <source src="https://actions.google.com/sounds/v1/alarms/buzzer.ogg" type="audio/ogg">
+</audio>
+
+<script>
+let totalRequired = 0;
+let correctCount = 0;
+let startTime;
+let timerInterval;
+let currentItem;
+let isLocked = false;
+
+const baseObjects = [
+/* ADDITIONAL OBJECTS */
+
+{ name: "A RADISH", color: "red" },
+{ name: "A STOP SIGN", color: "red" },
+{ name: "A FIRE HYDRANT", color: "red" },
+{ name: "AN APPLE", color: "red" },
+{ name: "A POMEGRANATE", color: "red" },
+{ name: "A STOPLIGHT", color: "red" },
+{ name: "A STRAWBERRY", color: "red" },
+{ name: "A LADYBUG", color: "red" },
+{ name: "BEETROOT", color: "red" },
+{ name: "A CHILI PEPPER", color: "red" },
+
+{ name: "THE OCEAN", color: "blue" },
+{ name: "A RAINDROP", color: "blue" },
+{ name: "THE SKY", color: "blue" },
+{ name: "A PAIR OF JEANS", color: "blue" },
+{ name: "A WHALE", color: "blue" },
+{ name: "A WAVE", color: "blue" },
+{ name: "WATER", color: "blue" },
+{ name: "A SAPPHIRE", color: "blue" },
+{ name: "A RIVER", color: "blue" },
+{ name: "URANUS", color: "blue" },
+
+{ name: "A FERN", color: "green" },
+{ name: "BROCCOLI", color: "green" },
+{ name: "A PEAR", color: "green" },
+{ name: "A LEAF", color: "green" },
+{ name: "A WATERMELON", color: "green" },
+{ name: "GRASS", color: "green" },
+{ name: "A TURTLE", color: "green" },
+{ name: "CELERY", color: "green" },
+{ name: "A VINE", color: "green" },
+{ name: "A CROCODILE", color: "green" },
+
+{ name: "A BANANA", color: "yellow" },
+{ name: "THE SUN", color: "yellow" },
+{ name: "A CANARY", color: "yellow" },
+{ name: "A BEE", color: "yellow" },
+{ name: "GOLD", color: "yellow" },
+{ name: "A HAY BALE", color: "yellow" },
+{ name: "A PINEAPPLE", color: "yellow" },
+{ name: "A CHEESE SLICE", color: "yellow" },
+{ name: "MUSTARD", color: "yellow" },
+{ name: "SAND", color: "yellow" },
+
+{ name: "A MANDARIN", color: "orange" },
+{ name: "A TRAFFIC CONE", color: "orange" },
+{ name: "A LIFE JACKET", color: "orange" },
+{ name: "A BASKETBALL", color: "orange" },
+{ name: "A GOLDFISH", color: "orange" },
+{ name: "A MAPLE LEAF", color: "orange" },
+{ name: "A SWEET POTATO", color: "orange" },
+{ name: "AN ORANGE", color: "orange" },
+{ name: "A PUMPKIN", color: "orange" },
+{ name: "A SAFETY VEST", color: "orange" },
+
+{ name: "A GRAPE", color: "purple" },
+{ name: "A PLUM", color: "purple" },
+{ name: "AN EGGPLANT", color: "purple" },
+{ name: "A VIOLET FLOWER", color: "purple" },
+{ name: "A LILAC", color: "purple" },
+{ name: "LAVENDER", color: "purple" },
+{ name: "AN AMETHYST", color: "purple" },
+
+{ name: "A CLOUD", color: "white" },
+{ name: "A PORCELAIN CUP", color: "white" },
+{ name: "A TOOTH", color: "white" },
+{ name: "A PILLOW", color: "white" },
+{ name: "PAPER", color: "white" },
+{ name: "A CANDLE", color: "white" },
+{ name: "A PLATE", color: "white" },
+{ name: "A DOVE", color: "white" },
+{ name: "A SWAN", color: "white" },
+{ name: "CHALK", color: "white" },
+
+{ name: "A PANDA", color: "black" },
+{ name: "A TUXEDO", color: "black" },
+{ name: "A BAT", color: "black" },
+{ name: "A CROW", color: "black" },
+{ name: "A SHADOW", color: "black" },
+{ name: "CHARCOAL", color: "black" },
+{ name: "A PIANO", color: "black" },
+{ name: "A BOWLER HAT", color: "black" },
+{ name: "THE NIGHT", color: "black" },
+{ name: "A RAVEN", color: "black" },
+
+{ name: "TREE BARK", color: "brown" },
+{ name: "A WALNUT SHELL", color: "brown" },
+{ name: "A COFFEE BEAN", color: "brown" },
+{ name: "A PAPER BAG", color: "brown" },
+{ name: "A CARDBOARD BOX", color: "brown" },
+{ name: "A DEER", color: "brown" },
+{ name: "A HORSE", color: "brown" },
+{ name: "A BISON", color: "brown" },
+{ name: "A COCONUT", color: "brown" },
+{ name: "A CHESTNUT", color: "brown" },
+
+/* EXTRA MIXED SIMPLE ITEMS */
+
+{ name: "A FLAMINGO", color: "pink" },
+{ name: "COTTON CANDY", color: "pink" },
+{ name: "A PIG", color: "pink" },
+{ name: "A ROSE PETAL", color: "pink" },
+{ name: "A PEONY", color: "pink" },
+
+{ name: "A SPOON", color: "silver" },
+{ name: "A COIN", color: "silver" },
+{ name: "TINFOIL", color: "silver" },
+{ name: "A FORK", color: "silver" },
+{ name: "A METAL KEY", color: "silver" },
+
+{ name: "A GOLD BAR", color: "gold" },
+{ name: "A TROPHY", color: "gold" },
+{ name: "A MEDAL", color: "gold" },
+{ name: "A WEDDING RING", color: "gold" },
+{ name: "A CROWN", color: "gold" },
+
+{ name: "ASH", color: "gray" },
+{ name: "A STORM CLOUD", color: "gray" },
+{ name: "A ROCK", color: "gray" },
+{ name: "A PEBBLE", color: "gray" },
+{ name: "A SIDEWALK", color: "gray" }
+
+];
+
+let objectPool = [];
+for (let i = 0; i < 100; i++) {
+    baseObjects.forEach(obj => objectPool.push(obj));
+}
+
+function startGame() {
+    const input = document.getElementById("quantityInput").value;
+    const error = document.getElementById("startError");
+
+    if (input < 1 || input > 1000) {
+        error.textContent = "INVALID ENTRY. ENTER 1-1000.";
+        return;
+    }
+
+    totalRequired = parseInt(input);
+    correctCount = 0;
+    startTime = new Date();
+
+    document.getElementById("startScreen").style.display = "none";
+    document.getElementById("gameScreen").style.display = "block";
+
+    timerInterval = setInterval(updateTimer, 1000);
+    nextQuestion();
+}
+
+function updateTimer() {
+    const now = new Date();
+    const seconds = Math.floor((now - startTime) / 1000);
+    document.getElementById("timer").textContent = "TIME: " + seconds + "s";
+}
+
+function nextQuestion() {
+    if (correctCount >= totalRequired) {
+        endGame();
+        return;
+    }
+
+    currentItem = objectPool[Math.floor(Math.random() * objectPool.length)];
+
+    document.getElementById("progress").textContent =
+        "IDENTIFIED: " + correctCount + " / " + totalRequired;
+
+    document.getElementById("questionText").textContent =
+        "WHAT COLOR IS " + currentItem.name + "?";
+
+    document.getElementById("answerInput").value = "";
+    document.getElementById("feedback").textContent = "";
+    document.getElementById("loadingMessage").textContent = "";
+    document.getElementById("answerInput").disabled = false;
+    document.getElementById("submitButton").disabled = false;
+    document.getElementById("answerInput").focus();
+
+    isLocked = false;
+}
+
+function submitAnswer() {
+    if (isLocked) return;
+
+    const userAnswer = document.getElementById("answerInput").value
+        .trim()
+        .toLowerCase();
+
+    if (userAnswer === currentItem.color.toLowerCase()) {
+        correctCount++;
+        lockAndDelay();
+    } else {
+        document.getElementById("feedback").textContent = "INCORRECT, TRY AGAIN.";
+        document.getElementById("buzzSound").play();
+    }
+}
+
+function lockAndDelay() {
+    isLocked = true;
+    document.getElementById("answerInput").disabled = true;
+    document.getElementById("submitButton").disabled = true;
+
+    let countdown = 5;
+    const loadingMessage = document.getElementById("loadingMessage");
+    loadingMessage.textContent =
+        "PROCESSING NEXT OBJECT... " + countdown;
+
+    const interval = setInterval(() => {
+        countdown--;
+        loadingMessage.textContent =
+            "PROCESSING NEXT OBJECT... " + countdown;
+
+        if (countdown <= 0) {
+            clearInterval(interval);
+            nextQuestion();
+        }
+    }, 1000);
+}
+function endGame() {
+    clearInterval(timerInterval);
+
+    const endTime = new Date();
+    const timeTaken = Math.floor((endTime - startTime) / 1000);
+
+    document.getElementById("gameScreen").style.display = "none";
+    document.getElementById("endScreen").style.display = "block";
+
+    document.getElementById("stats").innerHTML =
+        "NUMBER OF COLORED THINGS IDENTIFIED: " + totalRequired +
+        "<br>TOTAL TIME TAKEN: " + timeTaken + " SECONDS";
+}
+
+document.addEventListener("keydown", function(event) {
+    if (event.key === "Enter") {
+        submitAnswer();
+    }
+});
+</script>
+
+</body>
+</html>
