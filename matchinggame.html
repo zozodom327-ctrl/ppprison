@@ -433,16 +433,21 @@ function createBoard() {
 
 function flipTile(tile) {
 
-    if (rapidPunishing) return;
+if (rapidPunishing) return;
 
-    const now = Date.now();
-    if (now - lastClickTime < rapidClickThreshold) {
-        triggerSlowPunishment();
-        return;
-    }
-    lastClickTime = now;
+// If board is locked (animation still running), punish immediately
+if (locked) {
+    triggerSlowPunishment();
+    return;
+}
 
-    if (locked) return;
+// Optional: keep or remove rapid-click logic
+const now = Date.now();
+if (now - lastClickTime < rapidClickThreshold) {
+    triggerSlowPunishment();
+    return;
+}
+lastClickTime = now;
     if (tile.classList.contains("flipped") ||
         tile.classList.contains("matched") ||
         flippedTiles.length === 2) return;
