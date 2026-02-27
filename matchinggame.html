@@ -69,7 +69,7 @@ button:hover {
     position: relative;
     width: 100%;
     height: 100%;
-    transition: transform 1.5s;
+    transition: transform 3.0s;
     transform-style: preserve-3d;
 }
 
@@ -286,7 +286,7 @@ function triggerSlowPunishment() {
     */
     setTimeout(() => {
         reshuffleAll();
-    }, 1500); // matches CSS flip duration
+    }, 3000); // matches CSS flip duration
 
     /* STEP 3:
        Run stretched countdown independently
@@ -464,7 +464,7 @@ function flipTile(tile) {
         } else {
             locked = false;
         }
-    }, 1500);
+    }, 3000);
 }
 
 function checkMatch() {
