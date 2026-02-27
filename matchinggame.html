@@ -204,10 +204,10 @@ const wordPool = [
 
 const punishmentPool = [
 "Not quite!","Almost, keep it up!","Try again!","You can do it!","Nice try!",
-"You're doing great!","I believe in you!","Keep trying!","You can do it!","I believe in you!",
+"You're doing great!","I believe in you!","Keep trying!","I believe in you!",
 "Poor thing!","One more try!","You're great at this!","You're a champion!","There there...!",
 "Keep going! You got this!","<3 <3 <3","You're a star!","You'll do it!","Relax, everything's okay!",
-"Superstar!","Not much longer now!","It will be over soon!","Not much longer now!","Stay strong!",
+"Superstar!","Not much longer now!","It will be over soon!","It will be over soon!","Stay strong!",
 "You're great at matching!","You love this!","Mwah <3","You're doing awesome!","Keep trying! Almost there!",
 "You're special!","It's okay!","Don't worry, everything's fine!","Next time, for sure!","It's going to be okay!",
 "Don't panic!","Keep it up!","You're really great!","Match for me <3","You are cherished!",
@@ -361,7 +361,7 @@ function startGame() {
 
     document.getElementById("flips").innerText = 0;
     document.getElementById("matches").innerText = 0;
-    document.getElementById("time").innerText = 0;
+    document.getElementById("time").innerText = "00:00:00";
 
     document.getElementById("startScreen").style.display = "none";
     document.getElementById("gameContainer").style.display = "block";
@@ -373,8 +373,18 @@ function startGame() {
 }
 
 function updateTime() {
-    const seconds = Math.floor((Date.now() - startTime) / 1000);
-    document.getElementById("time").innerText = seconds;
+    const totalSeconds = Math.floor((Date.now() - startTime) / 1000);
+
+    const hours = Math.floor(totalSeconds / 3600);
+    const minutes = Math.floor((totalSeconds % 3600) / 60);
+    const seconds = totalSeconds % 60;
+
+    const formattedTime =
+        String(hours).padStart(2, '0') + ":" +
+        String(minutes).padStart(2, '0') + ":" +
+        String(seconds).padStart(2, '0');
+
+    document.getElementById("time").innerText = formattedTime;
 }
 
 function createBoard() {
