@@ -158,7 +158,12 @@ button:hover {
     <p>I have been assigned to complete <input type="number" id="matchInput" min="2" max="25" value="6"> matches. Lucky me!</p>
     <br>
     <button onclick="startGame()">Begin</button>
-    <br>
+	<br><br>
+<label style="font-size:16px;">
+    <input type="checkbox" id="extraFunToggle">
+    Extra Fun Mode
+</label>
+<br><br>
     <p>Welcome to my fun little matching game!</p>
     <p>A great activity to keep restless subs occupied and happy :)</p>
     <p>You know how it works! Flip the tiles and match them up!</p>
@@ -183,6 +188,10 @@ button:hover {
     <p>Total Flips: <span id="finalFlips"></span></p>
     <p>Total Matches: <span id="finalMatches"></span></p>
     <p>Slow Down Screens: <span id="finalSlowDowns"></span></p>
+	<p>Extra Fun Mode Enabled: <span id="extraFunResult"></span></p>
+	<p id="extraFunWinsRow">
+    Extra Fun Wins: <span id="finalExtraFunWins"></span>
+    </p>
     <p>Total Time: <span id="finalTime"></span>s</p>
     <button onclick="location.reload()">Restart</button>
 </div>
@@ -232,6 +241,9 @@ let timerInterval = null;
 let locked = false;
 let wordColors = {};
 let slowDownCount = 0;
+let extraFunMode = false;
+let extraFunTriggered = false;
+let extraFunWins = 0;
 
 /* 🔥 NEW: rapid click detection */
 let lastClickTime = 0;
@@ -350,6 +362,8 @@ function triggerSparkles(tileA, tileB) {
 }
 
 function startGame() {
+    extraFunMode = document.getElementById("extraFunToggle").checked;
+    extraFunTriggered = false;
     totalMatches = parseInt(document.getElementById("matchInput").value);
     if (totalMatches < 2) return;
 
@@ -358,6 +372,7 @@ function startGame() {
     locked = false;
     rapidPunishing = false;
     lastClickTime = 0;
+	extraFunWins = 0;
 
     document.getElementById("flips").innerText = 0;
     document.getElementById("matches").innerText = 0;
@@ -487,7 +502,20 @@ function checkMatch() {
         flippedTiles = [];
         locked = false;
 
-        if (matchesMade === totalMatches) endGame();
+        // If only one pair remains, trigger Extra Fun BEFORE finishing
+if (
+    matchesMade === totalMatches - 1 &&
+    extraFunMode &&
+    !extraFunTriggered
+) {
+    extraFunTriggered = true;
+    triggerExtraFun();
+    return;
+}
+
+if (matchesMade === totalMatches) {
+    endGame();
+}
     } else {
         playBuzz();
         setTimeout(() => {
@@ -500,6 +528,76 @@ function checkMatch() {
     }
 }
 
+function triggerExtraFun() {
+
+    locked = true;
+
+    const popup = document.getElementById("punishPopup");
+    popup.style.display = "flex";
+
+    popup.innerHTML = `
+        <div>
+            <div style="font-size:48px; margin-bottom:20px;">
+                Extra Fun Mode Enabled!<br>
+				50% chance of extra fun!<br>
+				Calculating....
+            </div>
+        </div>
+    `;
+
+    setTimeout(() => {
+
+        const win = Math.random() < 0.5;
+
+        if (win) {
+		
+		    extraFunWins++;  // ✅ track win
+
+            popup.innerHTML = `
+                <div>
+                    <div style="font-size:48px; margin-bottom:20px;">
+                        YOU WON!<br>EXTRA FUN ACTIVATED!<br>Game restarting...
+                    </div>
+                </div>
+            `;
+
+            setTimeout(() => {
+                popup.style.display = "none";
+                restartGameFromBeginning();
+            }, 5000);
+
+        } else {
+
+            popup.innerHTML = `
+                <div>
+                    <div style="font-size:48px; margin-bottom:20px;">
+                        Too bad...<br>No Extra Fun This Time...<br>Game resuming...
+                    </div>
+                </div>
+            `;
+
+            setTimeout(() => {
+                popup.style.display = "none";
+                locked = false; // allow final pair to be clicked
+            }, 5000);
+        }
+
+    }, 5000);
+}
+
+function restartGameFromBeginning() {
+
+    flippedTiles = [];
+    locked = false;
+	matchesMade = 0;               // ✅ reset
+    document.getElementById("matches").innerText = 0;
+	
+	extraFunTriggered = false; // ✅ allow it to trigger again
+
+    createBoard(); // just rebuild board
+	
+}
+
 function endGame() {
     clearInterval(timerInterval);
     const totalTime = Math.floor((Date.now() - startTime) / 1000);
@@ -509,11 +607,22 @@ function endGame() {
 
     document.getElementById("finalFlips").innerText = flips;
     document.getElementById("finalMatches").innerText = matchesMade;
+	document.getElementById("extraFunResult").innerText = extraFunMode ? "Yes" : "No";
     // Convert seconds to HH:MM:SS
 const hours = Math.floor(totalTime / 3600);
 const minutes = Math.floor((totalTime % 3600) / 60);
 const seconds = totalTime % 60;
 
+    document.getElementById("finalExtraFunWins").innerText = extraFunWins;
+	
+	const winsRow = document.getElementById("extraFunWinsRow");
+
+if (extraFunMode) {
+    winsRow.style.display = "block";
+} else {
+    winsRow.style.display = "none";
+}	
+	
 // Pad with leading zeros
 const formattedTime =
     String(hours).padStart(2, '0') + ":" +
