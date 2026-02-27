@@ -244,6 +244,7 @@ let slowDownCount = 0;
 let extraFunMode = false;
 let extraFunTriggered = false;
 let extraFunWins = 0;
+let firstExtraFunGuaranteed = false;
 
 /* 🔥 NEW: rapid click detection */
 let lastClickTime = 0;
@@ -373,6 +374,7 @@ function startGame() {
     rapidPunishing = false;
     lastClickTime = 0;
 	extraFunWins = 0;
+	firstExtraFunGuaranteed = false;
 
     document.getElementById("flips").innerText = 0;
     document.getElementById("matches").innerText = 0;
@@ -547,7 +549,14 @@ function triggerExtraFun() {
 
     setTimeout(() => {
 
-        const win = Math.random() < 0.5;
+        let win;
+
+if (!firstExtraFunGuaranteed) {
+    win = true;                     // force first win
+    firstExtraFunGuaranteed = true; // mark it as used
+} else {
+    win = Math.random() < 0.5;      // normal fair odds
+}
 
         if (win) {
 		
@@ -715,3 +724,4 @@ function playBuzz() {
 </body>
 
 </html>
+
