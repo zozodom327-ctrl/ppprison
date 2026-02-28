@@ -4,81 +4,202 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Color Identification Assignment</title>
-
+<link href="https://fonts.googleapis.com/css2?family=Luckiest+Guy&family=Fredoka:wght@500;700&display=swap" rel="stylesheet">
 <style>
     body {
-        font-family: Arial, sans-serif;
-        background: black;
-        color: white;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        height: 100vh;
-        margin: 0;
-    }
+    font-family: 'Fredoka', sans-serif;
+    background: #ff4d6d;
+    color: white;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
+    min-height: 100vh;
+    padding-top: 30px;
+    margin: 0;
+    transition: background-color 4s ease-in-out;
+}
 
-    .container {
-        width: 500px;
-        text-align: center;
-    }
+#endScreen #stats {
+    font-size: 26px;
+    font-weight: bold;
+    margin: 20px 0;
+    line-height: 1.6;
+    text-shadow: 2px 2px 0 rgba(0,0,0,0.3);
+}
 
-    h1, h2, h3 {
-        font-weight: bold;
-        letter-spacing: 1px;
-    }
+/* Main container */
+.container {
+    width: 520px;
+    text-align: center;
+    background: rgba(255, 182, 193, 0.85); /* soft pastel pink */
+    padding: 30px;
+    border-radius: 25px;
+    box-shadow: 0 0 30px rgba(0,0,0,0.3);
+	margin-top: 100px;
+	border: 6px solid white;
+}
 
-    input {
-        padding: 10px;
-        margin: 15px 0;
-        width: 80%;
-        font-size: 18px;
-        background: black;
-        color: white;
-        border: 2px solid white;
-        text-align: center;
-    }
+/* Headings */
+h1, h2, h3 {
+    font-family: 'Luckiest Guy', cursive;
+    letter-spacing: 2px;
+    text-shadow: 3px 3px 0px rgba(0,0,0,0.4);
+}
 
-    button {
-        padding: 10px 20px;
-        font-size: 18px;
-        background: white;
-        color: black;
-        border: none;
-        cursor: pointer;
-        font-weight: bold;
-    }
+/* Timer big and dramatic */
+#timer {
+    font-size: 32px;
+    color: #fff700;
+    text-shadow: 2px 2px 0px #000;
+    margin-bottom: 15px;
+}
 
-    button:disabled {
-        background: grey;
-        cursor: not-allowed;
-    }
+/* Input */
+input {
+    padding: 12px;
+    margin: 15px 0;
+    width: 85%;
+    font-size: 20px;
+    border-radius: 15px;
+    border: 3px solid white;
+    text-align: center;
+    font-weight: bold;
+    background: white;
+    color: black;
+}
 
-    #feedback {
-        color: red;
-        height: 25px;
-        font-weight: bold;
-        margin-top: 10px;
-    }
+/* Buttons */
+button {
+    padding: 12px 25px;
+    font-size: 20px;
+    background: #fff700;
+    color: black;
+    border: none;
+    border-radius: 20px;
+    cursor: pointer;
+    font-weight: bold;
+    box-shadow: 0 6px 0 #d4c200;
+    transition: all 0.15s ease;
+}
 
-    #timer {
-        font-size: 28px;
-        margin-bottom: 20px;
-        color: red;
-        font-weight: bold;
-    }
+button:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 9px 0 #d4c200;
+}
 
-    #progress {
-        margin-bottom: 15px;
-    }
+button:active {
+    transform: translateY(3px);
+    box-shadow: 0 3px 0 #d4c200;
+}
 
-    #loadingMessage {
-        color: grey;
-        margin-top: 15px;
-        height: 25px;
-    }
+button:disabled {
+    background: grey;
+    box-shadow: none;
+    transform: none;
+    cursor: not-allowed;
+}
+
+/* Feedback */
+#feedback {
+    font-weight: bold;
+    font-size: 18px;
+    margin-top: 10px;
+}
+
+/* Processing text */
+#loadingMessage {
+    font-weight: bold;
+    font-size: 18px;
+    margin-top: 15px;
+}
+
+/* Rainbow Carnival Title */
+.rainbow-title {
+    text-align: center;
+    font-family: 'Luckiest Guy', cursive;
+    font-size: 48px;
+    pointer-events: none;
+	margin-bottom: 10px;
+}
+
+.rainbow-title span {
+    display: inline-block;
+    transform-origin: bottom center;
+
+    /* REMOVE old subtle shadow if present */
+    text-shadow: none;
+
+    /* Add bold black outline */
+    -webkit-text-stroke: 3px white;
+
+    /* Fallback for browsers that ignore stroke */
+    text-shadow:
+        2px 2px 0 white,
+       -2px 2px 0 white,
+        2px -2px 0 white,
+       -2px -2px 0 white;
+}
+/* Arch effect */
+.rainbow-title span:nth-child(1)  { transform: rotate(-20deg) translateY(20px); color: #ff006e; }
+.rainbow-title span:nth-child(2)  { transform: rotate(-17deg) translateY(16px); color: #ff9f1c; }
+.rainbow-title span:nth-child(3)  { transform: rotate(-14deg) translateY(12px); color: #ffbe0b; }
+.rainbow-title span:nth-child(4)  { transform: rotate(-11deg) translateY(9px);  color: #06d6a0; }
+.rainbow-title span:nth-child(5)  { transform: rotate(-8deg)  translateY(6px);  color: #3a86ff; }
+.rainbow-title span:nth-child(6)  { transform: rotate(-5deg)  translateY(4px);  color: #8338ec; }
+.rainbow-title span:nth-child(7)  { transform: rotate(-2deg)  translateY(2px);  color: #ff4d6d; }
+.rainbow-title span:nth-child(8)  { transform: rotate(0deg);                    color: #2ec4b6; }
+.rainbow-title span:nth-child(9)  { transform: rotate(2deg)   translateY(2px);  color: #ff006e; }
+.rainbow-title span:nth-child(10) { transform: rotate(5deg)   translateY(4px);  color: #ff9f1c; }
+.rainbow-title span:nth-child(11) { transform: rotate(8deg)   translateY(6px);  color: #ffbe0b; }
+.rainbow-title span:nth-child(12) { transform: rotate(11deg)  translateY(9px);  color: #06d6a0; }
+.rainbow-title span:nth-child(13) { transform: rotate(14deg)  translateY(12px); color: #3a86ff; }
+.rainbow-title span:nth-child(14) { transform: rotate(17deg)  translateY(16px); color: #8338ec; }
+.rainbow-title span:nth-child(15) { transform: rotate(20deg)  translateY(20px); color: #ff4d6d; }
+.rainbow-title span:nth-child(16) { transform: rotate(23deg)  translateY(24px); color: #ff9f1c; }
+.rainbow-title span:nth-child(17) { transform: rotate(26deg)  translateY(28px); color: #ffbe0b; }
+.rainbow-title span:nth-child(18) { transform: rotate(29deg)  translateY(32px); color: #06d6a0; }
+.rainbow-title span:nth-child(19) { transform: rotate(32deg)  translateY(36px); color: #3a86ff; }
+.rainbow-title span:nth-child(20) { transform: rotate(35deg)  translateY(40px); color: #8338ec; }
+.rainbow-title span:nth-child(21) { transform: rotate(38deg)  translateY(44px); color: #ff006e; }
+.rainbow-title span:nth-child(22) { transform: rotate(41deg)  translateY(48px); color: #ff9f1c; }
+.rainbow-title span:nth-child(23) { transform: rotate(44deg)  translateY(52px); color: #ffbe0b; }
+.rainbow-title span:nth-child(24) { transform: rotate(47deg)  translateY(56px); color: #06d6a0; }
+.rainbow-title span:nth-child(25) { transform: rotate(50deg)  translateY(60px); color: #3a86ff; }
+
+
 </style>
 </head>
 <body>
+
+<div class="rainbow-title">
+  <span>P</span>
+  <span>e</span>
+  <span>r</span>
+  <span>f</span>
+  <span>e</span>
+  <span>c</span>
+  <span>t</span>
+  <span>i</span>
+  <span>o</span>
+  <span>n</span>
+  <span>'</span>
+  <span>s</span>
+  &nbsp;
+  <span>C</span>
+  <span>o</span>
+  <span>l</span>
+  <span>o</span>
+  <span>r</span>
+  &nbsp;
+  <span>P</span>
+  <span>a</span>
+  <span>l</span>
+  <span>a</span>
+  <span>c</span>
+  <span>e</span>
+  <span>!</span>
+</div>
 
 <div class="container" id="startScreen">
     <h2>I HAVE BEEN ASSIGNED TO IDENTIFY</h2>
@@ -92,7 +213,7 @@
 </div>
 
 <div class="container" id="gameScreen" style="display:none;">
-    <div id="timer">TIME: 0s</div>
+    <div id="timer">TIME: 00:00:00s</div>
     <div id="progress"></div>
     <h2 id="questionText"></h2>
     <input type="text" id="answerInput" placeholder="ENTER COLOR">
@@ -110,6 +231,8 @@
 <audio id="buzzSound">
     <source src="https://actions.google.com/sounds/v1/alarms/buzzer.ogg" type="audio/ogg">
 </audio>
+
+
 
 <script>
 let totalRequired = 0;
@@ -246,6 +369,17 @@ const baseObjects = [
 
 ];
 
+const backgroundColors = [
+    "#ff4d6d",  // hot pink
+    "#ff9f1c",  // orange
+    "#2ec4b6",  // teal
+    "#3a86ff",  // bright blue
+    "#ff006e",  // magenta
+    "#8338ec",  // purple
+    "#ffbe0b",  // yellow
+    "#06d6a0"   // mint
+];
+
 let objectPool = [];
 for (let i = 0; i < 100; i++) {
     baseObjects.forEach(obj => objectPool.push(obj));
@@ -271,10 +405,29 @@ function startGame() {
     nextQuestion();
 }
 
+function changeBackgroundColor() {
+
+    const randomIndex = Math.floor(Math.random() * backgroundColors.length);
+    const newColor = backgroundColors[randomIndex];
+
+    document.body.style.backgroundColor = newColor;
+}
+
 function updateTimer() {
     const now = new Date();
-    const seconds = Math.floor((now - startTime) / 1000);
-    document.getElementById("timer").textContent = "TIME: " + seconds + "s";
+    const totalSeconds = Math.floor((now - startTime) / 1000);
+
+    const hours = Math.floor(totalSeconds / 3600);
+    const minutes = Math.floor((totalSeconds % 3600) / 60);
+    const seconds = totalSeconds % 60;
+
+    const formattedTime =
+        String(hours).padStart(2, '0') + ":" +
+        String(minutes).padStart(2, '0') + ":" +
+        String(seconds).padStart(2, '0') + "s";
+
+    document.getElementById("timer").textContent =
+        "TIME: " + formattedTime;
 }
 
 function nextQuestion() {
@@ -299,6 +452,7 @@ function nextQuestion() {
     document.getElementById("answerInput").focus();
 
     isLocked = false;
+	
 }
 
 function submitAnswer() {
@@ -324,8 +478,11 @@ function lockAndDelay() {
 
     let countdown = 5;
     const loadingMessage = document.getElementById("loadingMessage");
+
     loadingMessage.textContent =
         "PROCESSING NEXT OBJECT... " + countdown;
+
+    changeBackgroundColor();   // ✅ TRIGGER FADE HERE
 
     const interval = setInterval(() => {
         countdown--;
@@ -338,18 +495,39 @@ function lockAndDelay() {
         }
     }, 1000);
 }
+
+function generateGameId() {
+    let id = "";
+    for (let i = 0; i < 9; i++) {
+        id += Math.floor(Math.random() * 10);
+    }
+    return id;
+}
+
 function endGame() {
     clearInterval(timerInterval);
 
     const endTime = new Date();
-    const timeTaken = Math.floor((endTime - startTime) / 1000);
+    const totalSeconds = Math.floor((endTime - startTime) / 1000);
+
+    const hours = Math.floor(totalSeconds / 3600);
+    const minutes = Math.floor((totalSeconds % 3600) / 60);
+    const seconds = totalSeconds % 60;
+
+    const formattedTime =
+        String(hours).padStart(2, '0') + ":" +
+        String(minutes).padStart(2, '0') + ":" +
+        String(seconds).padStart(2, '0') + "s";
+
+    const gameId = generateGameId(); // ✅ ACTUALLY CREATE IT
 
     document.getElementById("gameScreen").style.display = "none";
     document.getElementById("endScreen").style.display = "block";
 
     document.getElementById("stats").innerHTML =
         "NUMBER OF COLORED THINGS IDENTIFIED: " + totalRequired +
-        "<br>TOTAL TIME TAKEN: " + timeTaken + " SECONDS";
+        "<br>TOTAL TIME TAKEN: " + formattedTime +
+        "<br><br>GAMEID: " + gameId;
 }
 
 document.addEventListener("keydown", function(event) {
@@ -362,4 +540,3 @@ document.addEventListener("keydown", function(event) {
 </body>
 
 </html>
-
