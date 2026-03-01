@@ -350,6 +350,7 @@ function endGame(){
 
 document.getElementById("finalStats").innerHTML =
     `THE NUMBER WAS: ${targetNumber}<br><br>
+     RANGE: 1 - ${maxNumber}<br>
      Incorrect guesses: ${incorrectGuesses}<br>
      Time taken: ${formattedTime}`;
 
@@ -373,4 +374,5 @@ document.getElementById("guessInput").addEventListener("keydown", function(event
 </script>
 
 </body>
+
 </html>
