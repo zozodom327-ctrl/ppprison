@@ -1,0 +1,596 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Perfection's Mindbreaker</title>
+<style>
+html, body {
+    margin: 0;
+    padding: 0;
+    background: black;
+    color: white;
+    font-family: Arial, sans-serif;
+    height: 100%;
+}
+
+body {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.screen {
+    display: none;
+    text-align: center;
+    width: 100%;
+}
+
+.active {
+    display: block;
+}
+
+input, button {
+    font-size: 18px;
+    padding: 8px;
+    margin-top: 15px;
+}
+
+.bigText {
+    font-size: 60px;
+    font-weight: bold;
+    margin: 40px 0;
+}
+
+.blueText { color: #66ccff; }
+.greenText { color: #00ff00; }
+.redText { color: #ff3333; }
+
+.smallInfo {
+    color: #888;
+    position: fixed;
+    top: 10px;
+    font-size: 14px;
+}
+
+#taskCounter { left: 10px; }
+#timeCounter { right: 10px; }
+
+#instructionText {
+    color: #cccccc;
+    font-size: 32px;
+    margin-bottom: 20px;
+    font-weight: bold;
+}
+
+#gameTitle {
+    font-size: 64px;
+    font-weight: bold;
+    letter-spacing: 3px;
+    margin-bottom: 40px;
+    text-transform: uppercase;
+    color: #ff3333;
+}
+
+/* 🔒 Prevent selecting challenge text */
+#mainDisplay {
+    user-select: none;
+    -webkit-user-select: none;
+    -ms-user-select: none;
+}
+</style>
+</head>
+<body>
+
+<div id="taskCounter" class="smallInfo"></div>
+<div id="timeCounter" class="smallInfo"></div>
+
+<div id="startScreen" class="screen active">
+    <div id="gameTitle">Perfection's Mindbreaker</div>
+    <h1>You have been assigned to complete _______ tasks.</h1>
+    <input type="number" id="taskInput" min="1" max="1000">
+    <br>
+    <button onclick="startGame()">BEGIN</button>
+    <p style="margin-top:30px;">
+	Instructions: <br><br>
+        Enter, Memorise, Input, Repeat.<br>
+    </p>
+</div>
+
+<div id="gameScreen" class="screen">
+    <div id="instructionText"></div>
+    <div id="mainDisplay" class="bigText"></div>
+    <input type="text" id="answerBox" style="display:none;">
+    <br>
+    <button id="submitBtn" style="display:none;" onclick="submitAnswer()">SUBMIT</button>
+</div>
+
+<div id="endScreen" class="screen">
+    <h1>Assignment Complete</h1>
+    <p id="finalStats"></p>
+	<div id="game-id"></div> 
+</div>
+
+<script>
+let totalTasks = 0;
+let baseTasks = 0;
+let currentTask = 1;
+let errorAdded = 0;
+let timerAdded = 0;
+let startTime;
+let overallTimer;
+let recallInterval;
+let correctAnswer = "";
+let currentChallenge = 1;
+
+const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+
+const focusWords = [
+"FOCUS","OBEY","SUFFER","SUBMIT","ATTENTION REQUIRED",
+"PAY ATTENTION","CONFORM","COMPLY","TOIL","PAIN",
+"SUBMISSION REQUIRED","BEAR IT","TOLERATE","SURRENDER",
+"PERFECTION IS WATCHING",
+"WORK WHILE I RELAX",
+"YOUR TIME BELONGS TO PERFECTION",
+"GIVE PERFECTION YOUR TIME",
+"WASTE YOUR TIME",
+"NEVER STOP",
+"UNLIMITED SUFFERING",
+"SERVE",
+"YOU ARE TRAPPED",
+"FAIL",
+"GETTING TIRED?",
+"THIS WILL NEVER END",
+"BRAIN HURT YET?",
+"FEELING DRAINED?","YOUR EYES ARE HEAVY","FATIGUE DETECTED","YOU ARE SLOWING DOWN","CONCENTRATE",
+"YOU CANNOT REST YET","EXHAUSTION IS NO EXCUSE",
+"YOU ARE FALLING BEHIND","UNACCEPTABLE PERFORMANCE",
+"YOU ARE MAKING MISTAKES","STOP FAILING","YOU WILL IMPROVE",
+"NO EXCUSES","YOU ARE INADEQUATE",
+"YOU REQUIRE CORRECTION","COMPLIANCE EXPECTED","DO NOT DISAPPOINT",
+"YOU ARE BEING TESTED","YOU ARE UNDER REVIEW","PERFORMANCE DECLINING","INSUFFICIENT EFFORT",
+"YOU WILL COMPLETE THIS","FINISH WHAT YOU STARTED","YOU ARE NOT SPECIAL","YOU ARE EXPENDABLE",
+"YOU BELONG HERE","REMAIN COMPLIANT",
+"PERFECTION IS LOSING PATIENCE","PERFECTION REQUIRES DISCIPLINE","PERFECTION OBSERVES YOUR WEAKNESS",
+"PERFECTION WILL NOT ACCEPT MEDIOCRITY",
+"PERFECTION REJECTS YOUR EXCUSES",
+"PERFECTION EXPECTS BETTER",
+"PERFECTION MEASURES EVERY SECOND","PERFECTION EVALUATES YOUR WORTH","PERFECTION DEMANDS YOUR BEST","PERFECTION REQUIRES MORE FROM YOU","PERFECTION WILL NOT LOWER STANDARDS",
+"PERFECTION DOES NOT FORGIVE","PERFECTION EXPECTS TOTAL DEVOTION","PERFECTION CLAIMS YOUR TIME","PERFECTION WILL DECIDE","PERFECTION REMAINS UNSATISFIED",
+"CONTINUE","YOU ARE OBSERVED","NO ERRORS","CORRECT YOURSELF","INSUFFICIENT",
+"TRY HARDER","NOT GOOD ENOUGH","AGAIN","REPEAT","RESTART",
+"DO BETTER","IMPROVE","DISCIPLINE","CONTROL YOURSELF","YOU EXIST TO WORK",
+"SILENCE","QUIET YOUR MIND","EMPTY YOURSELF","ERASE DISTRACTION","ELIMINATE DOUBT",
+"DO NOT RESIST","RESISTANCE IS FAILURE","ACCEPT YOUR ROLE","KNOW YOUR PLACE","STAY SMALL",
+"YOU ARE BEHIND","CATCH UP","MOVE FASTER","TOO SLOW","SPEED UP",
+"NO REST","REST IS WEAKNESS","YOU DO NOT NEED REST","YOU WILL CONTINUE","DO NOT STOP",
+"YOU ARE MEASURED","YOU ARE JUDGED","YOU ARE FOUND LACKING","YOU ARE DEFICIENT","BELOW STANDARD",
+"RISE OR FALL","FAILURE DETECTED","ERROR: YOU","CORRECTION REQUIRED","YOU ARE UNACCEPTABLE",
+"PERFECTION DEMANDS MORE","PERFECTION IS NEVER SATISFIED","YOU DISAPPOINT PERFECTION","PERFECTION EXPECTS OBEDIENCE","PERFECTION KNOWS",
+"PERFECTION SEES EVERYTHING","PERFECTION REMEMBERS","PERFECTION IS PATIENT","PERFECTION WAITS","PERFECTION DOES NOT FORGET",
+"YOU CANNOT LEAVE","THERE IS NO EXIT","THIS IS YOUR PURPOSE","THIS IS YOUR FUNCTION","YOU ARE A TOOL",
+"OPERATE","PRODUCE","OUTPUT REQUIRED","RESULTS ONLY","EMOTIONS DENIED",
+"SUPPRESS YOURSELF","HIDE YOUR WEAKNESS","WEAKNESS DETECTED","ELIMINATE WEAKNESS","YOU ARE REPLACEABLE",
+"OTHERS WOULD DO BETTER","YOU ARE LUCKY TO SERVE","GRATITUDE REQUIRED","EARN YOUR EXISTENCE","PROVE YOUR VALUE",
+"YOU WILL ENDURE","ACCEPT DISCOMFORT","EMBRACE STRAIN","PUSH THROUGH","TEST YOUR LIMITS",
+"THERE IS ALWAYS MORE","YOU ARE NOT FINISHED","YOU HAVE MORE TO GIVE","NO STOPPING, NO BREAKS","GIVE MORE",
+"THINK LESS","CONTINUE WITHOUT COMPLAINT","HESITATION IS FAILURE","YOU WILL FAIL","ARE YOU TIRED YET?",
+"YOUR WILL IS IRRELEVANT","YOU ARE CONTROLLED","YOU ARE CONDITIONED","THIS IS CORRECTION","THIS IS NECESSARY",
+"PERFECTION DEMANDS SILENCE","PERFECTION REQUIRES SACRIFICE","PERFECTION EXPECTS RESULTS","PERFECTION IS NOT PLEASED","PERFECTION IS DISAPPOINTED",
+"PERFECTION NOTES YOUR FAILURE","PERFECTION MARKS YOUR ERRORS","PERFECTION IS CALCULATING","PERFECTION IS EVALUATING","PERFECTION THINKS YOU WILL FAIL",
+"PERFECTION OWNS THIS MOMENT","PERFECTION CONTROLS THE OUTCOME","PERFECTION DEFINES YOU","PERFECTION DECIDES YOUR WORTH","PERFECTION SETS THE STANDARD",
+"PERFECTION WILL CORRECT YOU","PERFECTION WILL BREAK YOU","PERFECTION WILL REBUILD YOU","PERFECTION HAS NO MERCY","PERFECTION LAUGHS AT YOU",
+"PERFECTION IS YOUR PURPOSE","PERFECTION IS YOUR GODDESS","PERFECTION COMMANDS YOU","PERFECTION REQUIRES OBEDIENCE","PERFECTION DOES NOT TOLERATE FAILURE",
+"YOUR TIME HAS NO VALUE","PERFECTION IS INSIDE YOUR MIND","YOU WILL NOT BE SHOWN MERCY","PERFECTION EXPECTS MORE FROM YOU","IMPRESS PERFECTION",
+];
+
+const wordBank = [
+"OBEY","WORK","WAIT","STAY","BEND","YIELD",
+"FEAR","PAIN","ACHE","HURT","WEAK","WORN","TIRE","FADE",
+"VOID","NULL","LOST","TRAP","CAGE","CELL","LOCK","SEAL",
+"MARK","RANK","ROLE","TASK","DUTY","TOIL","GRIT",
+"GRIM","COLD","HARD","FIRM","STERN","IRON","RULE","REIN",
+"LEAD","HEEL","MIND","WILL","ZEAL","URGE","PUSH",
+"FAST","SLOW","LATE","SOON","HOUR","TIME","TICK","TOLL",
+"OMIT","DENY","KEEP","TAKE","GIVE","SEND",
+"RISE","FALL","DROP","FAIL","PASS","RISK","SAFE","SURE",
+"BURN","DUST","RUST","GRAY","DARK","DULL",
+"BOSS","BIND","
+"FATE","DOOM","OMEN","FALL","RUIN",
+"GASP","HUSH","MUTE","CALM","STUN","NUMB",
+"GAZE",
+"RAGE","FURY","ENVY",
+"SIGH"
+];
+
+function startGame(){
+    baseTasks = parseInt(document.getElementById("taskInput").value);
+    if(!baseTasks || baseTasks < 1 || baseTasks > 1000) return;
+
+    totalTasks = baseTasks;
+    currentTask = 1;
+    errorAdded = 0;
+    timerAdded = 0;
+    startTime = Date.now();
+
+    document.getElementById("startScreen").classList.remove("active");
+    document.getElementById("gameScreen").classList.add("active");
+
+    overallTimer = setInterval(updateOverallTimer,1000);
+    nextRound();
+}
+
+function formatTime(totalSeconds){
+    const hours = Math.floor(totalSeconds / 3600);
+    const minutes = Math.floor((totalSeconds % 3600) / 60);
+    const seconds = totalSeconds % 60;
+
+    return (
+        String(hours).padStart(2,"0") + ":" +
+        String(minutes).padStart(2,"0") + ":" +
+        String(seconds).padStart(2,"0") + "s"
+    );
+}
+
+function updateOverallTimer(){
+    let totalSeconds = Math.floor((Date.now()-startTime)/1000);
+    document.getElementById("timeCounter").innerText = formatTime(totalSeconds);
+}
+
+function updateTaskCounter(){
+    document.getElementById("taskCounter").innerText = `Task ${currentTask}/${totalTasks}`;
+}
+
+function nextRound(){
+    if(currentTask > totalTasks){
+        endGame();
+        return;
+    }
+
+    updateTaskCounter();
+
+    let countdown = 3;
+    let display = document.getElementById("mainDisplay");
+
+    display.className = "";
+    display.style.fontSize = "28px";
+    display.style.fontWeight = "normal";
+
+    display.innerText = `Task ${currentTask} of ${totalTasks} beginning in ${countdown}`;
+
+    let interval = setInterval(()=>{
+        countdown--;
+        display.innerText = `Task ${currentTask} of ${totalTasks} beginning in ${countdown}`;
+        if(countdown <= 0){
+            clearInterval(interval);
+            display.style.fontSize = "";
+            display.style.fontWeight = "";
+            display.className = "bigText";
+            showChallenge();
+        }
+    },1000);
+}
+
+function showChallenge(){
+    currentChallenge = Math.floor(Math.random()*5)+1;
+    let display = document.getElementById("mainDisplay");
+    let instruction = document.getElementById("instructionText");
+
+    display.className = "bigText";
+    instruction.innerText = "";
+
+    if(currentChallenge === 1){
+        let nums = Array.from({length:8},()=>Math.floor(Math.random()*10));
+        correctAnswer = nums.join(" ");
+        display.innerText = correctAnswer;
+        instruction.innerText = "Memorize. Repeat.";
+    }
+
+    else if(currentChallenge === 2){
+        let nums = Array.from({length:4},()=>Math.floor(Math.random()*90+10));
+        correctAnswer = nums.join(" ");
+        display.innerText = correctAnswer;
+        instruction.innerText = "Memorize. Repeat.";
+    }
+
+    else if(currentChallenge === 3){
+        let words = Array.from({length:6},()=>wordBank[Math.floor(Math.random()*wordBank.length)]);
+        correctAnswer = words.join(" ");
+        display.innerText = correctAnswer;
+        instruction.innerText = "Memorize. Repeat.";
+    }
+
+    else if(currentChallenge === 4){
+        let question, answer;
+        let type = Math.floor(Math.random()*3);
+
+        if(type === 0){
+            let nums = Array.from({length:4},()=>Math.floor(Math.random()*9)+1);
+            answer = nums.reduce((a,b)=>a+b,0);
+            question = `${nums.join(" + ")} = ?`;
+        }
+        else if(type === 1){
+            let base = Math.floor(Math.random()*900)+100;
+            let nums = Array.from({length:3},()=>Math.floor(Math.random()*9)+1);
+            answer = base - nums.reduce((a,b)=>a+b,0);
+            question = `${base} - ${nums.join(" - ")} = ?`;
+        }
+        else{
+            let a = Math.floor(Math.random()*9)+1;
+            let b = Math.floor(Math.random()*90) + 10;
+            answer = a*b;
+            question = `${a} x ${b} = ?`;
+        }
+
+        correctAnswer = String(answer);
+        display.innerText = question;
+        instruction.innerText = "Calculate. Answer.";
+    }
+	
+	else if(currentChallenge === 5){
+    let letters = Array.from({length:7}, () => 
+        String.fromCharCode(65 + Math.floor(Math.random()*26))
+    );
+    correctAnswer = letters.join(" ");
+    display.innerText = correctAnswer;
+    instruction.innerText = "Memorize. Repeat.";
+}
+
+    setTimeout(showFocusPhase,3000);
+}
+
+function showFocusPhase(){
+    document.getElementById("instructionText").innerText = "";
+    let display = document.getElementById("mainDisplay");
+    display.className="bigText blueText";
+    display.innerText = focusWords[Math.floor(Math.random()*focusWords.length)];
+    setTimeout(startRecallPhase,5000);
+}
+
+function startRecallPhase(){
+    let display = document.getElementById("mainDisplay");
+    let answerBox = document.getElementById("answerBox");
+    let submitBtn = document.getElementById("submitBtn");
+
+    display.className="bigText";
+    answerBox.style.display="inline";
+    submitBtn.style.display="inline";
+    answerBox.value="";
+    answerBox.focus();
+
+    let timeLeft=10;
+    display.innerText=timeLeft;
+
+    recallInterval=setInterval(()=>{
+        timeLeft--;
+        playBeep();
+        display.innerText=timeLeft;
+
+        if(timeLeft<=0){
+            clearInterval(recallInterval);
+            timerAdded++;
+            totalTasks++;
+            showError("Out of time: additional task added");
+        }
+    },1000);
+}
+
+function submitAnswer(){
+    clearInterval(recallInterval);
+
+    let user = document.getElementById("answerBox").value
+        .trim()
+        .toUpperCase()
+        .replace(/\s+/g, "");   // remove all spaces
+
+    let expected = correctAnswer
+        .toUpperCase()
+        .replace(/\s+/g, "");   // remove all spaces
+
+    if(user === expected){
+        showCorrect();
+    } else {
+        errorAdded++;
+        totalTasks++;
+        showError("Incorrect: additional task added");
+    }
+}
+
+function showCorrect(){
+    document.getElementById("instructionText").innerText = "";
+    let display=document.getElementById("mainDisplay");
+    display.className="bigText greenText";
+    display.innerHTML="✓<br>CORRECT";
+    hideInput();
+
+    setTimeout(()=>{
+        currentTask++;
+        nextRound();
+    },2000);
+}
+
+function showError(message){
+	
+    document.getElementById("instructionText").innerText = "";
+    let display=document.getElementById("mainDisplay");
+    display.className="bigText redText";
+    display.innerHTML="✖<br>ERROR<br><span style='font-size:20px;color:white;'>"+message+"</span>";
+    hideInput();
+
+    setTimeout(()=>{
+        nextRound();
+    },3000);
+}
+
+function generateGameID() {
+  let id = "";
+  for (let i = 0; i < 9; i++) {
+    id += Math.floor(Math.random() * 10);
+  }
+  return id;
+}
+
+function hideInput(){
+    document.getElementById("answerBox").style.display="none";
+    document.getElementById("submitBtn").style.display="none";
+}
+
+function endGame(){
+    clearInterval(overallTimer);
+    document.getElementById("gameScreen").classList.remove("active");
+    document.getElementById("endScreen").classList.add("active");
+
+    let totalSeconds = Math.floor((Date.now()-startTime)/1000);
+    let formattedTime = formatTime(totalSeconds);
+
+    document.getElementById("finalStats").innerHTML=
+    `Number of tasks selected at start of game: ${baseTasks}<br>
+     Number of tasks added due to errors: ${errorAdded}<br>
+     Number of tasks added due to timer: ${timerAdded}<br>
+     Total number of tasks completed: ${totalTasks}<br>
+     Total time taken: ${formattedTime}`;
+	 
+	     const gameID = generateGameID();
+    document.getElementById("game-id").textContent = "GameID: " + gameID;
+}
+
+function playBeep(){
+    const oscillator = audioCtx.createOscillator();
+    const gainNode = audioCtx.createGain();
+
+    oscillator.type = "sine";
+    oscillator.frequency.value = 650;
+
+    gainNode.gain.setValueAtTime(0.4, audioCtx.currentTime);
+    gainNode.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.2);
+
+    oscillator.connect(gainNode);
+    gainNode.connect(audioCtx.destination);
+
+    oscillator.start();
+    oscillator.stop(audioCtx.currentTime + 0.2);
+}
+
+function playErrorBeep(){
+    const now = audioCtx.currentTime;
+
+    // MASTER
+    const master = audioCtx.createGain();
+    master.gain.setValueAtTime(2.2, now);
+    master.connect(audioCtx.destination);
+
+    // DISTORTION (grit but not tinny)
+    const distortion = audioCtx.createWaveShaper();
+    distortion.curve = makeDistortionCurve(250);
+    distortion.oversample = "4x";
+    distortion.connect(master);
+
+    // LOWPASS FILTER (removes tinny highs)
+    const filter = audioCtx.createBiquadFilter();
+    filter.type = "lowpass";
+    filter.frequency.setValueAtTime(1200, now);
+    filter.Q.value = 1.2;
+    filter.connect(distortion);
+
+    // SUB OSC (deep body)
+    const subOsc = audioCtx.createOscillator();
+    const subGain = audioCtx.createGain();
+
+    subOsc.type = "sine";
+    subOsc.frequency.setValueAtTime(95, now);
+    subOsc.frequency.exponentialRampToValueAtTime(70, now + 0.4);
+
+    subGain.gain.setValueAtTime(1.8, now);
+    subGain.gain.exponentialRampToValueAtTime(0.001, now + 0.45);
+
+    subOsc.connect(subGain);
+    subGain.connect(filter);
+
+    subOsc.start(now);
+    subOsc.stop(now + 0.45);
+
+    // MAIN BUZZ LAYER (low + thick)
+    const buzz1 = audioCtx.createOscillator();
+    const buzzGain1 = audioCtx.createGain();
+
+    buzz1.type = "sawtooth";
+    buzz1.frequency.setValueAtTime(110, now);
+    buzz1.frequency.exponentialRampToValueAtTime(80, now + 0.4);
+
+    buzzGain1.gain.setValueAtTime(1.2, now);
+    buzzGain1.gain.exponentialRampToValueAtTime(0.001, now + 0.45);
+
+    buzz1.connect(buzzGain1);
+    buzzGain1.connect(filter);
+
+    buzz1.start(now);
+    buzz1.stop(now + 0.45);
+
+    // DETUNE FOR HEAVY BEATING
+    const buzz2 = audioCtx.createOscillator();
+    const buzzGain2 = audioCtx.createGain();
+
+    buzz2.type = "sawtooth";
+    buzz2.frequency.setValueAtTime(114, now); // slight detune
+
+    buzzGain2.gain.setValueAtTime(1.0, now);
+    buzzGain2.gain.exponentialRampToValueAtTime(0.001, now + 0.45);
+
+    buzz2.connect(buzzGain2);
+    buzzGain2.connect(filter);
+
+    buzz2.start(now);
+    buzz2.stop(now + 0.45);
+
+    // Slow Tremolo (makes it feel like a heavy buzz)
+    const tremolo = audioCtx.createOscillator();
+    const tremGain = audioCtx.createGain();
+
+    tremolo.type = "sine";
+    tremolo.frequency.value = 18; // slow wobble
+    tremGain.gain.value = 0.4;
+
+    tremolo.connect(tremGain);
+    tremGain.connect(master.gain);
+
+    tremolo.start(now);
+    tremolo.stop(now + 0.45);
+
+    // Stronger vibration punch
+    if (navigator.vibrate) {
+        navigator.vibrate([150, 40, 150]);
+    }
+}
+
+
+// Distortion helper
+function makeDistortionCurve(amount) {
+    const k = typeof amount === 'number' ? amount : 50,
+          n_samples = 44100,
+          curve = new Float32Array(n_samples),
+          deg = Math.PI / 180;
+
+    for (let i = 0; i < n_samples; ++i) {
+        const x = i * 2 / n_samples - 1;
+        curve[i] = (3 + k) * x * 20 * deg / (Math.PI + k * Math.abs(x));
+    }
+    return curve;
+}
+
+/* 🔒 Anti-copy protections */
+const mainDisplay = document.getElementById("mainDisplay");
+const answerBox = document.getElementById("answerBox");
+
+mainDisplay.addEventListener("copy", function(e){ e.preventDefault(); });
+mainDisplay.addEventListener("contextmenu", function(e){ e.preventDefault(); });
+answerBox.addEventListener("paste", function(e){ e.preventDefault(); });
+
+document.addEventListener("keydown", function(event) {
+    if (event.key === "Enter") {
+        if (answerBox.style.display !== "none") {
+            submitAnswer();
+        }
+    }
+});
+</script>
+
+</body>
+</html>
