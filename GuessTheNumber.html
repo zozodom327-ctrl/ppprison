@@ -1,0 +1,376 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Guess The Number</title>
+<style>
+html, body {
+    margin: 0;
+    padding: 0;
+    background: #1a1a1a;
+    color: #cfcfcf;
+    font-family: "Arial Black", Impact, sans-serif;
+    height: 100%;
+    letter-spacing: 1px;
+}
+
+body {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.screen {
+    display: none;
+    text-align: center;
+    width: 100%;
+}
+
+.active {
+    display: block;
+}
+
+input, button {
+    font-family: "Arial Black", Impact, sans-serif;
+    font-size: 20px;
+    padding: 10px;
+    margin-top: 20px;
+    background: #2a2a2a;
+    color: #d0d0d0;
+    border: 2px solid #555;
+    outline: none;
+    text-transform: uppercase;
+}
+
+input:focus {
+    border-color: #888;
+}
+
+button {
+    cursor: pointer;
+}
+
+button:hover {
+    background: #333;
+}
+
+.bigText {
+    font-size: 56px;
+    font-weight: 900;
+    margin: 50px 0;
+    color: #bfbfbf;
+}
+
+.smallInfo {
+    color: #777;
+    position: fixed;
+    top: 10px;
+    font-size: 14px;
+    font-weight: bold;
+}
+
+#timeCounter { right: 15px; }
+#guessCounter { left: 15px; }
+
+h1 {
+    font-size: 70px;
+    letter-spacing: 4px;
+    font-weight: 900;
+    color: #e0e0e0;
+}
+
+p {
+    color: #999;
+    font-weight: bold;
+}
+
+#tauntText {
+    color: #aaaaaa;
+}
+
+#endScreen h1 {
+    color: #bbbbbb;
+}
+</style>
+</head>
+<body>
+
+<div id="guessCounter" class="smallInfo"></div>
+<div id="timeCounter" class="smallInfo"></div>
+
+<!-- START SCREEN -->
+<div id="startScreen" class="screen active">
+    <h1 style="font-size:60px; letter-spacing:3px;">GUESS THE NUMBER</h1>
+    <p>Select a maximum number (10 - 10000)</p>
+    <input type="number" id="maxInput" min="10" max="10000">
+    <br>
+    <button onclick="startGame()">START</button>
+</div>
+
+<!-- GAME SCREEN -->
+<div id="gameScreen" class="screen">
+    <div id="mainDisplay" class="bigText"></div>
+    <input type="number" id="guessInput">
+    <br>
+    <button onclick="submitGuess()">GUESS</button>
+</div>
+
+<!-- TAUNT SCREEN -->
+<div id="tauntScreen" class="screen">
+    <div id="tauntText" class="bigText"></div>
+</div>
+
+<!-- END SCREEN -->
+<div id="endScreen" class="screen">
+    <h1>Correct.</h1>
+    <p id="finalStats"></p>
+    <div id="gameID"></div>
+</div>
+
+<script>
+let targetNumber;
+let maxNumber;
+let incorrectGuesses = 0;
+let startTime;
+let timerInterval;
+let guessHistory = [];
+
+const taunts = [
+"You almost had it.",
+"Nuh-uh, not that one",
+"Correct! (Just Joking)",
+"That's really close!",
+"It's higher than than",
+"It's lower than that",
+"So close! You almost got it!",
+"Getting warmer...",
+"Getting colder...",
+"It's just one higher than that!",
+"It's just one lower than that!",
+"You're getting really close now!",
+"Almost there, keep it up.",
+"Nope, not that one.",
+"I'm afraid not!",
+"That's way off, guess higher",
+"I wonder how much longer you'll be here?",
+"This is taking a while...",
+"Is this a good use of your time?",
+"Not quite! Keep trying",
+"Maybe you'll get it next time?",
+"Sorrrryyyyyyy, not that one",
+"Nope! Not that one!",
+"YOU GOT IT! (jkz)",
+"You're super close now!",
+"Alllllmossstttt",
+"I think it's a few less than that",
+"I think it's a few more than that",
+"Nopedy Nope",
+"Maybe guess better?",
+"Having fun?",
+"Loving this?",
+"Couple more guesses, you're close!",
+"Nearly thereeeee, keep going!",
+"No no no. Lower.",
+"Try adding 5. That feels right.",
+"You were closer before.",
+"Good guess! Shame it's wrong.",
+"Maybe subtract 3?",
+"Definitely not that.",
+"That felt promising. It wasn't.",
+"Have you tried guessing correctly?"
+];
+
+function startGame(){
+    maxNumber = parseInt(document.getElementById("maxInput").value);
+    if(!maxNumber || maxNumber < 10 || maxNumber > 10000) return;
+
+    targetNumber = Math.floor(Math.random() * maxNumber) + 1;
+    incorrectGuesses = 0;
+    startTime = Date.now();
+
+    document.getElementById("startScreen").classList.remove("active");
+    document.getElementById("gameScreen").classList.add("active");
+
+    document.getElementById("mainDisplay").innerText = `Guess a number between 1 and ${maxNumber}`;
+    document.getElementById("guessCounter").innerText = "Incorrect guesses: 0";
+
+    timerInterval = setInterval(updateTimer, 1000);
+	guessHistory = [];
+}
+
+function updateTimer(){
+    let totalSeconds = Math.floor((Date.now() - startTime) / 1000);
+    document.getElementById("timeCounter").innerText = formatTime(totalSeconds);
+}
+
+function formatTime(totalSeconds){
+    const hours = Math.floor(totalSeconds / 3600);
+    const minutes = Math.floor((totalSeconds % 3600) / 60);
+    const seconds = totalSeconds % 60;
+
+    return (
+        String(hours).padStart(2,"0") + ":" +
+        String(minutes).padStart(2,"0") + ":" +
+        String(seconds).padStart(2,"0") + "s"
+    );
+}
+
+function submitGuess(){
+    const guess = parseInt(document.getElementById("guessInput").value);
+    if(!guess) return;
+
+    guessHistory.push(guess);
+
+    // Only check once we have at least 4 guesses
+    if(guessHistory.length >= 4){
+
+        const a = guessHistory[guessHistory.length - 3];
+        const b = guessHistory[guessHistory.length - 2];
+        const c = guessHistory[guessHistory.length - 1];
+
+        // OPTION 1: Monotonic detection
+        const increasing = (a < b && b < c);
+        const decreasing = (a > b && b > c);
+
+        // OPTION 2: Constant step detection
+        const step1 = b - a;
+        const step2 = c - b;
+        const constantStep = (step1 === step2);
+
+        // OPTION 3: Alternating direction detection
+
+        const d1 = guessHistory[guessHistory.length - 4];
+        const d2 = guessHistory[guessHistory.length - 3];
+        const d3 = guessHistory[guessHistory.length - 2];
+        const d4 = guessHistory[guessHistory.length - 1];
+
+        const diff1 = d2 - d1;
+        const diff2 = d3 - d2;
+        const diff3 = d4 - d3;
+
+        const sign1 = Math.sign(diff1);
+        const sign2 = Math.sign(diff2);
+        const sign3 = Math.sign(diff3);
+
+        const alternating =
+            sign1 !== 0 &&
+            sign2 !== 0 &&
+            sign3 !== 0 &&
+            sign1 !== sign2 &&
+            sign2 !== sign3 &&
+            sign1 === sign3;
+
+        if(increasing || decreasing || constantStep || alternating){
+            showCountingPunishment();
+            document.getElementById("guessInput").value = "";
+            return;
+        }
+    }
+
+    if(guess === targetNumber){
+        endGame();
+    } else {
+        incorrectGuesses++;
+        document.getElementById("guessCounter").innerText =
+            `Incorrect guesses: ${incorrectGuesses}`;
+        showTaunt();
+    }
+
+    document.getElementById("guessInput").value = "";
+}
+
+function showCountingPunishment(){
+
+    guessHistory = []; // ← RESET PATTERN MEMORY
+	
+    document.getElementById("gameScreen").classList.remove("active");
+    document.getElementById("tauntScreen").classList.add("active");
+
+    const tauntText = document.getElementById("tauntText");
+    let fakeTime = 15;
+
+    const baseMessage =
+        "<span style='color:#ff3333;'>ERROR!</span><br><br>" +
+        "Pattern Detected.<br><br>" +
+        "No Counting. Be Creative.<br><br>";
+
+    tauntText.innerHTML = baseMessage + fakeTime;
+
+    let interval = setInterval(() => {
+        fakeTime--;
+
+        tauntText.innerHTML = baseMessage + fakeTime;
+
+        if(fakeTime <= 0){
+            clearInterval(interval);
+            document.getElementById("tauntScreen").classList.remove("active");
+            document.getElementById("gameScreen").classList.add("active");
+
+            setTimeout(() => {
+                document.getElementById("guessInput").focus();
+            }, 50);
+        }
+    }, 1500);
+}
+
+function showTaunt(){
+    document.getElementById("gameScreen").classList.remove("active");
+    document.getElementById("tauntScreen").classList.add("active");
+
+    const randomTaunt = taunts[Math.floor(Math.random() * taunts.length)];
+    const tauntText = document.getElementById("tauntText");
+
+    let fakeTime = 3;
+
+    tauntText.innerHTML = randomTaunt + "<br><br>" + fakeTime;
+
+    let interval = setInterval(() => {
+        fakeTime--;
+        tauntText.innerHTML = randomTaunt + "<br><br>" + fakeTime;
+
+        if(fakeTime <= 0){
+    clearInterval(interval);
+    document.getElementById("tauntScreen").classList.remove("active");
+    document.getElementById("gameScreen").classList.add("active");
+
+    setTimeout(() => {
+        document.getElementById("guessInput").focus();
+    }, 50);
+}
+    }, 1500); // 1.5 seconds per "second"
+}
+
+function endGame(){
+    clearInterval(timerInterval);
+
+    document.getElementById("gameScreen").classList.remove("active");
+    document.getElementById("endScreen").classList.add("active");
+
+    let totalSeconds = Math.floor((Date.now() - startTime) / 1000);
+    let formattedTime = formatTime(totalSeconds);
+
+document.getElementById("finalStats").innerHTML =
+    `THE NUMBER WAS: ${targetNumber}<br><br>
+     Incorrect guesses: ${incorrectGuesses}<br>
+     Time taken: ${formattedTime}`;
+
+    document.getElementById("gameID").innerText = 
+        "GameID: " + generateGameID();
+}
+
+function generateGameID(){
+    let id = "";
+    for(let i = 0; i < 9; i++){
+        id += Math.floor(Math.random() * 10);
+    }
+    return id;
+}
+
+document.getElementById("guessInput").addEventListener("keydown", function(event){
+    if(event.key === "Enter"){
+        submitGuess();
+    }
+});
+</script>
+
+</body>
+</html>
