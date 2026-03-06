@@ -1,0 +1,658 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Punishment Wheel</title>
+
+<style>
+
+body{
+font-family:Arial;
+text-align:center;
+background:#111;
+color:white;
+}
+
+.screen{display:none;}
+.active{display:block;}
+
+button{
+font-size:18px;
+padding:10px 20px;
+margin-top:20px;
+cursor:pointer;
+}
+
+#wheelContainer{
+margin:auto;
+margin-top:-40px;
+width:700px;
+height:700px;
+position:relative;
+
+border-radius:50%;
+box-shadow:
+0 0 40px gold,
+0 0 80px gold,
+0 0 120px rgba(255,215,0,0.7);
+}
+
+#wheel{
+width:100%;
+height:100%;
+border-radius:50%;
+border:8px solid white;
+}
+
+#pointer{
+width:0;
+height:0;
+border-left:20px solid transparent;
+border-right:20px solid transparent;
+border-top:40px solid red;
+margin:auto;
+position:relative;
+top:-30px;
+z-index:2;
+}
+
+.pointerBounce{
+animation:pointerBounce 0.12s;
+}
+
+@keyframes pointerBounce{
+0%{transform:rotate(0deg)}
+50%{transform:rotate(-18deg)}
+100%{transform:rotate(0deg)}
+}
+
+#winBanner{
+position:absolute;
+top:45%;
+left:50%;
+transform:translate(-50%,-50%);
+font-size:64px;
+font-weight:bold;
+
+color:black;
+background:rgba(255,255,0,0.95);
+padding:20px 40px;
+border-radius:20px;
+
+display:none;
+
+box-shadow:
+0 0 20px gold,
+0 0 40px gold,
+0 0 80px gold;
+
+text-shadow:0 0 10px yellow;
+}
+
+#resultBox{
+margin-top:30px;
+font-size:20px;
+}
+
+#confettiCanvas{
+position:fixed;
+top:0;
+left:0;
+pointer-events:none;
+z-index:0;
+}
+
+#resultCard{
+width:500px;
+margin:60px auto;
+padding:35px;
+
+background:#1a1a1a;
+
+border-radius:20px;
+border:4px solid gold;
+
+box-shadow:
+0 0 20px gold,
+0 0 50px rgba(255,215,0,0.5);
+
+font-size:22px;
+line-height:1.6;
+position:relative;
+z-index:2;
+}
+
+#resultCard h2{
+font-size:34px;
+margin-bottom:20px;
+color:#ffd700;
+text-shadow:0 0 10px gold;
+}
+
+#resultCard b{
+color:#ffd700;
+}
+
+#resultCard a{
+display:inline-block;
+margin-top:20px;
+padding:12px 24px;
+
+font-size:20px;
+font-weight:bold;
+
+background:gold;
+color:black;
+
+border-radius:10px;
+text-decoration:none;
+
+box-shadow:0 0 15px gold;
+}
+
+#resultCard a:hover{
+background:#ffd700;
+box-shadow:0 0 25px gold;
+}
+
+</style>
+</head>
+
+<body>
+
+<h1 style="
+font-size:64px;
+margin-top:20px;
+color:#ffd700;
+text-shadow:0 0 15px #ffcc00, 0 0 30px #ff9900;
+font-weight:bold;
+">
+Perfection's Wheel of Fun
+</h1>
+
+<div id="startScreen" class="screen active">
+<h1>Punishment Wheel</h1>
+<p>Enter your codeword.</p>
+<input id="codeInput" type="text">
+<br>
+<button onclick="startGame()">Enter</button>
+</div>
+
+<div id="wheelScreen" class="screen">
+<div id="pointer"></div>
+
+<div id="wheelContainer">
+<canvas id="wheel" width="700" height="700"></canvas>
+<div id="winBanner"></div>
+</div>
+
+<button onclick="spinWheel()">SPIN</button>
+</div>
+
+<div id="endScreen" class="screen">
+
+<div id="resultCard">
+<h2>Congratulations! You won!</h2>
+<div id="resultBox"></div>
+</div>
+
+</div>
+
+<canvas id="confettiCanvas"></canvas>
+
+<script>
+
+/* ---------- GAME DATA ---------- */
+
+let games=[
+
+{name:"Matching Game",url:"https://zozodom327-ctrl.github.io/ppprison/matchinggame.html",values:[2,8,12]},
+{name:"Colour Assignment",url:"https://zozodom327-ctrl.github.io/ppprison/colorassignment.html",values:[50,120,400]},
+{name:"Mindbreaker",url:"https://zozodom327-ctrl.github.io/ppprison/Mindbreaker.html",values:[20,40,80],scary:true},
+{name:"Prison Timeout",url:"https://zozodom327-ctrl.github.io/ppprison/Timeout.html",values:[10,20,30]},
+{name:"Guess The Number",url:"https://zozodom327-ctrl.github.io/ppprison/GuessTheNumber.html",values:[20,100,300]}
+
+]
+
+let bonuses=[
+"2x TASKS",
+"1/2 TASKS",
+"2x TASKS",
+"3x TASKS",
+"2x TASKS"
+]
+
+let wheelOptions=[]
+
+games.forEach(g=>{
+g.values.forEach(v=>{
+wheelOptions.push({type:"game",game:g,value:v})
+})
+})
+
+bonuses.forEach(b=>{
+wheelOptions.push({type:"bonus",bonus:b})
+})
+
+wheelOptions = wheelOptions.slice(0,20)
+
+/* ---------- SEEDED RNG ---------- */
+
+let seed=1
+
+function setSeed(str){
+seed=0
+for(let i=0;i<str.length;i++){
+seed=(seed*31 + str.charCodeAt(i)) % 1000000007
+}
+}
+
+function rand(){
+seed=(seed*9301+49297)%233280
+return seed/233280
+}
+
+/* ---------- PRE-DETERMINE RESULT ---------- */
+
+let plannedBonus=null
+let plannedResult=null
+
+function determineOutcome(){
+
+if(rand()<0.30){
+
+let bonusSlices=[]
+wheelOptions.forEach((o,i)=>{
+if(o.type=="bonus") bonusSlices.push(i)
+})
+
+plannedBonus = bonusSlices[Math.floor(rand()*bonusSlices.length)]
+
+}
+
+let gameSlices=[]
+wheelOptions.forEach((o,i)=>{
+if(o.type=="game") gameSlices.push(i)
+})
+
+plannedResult = gameSlices[Math.floor(rand()*gameSlices.length)]
+
+}
+
+/* ---------- DRAW WHEEL ---------- */
+
+let canvas=document.getElementById("wheel")
+let ctx=canvas.getContext("2d")
+
+function drawWheel(){
+
+let slice=2*Math.PI/wheelOptions.length
+let center=350
+let radius=350
+
+for(let i=0;i<wheelOptions.length;i++){
+
+let angle=i*slice - Math.PI/2
+
+ctx.beginPath()
+ctx.moveTo(center,center)
+ctx.arc(center,center,radius,angle,angle+slice)
+
+let colors=[
+"#ff3b3b",
+"#ff7a00",
+"#ffd400",
+"#2bdc00",
+"#00c8ff",
+"#0066ff",
+"#9b00ff",
+"#ff1493"
+]
+
+let color = colors[i % colors.length]
+
+if(wheelOptions[i].game?.scary){
+
+color="#660000"
+
+ctx.shadowColor="red"
+ctx.shadowBlur=30
+
+}else{
+
+ctx.shadowBlur=0
+
+}
+
+ctx.fillStyle=color
+ctx.fill()
+
+ctx.strokeStyle="white"
+ctx.lineWidth=4
+ctx.stroke()
+if(wheelOptions[i].game?.scary){
+
+ctx.strokeStyle="orange"
+ctx.lineWidth=8
+ctx.stroke()
+
+}
+
+ctx.save()
+
+ctx.translate(center,center)
+ctx.rotate(angle+slice/2)
+
+ctx.shadowBlur = 0
+
+ctx.textAlign = "right"
+ctx.textBaseline = "middle"
+
+let text=""
+
+if(wheelOptions[i].type=="game"){
+
+let name = wheelOptions[i].game.name
+
+if(name=="Matching Game") name="MATCHING"
+if(name=="Colour Assignment") name="COLOR"
+if(name=="Prison Timeout") name="PRISON"
+if(name=="Guess The Number") name="NUMBER"
+if(name=="Mindbreaker") name="MINDBREAKER"
+
+text = name + " ("+wheelOptions[i].value+")"
+
+}else{
+
+text = wheelOptions[i].bonus.toUpperCase()
+
+}
+
+if(wheelOptions[i].game?.scary){
+ctx.fillStyle="#ff4444"
+ctx.font="bold 26px Arial"
+}else{
+ctx.fillStyle="white"
+ctx.font="bold 24px Arial"
+}
+
+ctx.fillText(text,radius-10,0)
+
+ctx.restore()
+
+}
+
+}
+
+drawWheel()
+
+/* ---------- STATE ---------- */
+
+let spinning=false
+let currentRotation=0
+let wheel=document.getElementById("wheel")
+
+let codeword=""
+
+let audioCtx = new (window.AudioContext || window.webkitAudioContext)()
+
+
+/* ---------- START ---------- */
+
+function startGame(){
+
+codeword=document.getElementById("codeInput").value
+
+if(!codeword){
+alert("Enter a codeword")
+return
+}
+
+setSeed(codeword)
+determineOutcome()
+
+document.getElementById("startScreen").classList.remove("active")
+document.getElementById("wheelScreen").classList.add("active")
+
+}
+
+/* ---------- AUDIO ---------- */
+
+function playTick(){
+
+let osc = audioCtx.createOscillator()
+let gain = audioCtx.createGain()
+
+osc.connect(gain)
+gain.connect(audioCtx.destination)
+
+osc.frequency.value=1800
+osc.type="square"
+
+gain.gain.setValueAtTime(0.15,audioCtx.currentTime)
+gain.gain.exponentialRampToValueAtTime(0.001,audioCtx.currentTime+0.03)
+
+osc.start()
+osc.stop(audioCtx.currentTime+0.03)
+
+}
+
+function playYay(){
+
+let osc=audioCtx.createOscillator()
+let gain=audioCtx.createGain()
+
+osc.connect(gain)
+gain.connect(audioCtx.destination)
+
+osc.type="triangle"
+osc.frequency.setValueAtTime(400,audioCtx.currentTime)
+osc.frequency.exponentialRampToValueAtTime(900,audioCtx.currentTime+0.6)
+
+gain.gain.setValueAtTime(0.3,audioCtx.currentTime)
+gain.gain.exponentialRampToValueAtTime(0.001,audioCtx.currentTime+0.6)
+
+osc.start()
+osc.stop(audioCtx.currentTime+0.6)
+
+}
+
+/* ---------- POINTER ---------- */
+
+function bouncePointer(){
+
+let p=document.getElementById("pointer")
+p.classList.remove("pointerBounce")
+void p.offsetWidth
+p.classList.add("pointerBounce")
+
+}
+
+/* ---------- SPIN ---------- */
+
+function spinWheel(){
+
+if(spinning) return
+spinning=true
+
+if(plannedBonus!==null){
+spinTo(plannedBonus,true)
+}else{
+spinTo(plannedResult,false)
+}
+
+}
+
+function spinTo(index,isBonus){
+
+let sliceSize=360/wheelOptions.length
+let target=(index*sliceSize)+sliceSize/2
+
+let spins=10
+
+let currentOffset = currentRotation % 360
+let adjustment = (360 - target - currentOffset + 360) % 360
+
+let finalAngle = currentRotation + (360 * spins) + adjustment
+
+let start=currentRotation
+let change=finalAngle-start
+
+let duration=9000
+let startTime=performance.now()
+
+animate()
+
+function animate(){
+
+let elapsed=performance.now()-startTime
+let t=Math.min(elapsed/duration,1)
+let ease=1-Math.pow(1-t,3)
+
+let angle=start + change*ease
+
+wheel.style.transform="rotate("+angle+"deg)"
+
+handleTicks(angle)
+
+if(t<1){
+requestAnimationFrame(animate)
+}else{
+
+currentRotation=finalAngle%360
+
+if(isBonus){
+alert("BONUS! Spinning again!")
+spinTo(plannedResult,false)
+}else{
+showWin(index)
+}
+
+}
+
+}
+
+}
+
+let lastSlice=-1
+
+function handleTicks(angle){
+
+let sliceSize=360/wheelOptions.length
+let slice=Math.floor((angle%360)/sliceSize)
+
+if(slice!=lastSlice){
+
+playTick()
+bouncePointer()
+
+lastSlice=slice
+
+}
+
+}
+
+/* ---------- WIN ---------- */
+
+function showWin(index){
+
+let prize=wheelOptions[index]
+
+let banner=document.getElementById("winBanner")
+
+banner.innerText="YOU WON "+prize.value+" "+prize.game.name.toUpperCase()+"!"
+
+banner.style.display="block"
+
+playYay()
+startConfetti()
+
+setTimeout(()=>{
+showResults(prize)
+},4000)
+
+}
+
+/* ---------- RESULTS ---------- */
+
+function showResults(prize){
+
+document.getElementById("wheelScreen").classList.remove("active")
+document.getElementById("endScreen").classList.add("active")
+
+let html=""
+
+html+="<b>Game:</b> "+prize.game.name+"<br>"
+html+="<b>Requirement:</b> "+prize.value+"<br>"
+
+if(plannedBonus!==null){
+
+html+="<br><b>Bonus Modifier</b><br>"
+html+=wheelOptions[plannedBonus].bonus+"<br>"
+
+}
+
+html+="<br><b>Codeword:</b> "+codeword+"<br>"
+
+html+="<br><a href='"+prize.game.url+"' target='_blank'>Claim Your Prize!</a>"
+
+document.getElementById("resultBox").innerHTML=html
+
+}
+
+/* ---------- CONFETTI ---------- */
+
+let confettiCanvas=document.getElementById("confettiCanvas")
+let confettiCtx=confettiCanvas.getContext("2d")
+
+confettiCanvas.width=window.innerWidth
+confettiCanvas.height=window.innerHeight
+
+let confetti=[]
+
+function startConfetti(){
+
+for(let i=0;i<600;i++){
+
+confetti.push({
+x:Math.random()*window.innerWidth,
+y:-20,
+size:6+Math.random()*10,
+speed:2+Math.random()*5,
+drift:(Math.random()-0.5)*2,
+color:"hsl("+Math.random()*360+",80%,60%)"
+})
+
+}
+
+animateConfetti()
+
+}
+
+function animateConfetti(){
+
+confettiCtx.clearRect(0,0,confettiCanvas.width,confettiCanvas.height)
+
+confetti.forEach(c=>{
+
+confettiCtx.fillStyle=c.color
+confettiCtx.fillRect(c.x,c.y,c.size,c.size)
+
+c.y += c.speed
+c.x += c.drift
+
+if(c.y > window.innerHeight){
+c.y = -20
+c.x = Math.random()*window.innerWidth
+}
+
+})
+
+requestAnimationFrame(animateConfetti)
+
+}
+
+</script>
+
+</body>
+</html>
