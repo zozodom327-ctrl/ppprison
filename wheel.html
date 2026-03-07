@@ -71,12 +71,19 @@ position:absolute;
 top:45%;
 left:50%;
 transform:translate(-50%,-50%);
+
+width:650px;            /* makes banner wider */
+max-width:90%;          /* keeps it safe on smaller screens */
+
 font-size:64px;
 font-weight:bold;
+text-align:center;      /* keeps text centred */
 
 color:black;
 background:rgba(255,255,0,0.95);
-padding:20px 40px;
+
+padding:30px 50px;     /* more breathing room */
+
 border-radius:20px;
 
 display:none;
@@ -90,8 +97,10 @@ text-shadow:0 0 10px yellow;
 }
 
 #resultBox{
-margin-top:30px;
-font-size:20px;
+margin-top:20px;
+font-size:24px;
+line-height:1.7;
+font-weight:bold;
 }
 
 #confettiCanvas{
@@ -206,11 +215,31 @@ Perfection's Wheel of Fun
 
 let games=[
 
-{name:"Matching Game",url:"https://zozodom327-ctrl.github.io/ppprison/matchinggame.html",values:[2,8,12]},
-{name:"Colour Assignment",url:"https://zozodom327-ctrl.github.io/ppprison/colorassignment.html",values:[50,120,400]},
-{name:"Mindbreaker",url:"https://zozodom327-ctrl.github.io/ppprison/Mindbreaker.html",values:[20,40,80],scary:true},
-{name:"Prison Timeout",url:"https://zozodom327-ctrl.github.io/ppprison/Timeout.html",values:[10,20,30]},
-{name:"Guess The Number",url:"https://zozodom327-ctrl.github.io/ppprison/GuessTheNumber.html",values:[20,100,300]}
+{name:"Matching Game",
+url:"https://zozodom327-ctrl.github.io/ppprison/matchinggame.html",
+values:[2,8,12],
+winText:"YOU WON {v} MATCHES, YAY!"},
+
+{name:"Colour Assignment",
+url:"https://zozodom327-ctrl.github.io/ppprison/colorassignment.html",
+values:[50,120,400],
+winText:"YOU GET TO NAME {v} COLORED THINGS! NICE ONE!"},
+
+{name:"Mindbreaker",
+url:"https://zozodom327-ctrl.github.io/ppprison/Mindbreaker.html",
+values:[20,40,80],
+scary:true,
+winText:"{v} TASKS IN THE MINDBREAKER, LUCKY YOU!"},
+
+{name:"Prison Timeout",
+url:"https://zozodom327-ctrl.github.io/ppprison/Timeout.html",
+values:[10,20,30],
+winText:"YOU WON {v} MINUTES OF TIMEOUT, NICE!"},
+
+{name:"Guess The Number",
+url:"https://zozodom327-ctrl.github.io/ppprison/GuessTheNumber.html",
+values:[20,100,300],
+winText:"YOU GET TO GUESS {v} NUMBERS, AMAZING!"}
 
 ]
 
@@ -560,7 +589,8 @@ let prize=wheelOptions[index]
 
 let banner=document.getElementById("winBanner")
 
-banner.innerText="YOU WON "+prize.value+" "+prize.game.name.toUpperCase()+"!"
+let msg = prize.game.winText.replace("{v}", prize.value)
+banner.innerText = msg
 
 banner.style.display="block"
 
