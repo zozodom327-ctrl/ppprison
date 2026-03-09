@@ -1,0 +1,369 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Meditative Flower Identification</title>
+
+<style>
+body{
+font-family:Arial;
+background:#eef4ee;
+text-align:center;
+margin:0;
+padding:0;
+}
+
+#container{
+max-width:800px;
+margin:auto;
+padding:20px;
+}
+
+button{
+padding:10px 18px;
+margin:8px;
+font-size:16px;
+cursor:pointer;
+}
+
+.answerBtn{
+display:block;
+width:70%;
+margin:10px auto;
+}
+
+img{
+max-width:350px;
+border-radius:8px;
+margin-top:10px;
+}
+
+#punishInput{
+width:80%;
+padding:10px;
+font-size:16px;
+}
+
+.statbox{
+margin-top:10px;
+font-size:14px;
+color:#333;
+}
+
+.success{
+color:green;
+font-weight:bold;
+}
+
+.fail{
+color:red;
+font-weight:bold;
+}
+</style>
+</head>
+
+<body>
+
+<div id="container">
+
+<h1>Quiet Garden</h1>
+
+<div id="startScreen">
+<p>Select number of flowers to identify</p>
+
+<select id="questionCount">
+<option>10</option>
+<option>20</option>
+<option>30</option>
+<option>40</option>
+<option>50</option>
+<option>60</option>
+<option>70</option>
+<option>80</option>
+<option>90</option>
+<option>100</option>
+</select>
+
+<br><br>
+
+<button onclick="startGame()">Begin Meditation</button>
+</div>
+
+<div id="quizScreen" style="display:none">
+
+<h2 id="flowerName"></h2>
+
+<img id="flowerImage">
+
+<div id="answers"></div>
+
+<p id="message"></p>
+
+<div class="statbox" id="stats"></div>
+
+</div>
+
+<div id="punishScreen" style="display:none">
+
+<h2 class="fail">Incorrect</h2>
+
+<p>You must calmly write the correct scientific name 20 times.</p>
+
+<p id="punishFlower"></p>
+
+<input id="punishInput" autocomplete="off">
+
+<p id="punishCount">20 remaining</p>
+
+</div>
+
+<div id="endScreen" style="display:none">
+
+<h2>Session Complete</h2>
+
+<p id="finalStats"></p>
+
+</div>
+
+</div>
+
+<script>
+
+const flowerData=[
+
+{
+common:"Sunflower",
+scientific:"Helianthus annuus",
+image:"https://upload.wikimedia.org/wikipedia/commons/4/40/Sunflower_sky_backdrop.jpg",
+wrong:[
+"Helianthus tuberosus",
+"Heliopsis helianthoides",
+"Solidago canadensis"
+]
+},
+
+{
+common:"Common Dandelion",
+scientific:"Taraxacum officinale",
+image:"https://upload.wikimedia.org/wikipedia/commons/d/d7/Taraxacum_officinale_seedhead.jpg",
+wrong:[
+"Taraxacum erythrospermum",
+"Hypochaeris radicata",
+"Cichorium intybus"
+]
+},
+
+{
+common:"Lavender",
+scientific:"Lavandula angustifolia",
+image:"https://upload.wikimedia.org/wikipedia/commons/7/7e/Lavandula_angustifolia_002.JPG",
+wrong:[
+"Lavandula stoechas",
+"Salvia officinalis",
+"Rosmarinus officinalis"
+]
+},
+
+{
+common:"Garden Tulip",
+scientific:"Tulipa gesneriana",
+image:"https://upload.wikimedia.org/wikipedia/commons/9/9e/Tulipa_gesneriana_Tulip.jpg",
+wrong:[
+"Tulipa tarda",
+"Lilium candidum",
+"Fritillaria imperialis"
+]
+},
+
+{
+common:"Purple Coneflower",
+scientific:"Echinacea purpurea",
+image:"https://upload.wikimedia.org/wikipedia/commons/5/5b/Echinacea_purpurea_flower.jpg",
+wrong:[
+"Echinacea angustifolia",
+"Rudbeckia hirta",
+"Heliopsis helianthoides"
+]
+}
+
+];
+
+
+let pool=[]
+let goal=0
+let correct=0
+let incorrect=0
+let linesTyped=0
+let startTime=0
+
+let currentFlower=null
+let punishRemaining=20
+
+function startGame(){
+
+goal=parseInt(document.getElementById("questionCount").value)
+
+pool=[...flowerData]
+
+correct=0
+incorrect=0
+linesTyped=0
+startTime=Date.now()
+
+document.getElementById("startScreen").style.display="none"
+document.getElementById("quizScreen").style.display="block"
+
+nextQuestion()
+}
+
+function nextQuestion(){
+
+if(correct>=goal){
+endGame()
+return
+}
+
+if(pool.length===0){
+pool=[...flowerData]
+}
+
+currentFlower=pool[Math.floor(Math.random()*pool.length)]
+
+document.getElementById("flowerName").innerText=currentFlower.common
+document.getElementById("flowerImage").src=currentFlower.image
+document.getElementById("message").innerText=""
+
+let answers=[currentFlower.scientific,...currentFlower.wrong]
+
+answers.sort(()=>Math.random()-0.5)
+
+let html=""
+
+answers.forEach(a=>{
+html+=`<button class="answerBtn" onclick="answer('${a}')">${a}</button>`
+})
+
+document.getElementById("answers").innerHTML=html
+
+updateStats()
+}
+
+function answer(choice){
+
+if(choice===currentFlower.scientific){
+
+correct++
+
+pool=pool.filter(f=>f!==currentFlower)
+
+document.getElementById("message").innerHTML="<span class='success'>Correct. The garden thanks you.</span>"
+
+setTimeout(nextQuestion,1200)
+
+}else{
+
+incorrect++
+startPunishment()
+
+}
+
+}
+
+function startPunishment(){
+
+document.getElementById("quizScreen").style.display="none"
+document.getElementById("punishScreen").style.display="block"
+
+punishRemaining=20
+
+document.getElementById("punishFlower").innerText=currentFlower.scientific
+
+document.getElementById("punishCount").innerText="20 remaining"
+
+document.getElementById("punishInput").value=""
+document.getElementById("punishInput").focus()
+
+}
+
+document.getElementById("punishInput").addEventListener("keydown",function(e){
+
+if(e.key==="Enter"){
+
+e.preventDefault()
+
+let val=this.value.trim()
+
+if(val===currentFlower.scientific){
+
+punishRemaining--
+linesTyped++
+
+if(punishRemaining<=0){
+
+document.getElementById("punishScreen").style.display="none"
+document.getElementById("quizScreen").style.display="block"
+
+nextQuestion()
+
+}else{
+
+document.getElementById("punishCount").innerText=punishRemaining+" remaining"
+this.value=""
+
+}
+
+}else{
+
+punishRemaining=20
+
+document.getElementById("punishCount").innerText="Mistake. 20 remaining."
+
+this.value=""
+
+}
+
+}
+
+})
+
+document.getElementById("punishInput").addEventListener("paste",e=>e.preventDefault())
+
+document.getElementById("punishInput").addEventListener("copy",e=>e.preventDefault())
+
+document.getElementById("punishInput").addEventListener("cut",e=>e.preventDefault())
+
+function updateStats(){
+
+let time=Math.floor((Date.now()-startTime)/1000)
+
+document.getElementById("stats").innerText=
+"Time: "+time+"s | Correct: "+correct+" | Incorrect: "+incorrect+" | Lines Typed: "+linesTyped
+
+}
+
+setInterval(updateStats,1000)
+
+function endGame(){
+
+document.getElementById("quizScreen").style.display="none"
+document.getElementById("punishScreen").style.display="none"
+document.getElementById("endScreen").style.display="block"
+
+let totalTime=Math.floor((Date.now()-startTime)/1000)
+
+let gameid=Math.floor(100000000+Math.random()*900000000)
+
+document.getElementById("finalStats").innerHTML=
+
+"Time: "+totalTime+" seconds<br><br>"+
+"Correct: "+correct+"<br>"+
+"Incorrect: "+incorrect+"<br>"+
+"Lines Typed: "+linesTyped+"<br><br>"+
+"Game ID: "+gameid
+
+}
+
+</script>
+
+</body>
+</html>
