@@ -6,67 +6,177 @@
 
 <style>
 body{
-font-family:Arial;
-background:#eef4ee;
+font-family: "Nunito", "Segoe UI", Arial, sans-serif;
+background: linear-gradient(180deg,#edf6ee,#e3efe5);
 text-align:center;
 margin:0;
 padding:0;
+color:#2f3a2f;
 }
 
 #container{
+position:relative;
+z-index:2;
+
 max-width:800px;
-margin:auto;
-padding:20px;
+margin:40px auto;
+padding:30px;
+
+background:rgba(255,255,255,0.65);
+backdrop-filter:blur(6px);
+
+border-radius:22px;
+
+box-shadow:
+0 8px 30px rgba(60,120,80,0.15),
+0 0 40px rgba(120,200,140,0.12);
+}
+
+h1{
+font-weight:600;
+letter-spacing:1px;
+color:#3a5a40;
+margin-bottom:20px;
+}
+
+h2{
+font-weight:600;
+color:#3a5a40;
 }
 
 button{
-padding:10px 18px;
-margin:8px;
+padding:12px 22px;
+margin:10px;
 font-size:16px;
 cursor:pointer;
+
+border:none;
+border-radius:14px;
+
+background:#dcefe0;
+color:#2f3a2f;
+
+box-shadow:
+0 4px 10px rgba(0,0,0,0.08),
+0 0 10px rgba(120,200,140,0.15);
+
+transition:all .18s ease;
+}
+
+button:hover{
+background:#cfe8d5;
+transform:translateY(-1px);
+box-shadow:
+0 6px 14px rgba(0,0,0,0.12),
+0 0 14px rgba(120,200,140,0.25);
 }
 
 .answerBtn{
 display:block;
 width:70%;
-margin:10px auto;
+margin:12px auto;
+font-size:17px;
 }
 
 img{
-max-width:350px;
-border-radius:8px;
-margin-top:10px;
+max-width:360px;
+border-radius:16px;
+margin-top:16px;
+min-height:250px;
+
+box-shadow:
+0 10px 25px rgba(0,0,0,0.15),
+0 0 20px rgba(120,200,140,0.25);
+
+background:#dde5dd;
 }
 
 #punishInput{
 width:80%;
-padding:10px;
-font-size:16px;
+padding:12px;
+font-size:17px;
+
+border:none;
+border-radius:14px;
+
+background:#f3f8f4;
+
+box-shadow:
+inset 0 2px 6px rgba(0,0,0,0.08),
+0 0 10px rgba(120,200,140,0.15);
+}
+
+#punishInput:focus{
+outline:none;
+box-shadow:
+inset 0 2px 6px rgba(0,0,0,0.1),
+0 0 16px rgba(120,200,140,0.35);
 }
 
 .statbox{
-margin-top:10px;
+margin-top:14px;
 font-size:14px;
-color:#333;
+color:#4c5a4c;
 }
 
 .success{
-color:green;
+color:#3c8d5a;
 font-weight:bold;
 }
 
 .fail{
-color:red;
+color:#c24a4a;
 font-weight:bold;
+}
+
+select{
+padding:10px 14px;
+border-radius:10px;
+border:none;
+background:#f0f6f1;
+font-size:15px;
+
+box-shadow:
+0 2px 6px rgba(0,0,0,0.08);
+}
+
+.leaf-bg{
+position:fixed;
+top:0;
+left:0;
+width:100%;
+height:100%;
+pointer-events:none;
+overflow:hidden;
+z-index:0;
+}
+
+.leaf{
+position:absolute;
+font-size:22px;
+opacity:0.08;
+animation:floatLeaf linear infinite;
+}
+
+@keyframes floatLeaf{
+
+0%{
+transform:translateY(110vh) rotate(0deg);
+}
+
+100%{
+transform:translateY(-20vh) rotate(360deg);
+}
+
 }
 </style>
 </head>
 
 <body>
-
+<div class="leaf-bg"></div>
 <div id="container">
 
-<h1>Quiet Garden</h1>
+<h1>Perfection's Peaceful Garden</h1>
 
 <div id="startScreen">
 <p>Select number of flowers to identify</p>
@@ -91,7 +201,7 @@ font-weight:bold;
 
 <div id="quizScreen" style="display:none">
 
-<h2 id="flowerName"></h2>
+<i><h2 id="flowerName"></h2></i>
 
 <img id="flowerImage">
 
@@ -129,63 +239,7 @@ font-weight:bold;
 
 <script>
 
-const flowerData=[
-{
-common:"Sunflower",
-scientific:"Helianthus annuus",
-image:"https://upload.wikimedia.org/wikipedia/commons/thumb/4/40/Sunflower_sky_backdrop.jpg/512px-Sunflower_sky_backdrop.jpg",
-wrong:[
-"Helianthus tuberosus",
-"Heliopsis helianthoides",
-"Solidago canadensis"
-]
-},
-
-{
-common:"Tulip",
-scientific:"Tulipa gesneriana",
-image:"https://upload.wikimedia.org/wikipedia/commons/thumb/a/a7/Tulip_-_floriade_canberra.jpg/512px-Tulip_-_floriade_canberra.jpg",
-wrong:[
-"Lilium candidum",
-"Iris germanica",
-"Crocus sativus"
-]
-},
-
-{
-common:"Common Daisy",
-scientific:"Bellis perennis",
-image:"https://upload.wikimedia.org/wikipedia/commons/thumb/4/4f/Bellis_perennis_white.jpg/512px-Bellis_perennis_white.jpg",
-wrong:[
-"Leucanthemum vulgare",
-"Anthemis arvensis",
-"Erigeron annuus"
-]
-},
-
-{
-common:"Lavender",
-scientific:"Lavandula angustifolia",
-image:"https://upload.wikimedia.org/wikipedia/commons/thumb/7/7e/Lavandula_angustifolia_flowers.jpg/512px-Lavandula_angustifolia_flowers.jpg",
-wrong:[
-"Salvia officinalis",
-"Hyssopus officinalis",
-"Nepeta cataria"
-]
-},
-
-{
-common:"Red Rose",
-scientific:"Rosa gallica",
-image:"https://upload.wikimedia.org/wikipedia/commons/thumb/3/35/Red_rose.jpg/512px-Red_rose.jpg",
-wrong:[
-"Rosa canina",
-"Camellia japonica",
-"Paeonia officinalis"
-]
-}
-  ]
-
+let flowerData=[]
 let pool=[]
 let goal=0
 let correct=0
@@ -196,7 +250,84 @@ let startTime=0
 let currentFlower=null
 let punishRemaining=20
 
-function startGame(){
+
+async function loadFlowerDatabase(){
+
+let url="https://api.inaturalist.org/v1/taxa?taxon_id=47126&rank=species&per_page=200&order_by=observations_count"
+
+let res=await fetch(url)
+let data=await res.json()
+
+let species=data.results
+let epithets = species.map(s => s.name.split(" ")[1]).filter(Boolean)
+
+flowerData = species.map(s=>{
+
+let genus = s.name.split(" ")[0]
+
+let wrong=[]
+
+while(wrong.length<3){
+
+let epithet = epithets[Math.floor(Math.random()*epithets.length)]
+
+let candidate = genus + " " + epithet
+
+if(candidate !== s.name && !wrong.includes(candidate)){
+wrong.push(candidate)
+}
+
+}
+
+return{
+common:s.preferred_common_name || s.name,
+scientific:s.name,
+wrong:wrong
+}
+
+})
+
+}
+
+
+async function loadFlowerImage(scientific){
+
+let img=document.getElementById("flowerImage")
+
+img.src=""
+
+try{
+
+let url="https://api.inaturalist.org/v1/taxa?q="+encodeURIComponent(scientific)
+
+let res=await fetch(url)
+
+let data=await res.json()
+
+if(data.results.length>0 && data.results[0].default_photo){
+
+img.src=data.results[0].default_photo.medium_url
+
+}else{
+
+img.src=""
+
+}
+
+}catch(e){
+
+img.src=""
+
+}
+
+}
+
+
+async function startGame(){
+
+if(flowerData.length===0){
+await loadFlowerDatabase()
+}
 
 goal=parseInt(document.getElementById("questionCount").value)
 
@@ -213,6 +344,47 @@ document.getElementById("quizScreen").style.display="block"
 nextQuestion()
 }
 
+function createLeaves(){
+
+const bg=document.querySelector(".leaf-bg")
+
+for(let i=0;i<20;i++){
+
+let leaf=document.createElement("div")
+
+leaf.className="leaf"
+
+leaf.innerText="🌿"
+
+leaf.style.left=Math.random()*100+"%"
+
+leaf.style.animationDuration=(20+Math.random()*20)+"s"
+
+leaf.style.fontSize=(16+Math.random()*16)+"px"
+
+leaf.style.opacity=(0.05+Math.random()*0.05)
+
+bg.appendChild(leaf)
+
+}
+
+}
+
+createLeaves()
+
+function formatTime(seconds){
+
+let h = Math.floor(seconds / 3600)
+let m = Math.floor((seconds % 3600) / 60)
+let s = seconds % 60
+
+h = String(h).padStart(2,"0")
+m = String(m).padStart(2,"0")
+s = String(s).padStart(2,"0")
+
+return h + ":" + m + ":" + s
+}
+
 function nextQuestion(){
 
 if(correct>=goal){
@@ -227,7 +399,9 @@ pool=[...flowerData]
 currentFlower=pool[Math.floor(Math.random()*pool.length)]
 
 document.getElementById("flowerName").innerText=currentFlower.common
-document.getElementById("flowerImage").src=currentFlower.image
+
+loadFlowerImage(currentFlower.scientific)
+
 document.getElementById("message").innerText=""
 
 let answers=[currentFlower.scientific,...currentFlower.wrong]
@@ -244,6 +418,7 @@ document.getElementById("answers").innerHTML=html
 
 updateStats()
 }
+
 
 function answer(choice){
 
@@ -266,6 +441,7 @@ startPunishment()
 
 }
 
+
 function startPunishment(){
 
 document.getElementById("quizScreen").style.display="none"
@@ -281,6 +457,7 @@ document.getElementById("punishInput").value=""
 document.getElementById("punishInput").focus()
 
 }
+
 
 document.getElementById("punishInput").addEventListener("keydown",function(e){
 
@@ -323,22 +500,24 @@ this.value=""
 
 })
 
+
 document.getElementById("punishInput").addEventListener("paste",e=>e.preventDefault())
-
 document.getElementById("punishInput").addEventListener("copy",e=>e.preventDefault())
-
 document.getElementById("punishInput").addEventListener("cut",e=>e.preventDefault())
+
 
 function updateStats(){
 
-let time=Math.floor((Date.now()-startTime)/1000)
+let time=formatTime(Math.floor((Date.now()-startTime)/1000))
 
 document.getElementById("stats").innerText=
-"Time: "+time+"s | Correct: "+correct+" | Incorrect: "+incorrect+" | Lines Typed: "+linesTyped
+"Time: "+time+" | Correct: "+correct+" | Incorrect: "+incorrect+" | Lines Typed: "+linesTyped
 
 }
 
+
 setInterval(updateStats,1000)
+
 
 function endGame(){
 
@@ -346,7 +525,7 @@ document.getElementById("quizScreen").style.display="none"
 document.getElementById("punishScreen").style.display="none"
 document.getElementById("endScreen").style.display="block"
 
-let totalTime=Math.floor((Date.now()-startTime)/1000)
+let totalTime=formatTime(Math.floor((Date.now()-startTime)/1000))
 
 let gameid=Math.floor(100000000+Math.random()*900000000)
 
@@ -363,6 +542,4 @@ document.getElementById("finalStats").innerHTML=
 </script>
 
 </body>
-
 </html>
-
