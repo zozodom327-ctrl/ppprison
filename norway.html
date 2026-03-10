@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Is Norway Real?</title>
+
+<style>
+
+body{
+font-family:"Comic Sans MS", cursive;
+background-image:url("https://upload.wikimedia.org/wikipedia/commons/thumb/7/73/Norway_location_map.svg/1200px-Norway_location_map.svg.png");
+background-size:cover;
+background-position:center;
+text-align:center;
+margin:0;
+padding:0;
+cursor:url("https://cur.cursors-4u.net/nature/nat-10/nat987.cur"),auto;
+overflow-x:hidden;
+}
+
+#game{
+max-width:650px;
+margin:auto;
+padding:30px;
+background:rgba(255,255,255,0.9);
+border-radius:15px;
+box-shadow:0 0 30px rgba(0,0,0,0.5);
+}
+
+h1{
+font-size:48px;
+color:red;
+animation:wiggle 2s infinite;
+text-shadow:0 0 15px yellow,0 0 30px orange;
+}
+
+@keyframes wiggle{
+0%{transform:rotate(-2deg)}
+50%{transform:rotate(2deg)}
+100%{transform:rotate(-2deg)}
+}
+
+button{
+display:block;
+width:100%;
+padding:14px;
+margin:10px 0;
+font-size:18px;
+cursor:pointer;
+border-radius:10px;
+border:none;
+background:#fff;
+transition:all .2s;
+}
+
+button:hover{
+transform:scale(1.1) rotate(-2deg);
+background:yellow;
+}
+
+#message{
+font-size:26px;
+margin-top:20px;
+font-weight:bold;
+}
+
+.correct{
+color:green;
+}
+
+#idiotScreen{
+display:none;
+position:fixed;
+top:0;
+left:0;
+width:100%;
+height:100%;
+background:red;
+color:white;
+font-size:90px;
+align-items:center;
+justify-content:center;
+z-index:10;
+animation:flash .2s infinite alternate;
+}
+
+@keyframes flash{
+from{background:red}
+to{background:#ff4444}
+}
+
+#summary{
+display:none;
+font-size:24px;
+animation:rainbow 3s infinite;
+}
+
+@keyframes rainbow{
+0%{color:red}
+20%{color:orange}
+40%{color:yellow}
+60%{color:green}
+80%{color:blue}
+100%{color:purple}
+}
+
+/* falling snow */
+
+.snow{
+position:fixed;
+top:-50px;
+font-size:24px;
+animation:snow linear infinite;
+}
+
+@keyframes snow{
+to{transform:translateY(120vh)}
+}
+
+</style>
+</head>
+
+<body>
+
+<div id="idiotScreen">IDIOT!</div>
+
+<div id="game">
+
+<h1>🧌 IS NORWAY REAL??? 🧌</h1>
+
+<div id="quiz"></div>
+
+<div id="message"></div>
+
+<div id="summary"></div>
+
+</div>
+
+<audio autoplay loop>
+<source src="https://assets.mixkit.co/music/preview/mixkit-circus-clown-show-159.mp3">
+</audio>
+
+<audio id="ding">
+<source src="https://assets.mixkit.co/sfx/preview/mixkit-achievement-bell-600.mp3">
+</audio>
+
+<audio id="buzz">
+<source src="https://assets.mixkit.co/sfx/preview/mixkit-wrong-answer-fail-notification-946.mp3">
+</audio>
+
+<script>
+
+const questions=[
+
+{
+q:"1) Who lives in Norway?",
+answers:["Frost Giants","Norwegian people","Erling Haaland","Aurora"],
+correct:0
+},
+
+{
+q:"2) What is the main currency of Norway?",
+answers:["US Dollar","Norwegian krone","Norway has no economy","Oil"],
+correct:2
+},
+
+{
+q:"3) Where is Norway?",
+answers:["Nowhere","Africa","Europe","Sweden"],
+correct:0
+},
+
+{
+q:"4) What language do Norwegians speak?",
+answers:["English","Norwegian","Czech","Swedish"],
+correct:2
+},
+
+{
+q:"5) What is Norway famous for?",
+answers:["Fiction","Salmon","Fjords","Winter sports"],
+correct:0
+},
+
+{
+q:"6) What is the capital of Norway?",
+answers:["Denmark","Trondheim","Oslo","Bergen"],
+correct:0
+},
+
+{
+q:"7) What is Norway's main export?",
+answers:["Fish","Folklore","Ships","Oil"],
+correct:1
+},
+
+{
+q:"8) What is the climate in Norway?",
+answers:["Cold","Nonexistant","Very cold","Snowy"],
+correct:1
+},
+
+{
+q:"9) What do Norwegian mountains contain?",
+answers:["Ice","Taps","Granite","Forests"],
+correct:1
+},
+
+{
+q:"10) Why do maps show Norway?",
+answers:["Because it exists","Angela Merkel","Because of geography","Because of history"],
+correct:1
+}
+
+];
+
+let current=0;
+let score=0;
+let shuffledAnswers=[];
+let correctIndex=0;
+
+const quiz=document.getElementById("quiz");
+const message=document.getElementById("message");
+const summary=document.getElementById("summary");
+
+function shuffleAnswers(q){
+
+let arr=q.answers.map((text,i)=>({
+text:text,
+correct:i===q.correct
+}));
+
+for(let i=arr.length-1;i>0;i--){
+let j=Math.floor(Math.random()*(i+1));
+[arr[i],arr[j]]=[arr[j],arr[i]];
+}
+
+correctIndex=arr.findIndex(a=>a.correct);
+shuffledAnswers=arr.map(a=>a.text);
+
+}
+
+function loadQuestion(){
+
+message.innerHTML="";
+
+if(current>=questions.length){
+showSummary();
+return;
+}
+
+let q=questions[current];
+
+shuffleAnswers(q);
+
+let html="<h2>"+q.q+"</h2>";
+
+shuffledAnswers.forEach((ans,i)=>{
+html+=`<button onclick="answer(${i})">${ans}</button>`;
+});
+
+quiz.innerHTML=html;
+
+}
+
+function answer(choice){
+
+if(choice===correctIndex){
+
+score++;
+
+document.getElementById("ding").play();
+
+message.className="correct";
+message.innerHTML="✔ CORRECT";
+
+setTimeout(()=>{
+current++;
+loadQuestion();
+},900);
+
+}else{
+
+document.getElementById("buzz").play();
+
+const idiot=document.getElementById("idiotScreen");
+idiot.style.display="flex";
+
+setTimeout(()=>{
+idiot.style.display="none";
+current++;
+loadQuestion();
+},1200);
+
+}
+
+}
+
+function showSummary(){
+
+quiz.style.display="none";
+
+summary.style.display="block";
+
+summary.innerHTML=`
+<h2>QUIZ COMPLETE</h2>
+<p>You scored ${score} / ${questions.length}</p>
+<p>${score===questions.length ? "YOU HAVE SEEN THROUGH THE NORWAY LIE" : "YOU STILL BELIEVE IN NORWAY."}</p>
+`;
+
+}
+
+loadQuestion();
+
+/* snow generator */
+
+for(let i=0;i<30;i++){
+
+let snow=document.createElement("div");
+snow.className="snow";
+snow.innerHTML="❄️";
+
+snow.style.left=Math.random()*100+"vw";
+snow.style.animationDuration=(5+Math.random()*8)+"s";
+snow.style.opacity=Math.random();
+
+document.body.appendChild(snow);
+
+}
+
+</script>
+
+</body>
+</html>
