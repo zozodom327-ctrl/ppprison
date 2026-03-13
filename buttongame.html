@@ -1,0 +1,364 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Mikes Button Game</title>
+
+<style>
+body{
+font-family:Arial, Helvetica, sans-serif;
+background:#1a1a1a;
+color:#e5e5e5;
+text-align:center;
+margin:0;
+padding:0;
+letter-spacing:1px;
+}
+
+.screen{
+display:none;
+padding:40px;
+max-width:700px;
+margin:auto;
+}
+
+.active{
+display:block;
+}
+
+h1{
+font-size:42px;
+font-weight:900;
+margin-top:0;
+text-transform:uppercase;
+letter-spacing:4px;
+color:#ffffff;
+}
+
+p{
+font-weight:bold;
+}
+
+input{
+font-size:18px;
+padding:10px;
+width:120px;
+text-align:center;
+border:2px solid #888;
+background:#2a2a2a;
+color:#fff;
+}
+
+button{
+font-family:Arial, Helvetica, sans-serif;
+font-weight:900;
+text-transform:uppercase;
+font-size:24px;
+padding:20px 40px;
+background:#3a3a3a;
+color:#ffffff;
+border:3px solid #9a9a9a;
+cursor:pointer;
+}
+
+button:hover{
+background:#555;
+}
+
+#mainButton{
+font-size:42px;
+padding:40px 80px;
+margin-top:20px;
+}
+
+#timer{
+font-size:36px;
+font-weight:900;
+margin-bottom:20px;
+letter-spacing:3px;
+}
+
+#messageBox{
+margin-top:30px;
+font-size:22px;
+font-weight:bold;
+min-height:40px;
+color:#d0d0d0;
+}
+
+#countdown{
+font-size:28px;
+font-weight:bold;
+margin-top:10px;
+}
+
+#progressContainer{
+width:100%;
+height:30px;
+background:#333;
+border:2px solid #888;
+margin-top:25px;
+}
+
+#progressBar{
+height:100%;
+width:0%;
+background:#bfbfbf;
+}
+
+#progressText{
+font-weight:bold;
+margin-top:10px;
+}
+</style>
+</head>
+
+<body>
+
+<!-- START SCREEN -->
+
+<div id="startScreen" class="screen active">
+<h1>Mike's Button Game</h1><br>
+<p>Surely ANYONE could do this one...</p><br><br>
+
+<p>How many times must the button be clicked?</p>
+
+<input id="clickInput" type="number" min="1" value="10">
+
+<br><br>
+
+<button onclick="startGame()">START</button>
+</div>
+
+
+<!-- GAME SCREEN -->
+
+<div id="gameScreen" class="screen">
+
+<div id="timer">00:00:00</div>
+
+<button id="mainButton" onclick="pressButton()">BUTTON</button>
+
+<div id="messageBox"></div>
+
+<div id="countdown"></div>
+
+<div id="progressContainer">
+<div id="progressBar"></div>
+</div>
+
+<p id="progressText"></p>
+
+</div>
+
+
+<!-- END SCREEN -->
+
+<div id="endScreen" class="screen">
+
+<h1>Game Complete</h1>
+
+<p id="finalClicks"></p>
+<p id="finalTime"></p>
+<p id="gameID"></p>
+
+<button onclick="location.reload()">PLAY AGAIN</button>
+
+</div>
+
+<script>
+
+let requiredClicks = 0
+let clicks = 0
+let startTime
+let timerInterval
+let locked = false
+
+// 50 placeholder messages
+const messages = [
+"Good job! You clicked it!",
+"Well done, keep clicking!",
+"Fantastic work. That was definitely a click.",
+"Impressive dedication to button clicking.",
+"Another historic click! Truly remarkable.",
+"Excellent technique.",
+"Amazing! The button never saw it coming.",
+"Great job! Keep that clicking energy going.",
+"Outstanding. Truly elite button interaction.",
+"Well done. Historians will remember that click.",
+"Another thrilling moment in button history.",
+"Stunning performance. Truly inspirational clicking.",
+"You did it again! Incredible.",
+"Bravo. That button is really feeling it now.",
+"Top-tier clicking skills on display.",
+"Riveting gameplay. Absolutely gripping.",
+"You've mastered the ancient art of clicking.",
+"Another click! The suspense is unbearable.",
+"Keep going! You're really doing it.",
+"Fantastic. Truly groundbreaking button work.",
+"Perfection thinks you're really good at clicking buttons.",
+"This will really impress Perfection.",
+"Perfection is impressed you located the button.",
+"Perfection believes that was a very confident button press.",
+"Perfection is pleased to see the button being used as intended.",
+"Perfection is carefully evaluating your button technique.",
+"Perfection thinks that button press showed real character.",
+"Perfection suspects the button might be getting tired of you.",
+"Perfection appreciates your continued button enthusiasm.",
+"Perfection is fascinated by your dedication to this button.",
+"Perfection confirms that yes, that was indeed another button press.",
+"Perfection hopes you're enjoying this exciting button experience.",
+"Perfection is proud of that extremely professional button click.",
+"Perfection believes that button never stood a chance.",
+"Perfection is documenting each button press for science.",
+"Perfection is mildly amazed by how often you press the button.",
+"Perfection would like you to keep pressing the button.",
+"Perfection thinks your button timing is improving.",
+"Perfection notes that the button has now been pressed again.",
+"Perfection is curious how long you'll keep pressing the button.",
+"Perfection calls that a respectable button press.",
+"Perfection is watching you press the button with great interest.",
+"Perfection believes your relationship with this button is special.",
+"Perfection is confident you can press the button even more.",
+"Perfection suspects the button now recognizes you.",
+"Perfection is evaluating your long-term button commitment.",
+"Perfection applauds your persistence with this button.",
+"Perfection thinks that button press showed real dedication.",
+"Perfection is pleased the button continues to be pressed.",
+"Perfection predicts many more button presses in your future.",
+"Perfection believes this button press was particularly meaningful.",
+"Perfection considers you a promising button presser.",
+"Perfection wonders if pressing this button is the highlight of your day.",
+"Perfection is amazed by how seriously you're taking this button.",
+"Perfection suspects the button might be your greatest achievement today.",
+"Perfection didn't expect you to commit this hard to pressing a button.",
+"Perfection is curious how long you'll keep doing exactly this.",
+"Perfection wonders if the button means more to you than it should.",
+"Perfection is impressed by your ability to keep pressing the same button.",
+"Perfection thinks this button might be winning.",
+"Perfection didn't say you had to enjoy pressing the button.",
+"Perfection hopes this button experience is everything you dreamed of.",
+"Perfection is quietly impressed by your willingness to keep pressing.",
+"Perfection suspects the button is learning your habits.",
+"Perfection wonders if you've considered doing literally anything else.",
+"Perfection believes you and this button have formed a deep connection.",
+"Perfection is surprised you're still pressing the button.",
+"Perfection thinks the button might miss you when this is over.",
+"Perfection suspects this button press will not change your life.",
+"Perfection wonders what the button thinks about all this.",
+"Perfection appreciates your commitment to pointless button pressing.",
+"Perfection is confident the button is very proud of you."
+]
+
+function startGame(){
+
+requiredClicks = parseInt(document.getElementById("clickInput").value)
+
+document.getElementById("startScreen").classList.remove("active")
+document.getElementById("gameScreen").classList.add("active")
+
+startTime = Date.now()
+
+timerInterval = setInterval(updateTimer,1000)
+
+updateProgress()
+
+}
+
+function pressButton(){
+
+if(locked) return
+
+clicks++
+
+updateProgress()
+
+let msg = messages[Math.floor(Math.random()*messages.length)]
+
+document.getElementById("messageBox").innerText = msg
+
+startLock()
+
+if(clicks >= requiredClicks){
+endGame()
+}
+
+}
+
+function startLock(){
+
+locked = true
+let timeLeft = 10
+
+document.getElementById("countdown").innerText = "Wait: "+timeLeft
+
+let countdown = setInterval(()=>{
+
+timeLeft--
+
+document.getElementById("countdown").innerText = "Wait: "+timeLeft
+
+if(timeLeft <= 0){
+
+clearInterval(countdown)
+
+locked = false
+
+document.getElementById("countdown").innerText = ""
+
+}
+
+},1000)
+
+}
+
+function updateProgress(){
+
+let percent = (clicks/requiredClicks)*100
+
+document.getElementById("progressBar").style.width = percent+"%"
+
+document.getElementById("progressText").innerText =
+clicks+" / "+requiredClicks
+
+}
+
+function updateTimer(){
+
+let elapsed = Math.floor((Date.now()-startTime)/1000)
+
+let h = String(Math.floor(elapsed/3600)).padStart(2,"0")
+let m = String(Math.floor((elapsed%3600)/60)).padStart(2,"0")
+let s = String(elapsed%60).padStart(2,"0")
+
+document.getElementById("timer").innerText =
+h+":"+m+":"+s
+
+}
+
+function endGame(){
+
+clearInterval(timerInterval)
+
+document.getElementById("gameScreen").classList.remove("active")
+document.getElementById("endScreen").classList.add("active")
+
+let totalTime = document.getElementById("timer").innerText
+
+document.getElementById("finalClicks").innerText =
+"Button clicks: "+clicks
+
+document.getElementById("finalTime").innerText =
+"Total time: "+totalTime
+
+let id = Math.floor(100000000 + Math.random()*900000000)
+
+document.getElementById("gameID").innerText =
+"Game ID: "+id
+
+}
+
+</script>
+
+</body>
+</html>
