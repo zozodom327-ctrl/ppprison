@@ -239,7 +239,30 @@ winText:"YOU WON {v} MINUTES OF TIMEOUT, NICE!"},
 {name:"Guess The Number",
 url:"https://zozodom327-ctrl.github.io/ppprison/GuessTheNumber.html",
 values:[20,100,300],
-winText:"YOU GET TO GUESS {v} NUMBERS, AMAZING!"}
+winText:"YOU GET TO GUESS {v} NUMBERS, AMAZING!"},
+
+/* --- NEW GAMES --- */
+
+{
+name:"Meditation",
+url:"https://zozodom327-ctrl.github.io/ppprison/flowers.html",
+values:[10,30,50],
+winText:"YOU WON {v} MINUTES OF CALM."
+},
+
+{
+name:"Maze",
+url:"https://zozodom327-ctrl.github.io/ppprison/Maze.html",
+values:["SMALL","MEDIUM"],
+winText:"YOU GET TO DO A {v} MAZE! NICE!"
+},
+
+{
+name:"Grid",
+url:"https://zozodom327-ctrl.github.io/ppprison/grid.html",
+values:[1],
+winText:"THE LUCKY GRID! LUCKY YOU!"
+}
 
 ]
 
@@ -263,7 +286,7 @@ bonuses.forEach(b=>{
 wheelOptions.push({type:"bonus",bonus:b})
 })
 
-wheelOptions = wheelOptions.slice(0,20)
+// wheelOptions = wheelOptions.slice(0,20)
 
 /* ---------- SEEDED RNG ---------- */
 
@@ -388,6 +411,9 @@ if(name=="Colour Assignment") name="COLOR"
 if(name=="Prison Timeout") name="PRISON"
 if(name=="Guess The Number") name="NUMBER"
 if(name=="Mindbreaker") name="MINDBREAKER"
+if(name=="Meditation") name="MEDITATE"
+if(name=="Maze") name="MAZE"
+if(name=="Grid") name="GRID"
 
 text = name + " ("+wheelOptions[i].value+")"
 
