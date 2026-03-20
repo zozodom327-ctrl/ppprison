@@ -1,0 +1,776 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Perfection's Educational Typing</title>
+
+<style>
+body{
+font-family:Arial, sans-serif;
+background:#000;
+color:#fff;
+text-align:center;
+margin:0;
+}
+
+.screen{display:none; padding:20px;}
+.active{display:block;}
+
+input, textarea{
+width:80%;
+padding:10px;
+font-size:18px;
+margin-top:15px;
+background:#111;
+color:#fff;
+border:2px solid #ff4da6;
+border-radius:10px;
+}
+
+button{
+padding:10px 20px;
+font-size:18px;
+margin-top:20px;
+cursor:pointer;
+background:#ff4da6;
+color:#000;
+border:none;
+border-radius:8px;
+box-shadow:0 0 10px #ff4da6;
+}
+
+#textDisplay{
+width:80%;
+margin:20px auto;
+padding:20px;
+background:#111;
+border:2px solid #222;
+text-align:left;
+line-height:1.6;
+border-radius:10px;
+}
+
+.word.correct{
+color:#ff4da6;
+text-shadow:0 0 5px #ff4da6;
+}
+
+.word.incorrect{
+color:#ff3333;
+}
+
+#progressBar{
+width:80%;
+height:20px;
+background:#222;
+margin:20px auto;
+border-radius:10px;
+overflow:hidden;
+}
+
+#progressFill{
+height:100%;
+width:0%;
+background:#ff4da6;
+box-shadow:0 0 10px #ff4da6, 0 0 20px #ff1a8c;
+}
+
+#textLabel{
+font-size:20px;
+margin-top:10px;
+color:#ff4da6;
+font-weight:bold;
+text-shadow:0 0 8px #ff4da6;
+}
+
+.small{
+font-size:12px;
+color:#aaa;
+}
+
+</style>
+</head>
+
+<body oncontextmenu="return false">
+
+<h1 style="
+font-size:56px;
+color:#ff4da6;
+text-shadow:0 0 10px #ff4da6, 0 0 20px #ff1a8c;
+margin-top:20px;
+font-weight:bold;
+">
+WriteForPerfection
+</h1>
+
+<div id="start" class="screen active">
+<h1>Looks like someone needs to do a little study!</h1>
+<p>How many texts has Perfection assigned you?</p>
+<input type="number" id="taskCount" min="1" max="100" value="5">
+<br>
+<button onclick="startGame()">Begin</button>
+</div>
+
+<div id="play" class="screen">
+<h2 id="timer">00:00:00</h2>
+<div id="progressBar"><div id="progressFill"></div></div>
+<div id="textLabel"></div>
+<div id="textDisplay"></div>
+<textarea id="inputBox" rows="6" oninput="checkTyping()"></textarea>
+<br>
+<button id="nextBtn" onclick="nextText()" style="display:none">Next</button>
+</div>
+
+<div id="end" class="screen">
+<h1>Complete.</h1>
+<div id="results"></div>
+</div>
+
+<script>
+
+// PREVENT PASTE
+window.addEventListener('paste', e=>e.preventDefault());
+window.addEventListener('copy', e=>e.preventDefault());
+window.addEventListener('cut', e=>e.preventDefault());
+
+let texts = [
+
+{
+label:"Wollstonecraft",
+content:`I do not wish women to have power over men, but over themselves. The mind has no gender, and the improvement of reason is the true foundation of virtue. When women are educated only to please others, their abilities are limited and their independence weakened. A society that values reason must also value the intellectual development of all its members. To deny women education is to deny them the tools needed for moral and personal growth. True equality cannot exist where one group is deliberately kept ignorant. The cultivation of the mind should be the goal of every individual, regardless of gender, and only through this can genuine virtue and independence be achieved.`
+},
+
+{
+label:"Sojourner Truth",
+content:`That man over there says that women need to be helped into carriages and lifted over ditches, and to have the best place everywhere. Nobody ever helps me into carriages or over mud puddles, or gives me any best place. And ain't I a woman. Look at me. Look at my arm. I have ploughed and planted and gathered into barns, and no man could head me. And ain't I a woman. I could work as much and eat as much as a man when I could get it, and bear the lash as well. And ain't I a woman. I have borne children and seen most of them sold off to slavery, and when I cried out with a mother's grief, none but Jesus heard me. And ain't I a woman.`
+},
+
+{
+label:"Mill",
+content:`The principle which regulates the existing social relations between the two sexes is wrong in itself, and now one of the chief hindrances to human improvement. It ought to be replaced by a principle of perfect equality, admitting no power or privilege on the one side, nor disability on the other. The subordination of women is not the result of natural differences, but of social arrangements that have been accepted without question. If society is to progress, it must allow all individuals the freedom to develop their abilities. Equality is not only a matter of justice, but also of utility, as it allows the talents of all people to contribute to the common good.`
+},
+
+{
+label:"Feminism",
+content:`Feminism is a range of social movements, political movements, and ideologies that aim to define and establish the political, economic, personal, and social equality of the sexes. It incorporates the position that societies prioritize the male point of view, and that women are treated unjustly within those societies. Efforts to change this include fighting against gender stereotypes and establishing educational, professional, and interpersonal opportunities and outcomes for women that are equal to those for men. Feminist movements have campaigned and continue to campaign for women's rights, including the right to vote, to hold public office, to work, to earn fair wages, and to have bodily autonomy.`
+},
+
+{
+label:"De Beauvoir",
+content:`Simone de Beauvoir was a French existentialist philosopher, writer, and social theorist. She is best known for her work examining the treatment of women in society and is often regarded as a foundational figure in modern feminist philosophy. Her writing explores how women have historically been defined in relation to men rather than as independent individuals. She argued that this condition is not an inherent reality, but one shaped by cultural and social forces. By examining these structures, Beauvoir challenged readers to reconsider assumptions about gender and identity. Her work continues to influence debates about equality, freedom, and the construction of social roles.`
+},
+
+{
+label:"Hooks",
+content:`bell hooks was an American author, professor, and social activist whose work examined the intersections of race, capitalism, and gender. She argued that feminism is for everybody and should be accessible rather than exclusive. Her writing emphasizes that systems of oppression are interconnected and must be understood together rather than in isolation. hooks focused on the importance of education as a practice of freedom, encouraging individuals to think critically about the world around them. She also highlighted the role of love, community, and care in creating social change. Her work remains influential in discussions about equality and justice.`
+},
+
+{
+label:"Intersectionality",
+content:`Intersectionality is a framework for understanding how aspects of a person's social and political identities combine to create different modes of discrimination and privilege. These identities can include gender, race, class, sexuality, and others. The concept highlights that experiences of inequality are not the result of a single factor, but the interaction of multiple factors. For example, a woman may face discrimination, but that experience can differ greatly depending on her race or economic status. By examining these overlapping systems, intersectionality provides a more complete understanding of social inequality and helps guide more effective approaches to justice and inclusion.`
+},
+
+{
+label:"Suffrage",
+content:`Women's suffrage is the right of women to vote in elections. The movement for women's suffrage was a significant part of broader struggles for gender equality. Activists organized campaigns, protests, and political efforts to secure voting rights. These efforts often faced strong resistance, including legal barriers and social opposition. Over time, suffrage movements achieved success in many countries, leading to expanded democratic participation. The achievement of voting rights marked an important step toward equality, but it did not end broader struggles for women's rights. Suffrage remains a key example of how collective action can bring about social and political change.`
+},
+
+{
+label:"Patriarchy",
+content:`Patriarchy is a social system in which men hold primary power and dominate roles of political leadership, moral authority, and social privilege. In such systems, women and other marginalized groups often have limited access to power and resources. Feminist theory examines how patriarchal structures are maintained and how they shape everyday life. These structures can be reinforced through cultural norms, laws, and institutions. Challenging patriarchy involves questioning these norms and working toward more equitable systems. Understanding patriarchy is a key step in addressing broader patterns of inequality in society.`
+},
+
+{
+label:"Gender Roles",
+content:`Gender roles are the social and behavioral norms that are considered appropriate for individuals based on their perceived gender. These roles can vary widely across cultures and historical periods, but they often reinforce expectations about how men and women should behave. Feminist scholars argue that many gender roles are socially constructed rather than biologically determined. This means they can be changed or challenged. Limiting individuals to strict roles can restrict personal freedom and opportunity. By questioning traditional expectations, individuals and societies can create more flexible and inclusive understandings of identity.`
+},
+
+{
+label:"Angela Davis",
+content:`Angela Davis is an American political activist, scholar, and author known for her work on issues related to race, gender, and the prison system. She has been a prominent figure in movements for social justice and has written extensively about the connections between different forms of oppression. Davis emphasizes the importance of understanding how systems such as racism, sexism, and economic inequality are interconnected. Her work encourages collective action and critical thinking as tools for social change. Through both her writing and activism, she has contributed significantly to discussions about equality and human rights.`
+},
+
+{
+label:"Education",
+content:`Education has long been a central focus of feminist movements. Access to education is seen as a key factor in achieving equality, as it provides individuals with the knowledge and skills needed to participate fully in society. Historically, women were often denied educational opportunities, limiting their independence and influence. Feminist advocates have worked to expand access and challenge biases within educational systems. This includes addressing disparities in resources, representation, and curriculum. By promoting inclusive education, societies can work toward greater fairness and empowerment for all individuals.`
+},
+
+{
+label:"Workplace Equality",
+content:`Workplace equality refers to the fair treatment of individuals in employment regardless of gender or other characteristics. Feminist movements have highlighted issues such as unequal pay, limited advancement opportunities, and discrimination. Efforts to address these challenges include advocating for equal pay laws, parental leave policies, and inclusive workplace practices. Achieving equality in the workplace benefits not only individuals but also organizations and societies as a whole. It allows for a broader range of talents and perspectives to be recognized and utilized.`
+},
+
+{
+label:"Representation",
+content:`Representation refers to the presence and portrayal of different groups within media, politics, and other areas of public life. Feminist perspectives emphasize the importance of accurate and diverse representation of women and marginalized groups. When representation is limited or stereotypical, it can reinforce harmful assumptions and restrict opportunities. Increasing representation helps to challenge these patterns and provides a wider range of role models and perspectives. This can influence how individuals see themselves and others, contributing to broader social change.`
+},
+
+{
+label:"Autonomy",
+content:`Autonomy is the ability of individuals to make their own choices and govern their own lives. Feminist theory places strong emphasis on autonomy, particularly in relation to bodily rights and personal decision making. Restrictions on autonomy can take many forms, including legal, social, and economic barriers. Expanding autonomy involves removing these barriers and ensuring that individuals have the freedom and resources to make informed choices. This is considered a fundamental aspect of equality and human rights.`
+},
+
+,
+{
+label:"Gender Equality",
+content:`Gender equality is the state in which individuals of all genders have equal rights, responsibilities, and opportunities. It is a central goal of many social movements and international organizations. Achieving gender equality requires addressing historical and structural inequalities that have limited access to education, employment, and political participation for women and other marginalized groups. Efforts include legal reforms, policy changes, and shifts in cultural attitudes. Gender equality is not only a matter of fairness, but also contributes to economic growth, social stability, and improved outcomes for communities as a whole.`
+},
+
+{
+label:"Mary Astell",
+content:`Mary Astell was an English philosopher and writer who advocated for women's education in the late seventeenth and early eighteenth centuries. She argued that women were capable of reason and deserved the same intellectual opportunities as men. Astell criticized the limited roles available to women and proposed the creation of institutions where women could pursue learning. Her work challenged prevailing assumptions about gender and laid important groundwork for later feminist thought. By emphasizing education and rationality, she contributed to early debates about equality and the role of women in society.`
+},
+
+{
+label:"Olympe de Gouges",
+content:`Olympe de Gouges was a French playwright and political activist during the French Revolution. She is best known for writing the Declaration of the Rights of Woman and of the Female Citizen, which argued that women should have the same rights as men. Her work challenged the exclusion of women from political life and called for equality in areas such as education, property rights, and participation in government. De Gouges was executed during the Reign of Terror, but her ideas have had a lasting impact on feminist movements and discussions of human rights.`
+},
+
+{
+label:"Second Wave",
+content:`Second-wave feminism refers to a period of feminist activity that began in the early 1960s and continued into the 1980s. This wave focused on a wide range of issues, including workplace discrimination, reproductive rights, and legal inequalities. Activists worked to challenge traditional gender roles and to expand opportunities for women in education and employment. The movement also raised awareness about issues such as domestic violence and sexual harassment. Second-wave feminism built on earlier efforts while introducing new ideas about identity, culture, and social change.`
+},
+
+{
+label:"Third Wave",
+content:`Third-wave feminism emerged in the 1990s as a response to perceived limitations of earlier feminist movements. It emphasized diversity, individuality, and the importance of understanding different experiences of gender. Third-wave feminists often focused on issues such as identity, representation, and the intersection of gender with race, class, and sexuality. The movement sought to challenge universal definitions of womanhood and to create a more inclusive understanding of feminism. It also made use of media and popular culture as tools for expression and activism.`
+},
+
+{
+label:"Betty Friedan",
+content:`Betty Friedan was an American writer and activist best known for her book The Feminine Mystique. In her work, she explored the dissatisfaction experienced by many women who were confined to domestic roles in the mid twentieth century. Friedan argued that these limitations prevented women from realizing their full potential. She was a co founder of the National Organization for Women and played a key role in advocating for workplace equality and legal rights. Her contributions helped to shape the direction of second wave feminism in the United States.`
+},
+
+{
+label:"Gloria Steinem",
+content:`Gloria Steinem is an American feminist journalist and social political activist who became a leading figure during the second wave of feminism. She co founded Ms magazine, which provided a platform for discussing issues affecting women. Steinem has been involved in campaigns for reproductive rights, equal pay, and political representation. Her work has emphasized the importance of media in shaping public understanding and has encouraged women to participate actively in social and political life. She remains an influential voice in discussions about equality and justice.`
+},
+
+{
+label:"Reproductive Rights",
+content:`Reproductive rights refer to the legal rights and freedoms relating to reproduction and reproductive health. These include access to contraception, safe and legal abortion, and comprehensive health care. Feminist movements have emphasized the importance of reproductive autonomy as a fundamental aspect of equality. Without control over reproductive decisions, individuals may face limitations in education, employment, and personal development. Debates about reproductive rights often involve ethical, legal, and political considerations, and they continue to be a central issue in discussions of gender equality.`
+},
+
+{
+label:"Wage Gap",
+content:`The gender wage gap refers to the average difference in earnings between men and women. It is influenced by a range of factors, including occupational segregation, differences in work experience, and discrimination. Feminist economists study these factors to better understand how inequality is produced and maintained. Efforts to address the wage gap include legislation promoting equal pay, workplace transparency, and policies supporting work life balance. Reducing the wage gap is seen as an important step toward achieving economic equality.`
+},
+
+{
+label:"Domestic Labor",
+content:`Domestic labor includes tasks such as cooking, cleaning, and caregiving that are often performed within the home. Historically, this work has been undervalued and disproportionately carried out by women. Feminist scholars have highlighted the importance of recognizing domestic labor as a form of work that contributes to the functioning of society. Discussions about domestic labor also involve questions of fairness, division of responsibilities, and economic recognition. Addressing inequalities in domestic labor is an important part of broader efforts toward gender equality.`
+},
+
+{
+label:"Political Representation",
+content:`Political representation refers to the participation of individuals in political decision making processes. Feminist movements have advocated for increased representation of women in government and leadership roles. Greater representation is seen as important for ensuring that diverse perspectives are included in policy decisions. Efforts to improve representation include electoral reforms, quotas, and initiatives to support women candidates. Increasing participation in political life is considered a key aspect of democratic equality.`
+},
+
+{
+label:"Media Representation",
+content:`Media representation involves how different groups are portrayed in television, film, news, and other forms of media. Feminist analysis examines how women are often depicted in limited or stereotypical ways. These portrayals can influence public attitudes and reinforce social norms. Expanding representation to include a wider range of experiences and identities can help challenge stereotypes and promote understanding. Media plays a significant role in shaping perceptions, making it an important area for advocacy and change.`
+},
+
+{
+label:"Legal Rights",
+content:`Legal rights for women have expanded significantly over time, but disparities still exist in many parts of the world. Feminist movements have worked to secure rights related to voting, property ownership, employment, and personal autonomy. Legal reforms are often the result of sustained activism and advocacy. While laws can provide important protections, their effectiveness depends on implementation and enforcement. Continued efforts are needed to ensure that legal rights translate into real equality in everyday life.`
+},
+
+{
+label:"Education Access",
+content:`Access to education is a key factor in promoting equality and social mobility. Historically, girls and women have faced barriers to education in many societies. Feminist advocacy has focused on removing these barriers and ensuring equal opportunities for learning. Education can empower individuals, improve economic outcomes, and contribute to broader social development. Efforts to expand access include policy changes, investment in schools, and initiatives to address cultural and economic obstacles.`
+},
+
+{
+label:"Social Norms",
+content:`Social norms are the shared expectations and rules that guide behavior within a society. These norms often influence perceptions of gender and appropriate roles for individuals. Feminist theory examines how social norms can reinforce inequality and limit opportunities. Changing these norms requires both individual and collective action, including education, advocacy, and representation. By challenging restrictive expectations, societies can move toward more inclusive and equitable systems.`
+},
+
+,
+{
+label:"Judith Butler",
+content:`Judith Butler is an American philosopher and gender theorist known for their work on gender identity and performativity. Butler argues that gender is not something one is, but something one does through repeated actions and behaviors shaped by social expectations. This idea challenges the assumption that gender is fixed or purely biological. By examining how norms are created and reinforced, Butler's work encourages critical thinking about identity and power. Their theories have influenced feminist thought, queer theory, and discussions about how language and culture shape human experience.`
+},
+
+{
+label:"Audre Lorde",
+content:`Audre Lorde was an American writer, poet, and activist whose work addressed issues of race, gender, sexuality, and identity. She emphasized that the experiences of women are not all the same and that differences should be recognized rather than ignored. Lorde argued that silence about injustice allows inequality to continue, and she encouraged people to speak openly about their experiences. Her writing highlights the importance of self expression, community, and resistance. Lorde's work remains influential in discussions about intersectionality and social justice.`
+},
+
+{
+label:"Queer Theory",
+content:`Queer theory is an academic field that examines and challenges traditional ideas about gender and sexuality. It questions fixed categories and explores how identities are shaped by culture, language, and power structures. Queer theory often focuses on how norms are created and maintained, and how they can be disrupted. By analyzing these systems, it seeks to create more inclusive ways of understanding identity. The field draws on ideas from feminism, philosophy, and cultural studies, and has contributed to broader discussions about diversity and equality.`
+},
+
+{
+label:"Liberal Feminism",
+content:`Liberal feminism is a branch of feminist thought that focuses on achieving equality through legal and political reform. It emphasizes individual rights, equal opportunities, and access to education and employment. Liberal feminists work within existing systems to promote change, advocating for laws and policies that support equality. This approach has been influential in campaigns for voting rights, workplace equality, and anti discrimination legislation. While it has achieved significant progress, critics argue that it may not fully address deeper structural inequalities.`
+},
+
+{
+label:"Radical Feminism",
+content:`Radical feminism is a perspective that examines the root causes of gender inequality and seeks to transform the structures that maintain it. Radical feminists argue that patriarchy is deeply embedded in social, political, and economic systems. They focus on issues such as power, control, and the ways in which inequality is reproduced. This approach often calls for fundamental changes to society rather than gradual reform. Radical feminism has contributed to important discussions about violence, representation, and the nature of social institutions.`
+},
+
+{
+label:"Cultural Feminism",
+content:`Cultural feminism emphasizes the value of traits and perspectives traditionally associated with women. It seeks to highlight the importance of care, cooperation, and community, and to challenge the idea that these qualities are less valuable than those associated with men. Cultural feminists often focus on creating spaces that support women's experiences and perspectives. While this approach has been influential in promoting alternative values, it has also been debated for potentially reinforcing certain stereotypes.`
+},
+
+{
+label:"Ecofeminism",
+content:`Ecofeminism is a movement and theoretical perspective that connects environmental issues with feminist concerns. It argues that the exploitation of the environment and the oppression of women are linked through similar systems of domination. Ecofeminists examine how social structures contribute to both environmental degradation and inequality. They advocate for approaches that emphasize sustainability, care, and respect for all forms of life. This perspective brings together ideas from environmentalism, feminism, and social justice.`
+},
+
+{
+label:"Body Autonomy",
+content:`Body autonomy refers to the right of individuals to make decisions about their own bodies without external control or coercion. This concept is central to many feminist discussions, particularly in relation to health care, reproduction, and personal identity. Restrictions on body autonomy can limit individuals' ability to make choices about their lives. Feminist advocacy emphasizes the importance of informed consent, access to resources, and the removal of barriers that prevent individuals from exercising control over their bodies.`
+},
+
+{
+label:"Sexual Harassment",
+content:`Sexual harassment is a form of discrimination that involves unwanted behavior of a sexual nature. It can occur in workplaces, educational settings, and public spaces. Feminist movements have played a key role in raising awareness about sexual harassment and advocating for policies to prevent it. Addressing harassment involves creating safe environments, establishing clear guidelines, and supporting those who experience it. Efforts to combat harassment are part of broader attempts to promote respect and equality.`
+},
+
+{
+label:"Violence Against Women",
+content:`Violence against women includes physical, emotional, and psychological harm directed at women because of their gender. This issue exists in many forms, including domestic violence, harassment, and exploitation. Feminist organizations work to raise awareness, support survivors, and promote legal and social changes to prevent violence. Addressing this issue requires cooperation across communities, institutions, and governments. It is widely recognized as a significant barrier to achieving equality and human rights.`
+},
+
+{
+label:"Women in STEM",
+content:`Women in science, technology, engineering, and mathematics have historically been underrepresented. Efforts to increase participation focus on addressing barriers such as stereotypes, lack of role models, and unequal opportunities. Encouraging diversity in these fields can lead to more innovation and better problem solving. Initiatives include educational programs, mentorship, and policy changes aimed at creating inclusive environments. Increasing representation in STEM is seen as an important step toward broader gender equality.`
+},
+
+{
+label:"Global Feminism",
+content:`Global feminism examines feminist issues from an international perspective, recognizing that experiences of inequality vary across cultures and regions. It emphasizes the importance of understanding local contexts while also addressing global patterns of inequality. Global feminist approaches often involve collaboration across borders and highlight issues such as economic inequality, access to education, and human rights. By considering diverse perspectives, this approach seeks to create more inclusive and effective strategies for change.`
+},
+
+{
+label:"Social Justice",
+content:`Social justice refers to the fair distribution of resources, opportunities, and privileges within a society. Feminist movements are closely connected to broader social justice efforts, as they address inequalities related to gender and other factors. Achieving social justice involves challenging systems that create disadvantage and working toward more equitable outcomes. This can include legal reform, education, and community action. Feminist perspectives contribute to these efforts by highlighting the importance of inclusion and equality.`
+},
+
+{
+label:"Activism",
+content:`Activism involves taking action to bring about social or political change. Feminist activism has taken many forms, including protests, writing, education, and community organizing. Activists work to raise awareness, influence policy, and challenge inequality. Throughout history, feminist activism has led to significant achievements, such as expanded rights and increased representation. It continues to play a vital role in addressing ongoing challenges and promoting equality.`
+},
+
+{
+label:"Equality vs Equity",
+content:`Equality and equity are related but distinct concepts. Equality refers to treating everyone the same, while equity involves recognizing differences and providing resources based on individual needs. Feminist discussions often emphasize equity as a way to address existing inequalities. By considering the specific challenges faced by different groups, equity aims to create fairer outcomes. Understanding this distinction helps inform policies and practices that promote inclusion and justice.`
+},
+
+,
+{
+label:"Simone Weil",
+content:`Simone Weil was a French philosopher, political activist, and writer whose work addressed issues of justice, labor, and human suffering. She believed that attention to others was a fundamental moral responsibility and emphasized the importance of compassion and understanding. Weil's writing explored the conditions of workers and the effects of oppression, arguing that social systems often fail to recognize human dignity. Her ideas have influenced discussions about ethics, equality, and the responsibilities individuals have toward one another in society.`
+},
+
+{
+label:"Malala Yousafzai",
+content:`Malala Yousafzai is a Pakistani education activist known for her advocacy of girls' education. She gained international attention after speaking out against restrictions on education in her region. Malala has emphasized that access to education is a fundamental right and a powerful tool for change. Through her activism, she has worked to promote educational opportunities for girls around the world. Her efforts highlight the importance of education in achieving equality and empowering individuals to shape their own futures.`
+},
+
+{
+label:"UN Women",
+content:`UN Women is an organization dedicated to gender equality and the empowerment of women. It works globally to support policies, programs, and standards that promote equal rights and opportunities. The organization focuses on areas such as economic empowerment, leadership, and the elimination of violence against women. By collaborating with governments and communities, UN Women aims to create lasting change. Its work reflects the growing recognition of gender equality as a key factor in sustainable development.`
+},
+
+{
+label:"CEDAW",
+content:`The Convention on the Elimination of All Forms of Discrimination Against Women is an international treaty adopted by the United Nations. It sets out a framework for eliminating discrimination and promoting equality in areas such as education, employment, and health. Countries that adopt the convention commit to taking steps to ensure equal rights for women. CEDAW is often described as an international bill of rights for women and has played an important role in shaping policies and laws worldwide.`
+},
+
+{
+label:"Gender Pay Equity",
+content:`Gender pay equity refers to the principle that individuals should receive equal pay for work of equal value, regardless of gender. While progress has been made, disparities in earnings persist in many parts of the world. These differences can result from a combination of factors, including discrimination and structural inequalities. Efforts to promote pay equity include legislation, transparency initiatives, and organizational policies. Addressing pay disparities is seen as an important step toward economic fairness.`
+},
+
+{
+label:"Care Work",
+content:`Care work includes activities that involve caring for others, such as raising children, supporting family members, and providing health assistance. Much of this work is unpaid and often performed by women. Feminist scholars have highlighted the importance of recognizing care work as essential to the functioning of society. Discussions about care work also address the need for support systems, fair compensation, and shared responsibility. Valuing care work is an important part of promoting equality.`
+},
+
+{
+label:"Glass Ceiling",
+content:`The glass ceiling is a metaphor used to describe invisible barriers that prevent individuals, particularly women, from advancing to higher positions in organizations. These barriers are not always explicit but can result from biases, limited opportunities, and structural inequalities. The concept highlights the challenges faced by individuals seeking leadership roles. Efforts to break the glass ceiling include mentorship, policy changes, and increased awareness of bias. Addressing these barriers is essential for creating more inclusive workplaces.`
+},
+
+{
+label:"Gender Stereotypes",
+content:`Gender stereotypes are widely held beliefs about the characteristics and roles of individuals based on their gender. These stereotypes can influence behavior, expectations, and opportunities. Feminist perspectives emphasize that many stereotypes are socially constructed and can limit individual potential. Challenging stereotypes involves questioning assumptions and promoting more flexible understandings of identity. Reducing reliance on stereotypes can help create environments where individuals are free to pursue their interests and abilities.`
+},
+
+{
+label:"Women's Health",
+content:`Women's health refers to the physical and mental well being of women across different stages of life. Feminist advocacy has highlighted the importance of addressing disparities in health care access, research, and treatment. Historically, women's health issues have sometimes been underrepresented in medical research. Efforts to improve women's health include expanding access to services, increasing awareness, and promoting inclusive research practices. Addressing health inequalities is an important part of achieving broader social equality.`
+},
+
+{
+label:"Human Rights",
+content:`Human rights are the basic rights and freedoms to which all individuals are entitled. Feminist movements have emphasized that women's rights are an essential part of human rights. This includes the right to safety, education, health care, and participation in public life. Efforts to promote human rights often involve legal frameworks, advocacy, and international cooperation. Recognizing the universality of human rights helps support efforts toward equality and justice.`
+},
+
+{
+label:"Empowerment",
+content:`Empowerment refers to the process of gaining the ability and confidence to make decisions and take control of one's life. Feminist approaches to empowerment focus on removing barriers that limit opportunities and supporting individuals in developing their skills and voices. This can include access to education, economic resources, and social support. Empowerment is seen as both an individual and collective process, contributing to broader social change.`
+},
+
+{
+label:"Leadership",
+content:`Leadership involves guiding and influencing others toward shared goals. Increasing the representation of women in leadership positions has been a focus of feminist advocacy. Diverse leadership can lead to more inclusive decision making and better outcomes. Efforts to support women leaders include mentorship programs, policy changes, and initiatives to address bias. Expanding leadership opportunities is an important aspect of achieving equality.`
+},
+
+{
+label:"Community",
+content:`Community plays a significant role in feminist movements, providing support, shared knowledge, and collective action. Building strong communities allows individuals to connect, organize, and advocate for change. Feminist communities often emphasize inclusivity, collaboration, and mutual support. These networks can help individuals navigate challenges and work together toward common goals. Community based approaches are essential for sustaining social movements and creating lasting impact.`
+},
+
+{
+label:"Resistance",
+content:`Resistance refers to actions taken to challenge and oppose systems of inequality and injustice. Feminist resistance has taken many forms, including protests, writing, and advocacy. These efforts aim to raise awareness and promote change by questioning existing power structures. Resistance is often a collective effort, bringing together individuals and groups to work toward shared goals. It plays a key role in advancing social progress and challenging discrimination.`
+},
+
+{
+label:"Policy Change",
+content:`Policy change involves modifying laws, regulations, or institutional practices to address social issues. Feminist advocacy often focuses on influencing policy to promote equality and protect rights. This can include efforts to pass new legislation, reform existing systems, and ensure effective implementation. Policy change is an important tool for achieving long term improvements in areas such as education, health care, and employment. By shaping policies, societies can work toward more equitable outcomes.`
+},
+
+,
+{
+label:"Malala Fund",
+content:`The Malala Fund is an organization focused on advocating for girls' education around the world. It works to ensure that girls have access to free, safe, and quality education. The organization supports local activists and invests in programs that remove barriers to schooling. These barriers can include poverty, conflict, and cultural restrictions. By promoting education, the Malala Fund aims to empower girls to make decisions about their own lives and contribute to their communities. Education is seen as a key factor in achieving equality and long term social progress.`
+},
+
+{
+label:"Rosa Luxemburg",
+content:`Rosa Luxemburg was a political theorist, economist, and revolutionary socialist who wrote extensively about social justice and equality. She argued that economic systems play a major role in shaping inequality and that meaningful change requires collective action. Luxemburg emphasized the importance of democracy, participation, and critical thought. Her work has influenced discussions about labor, power, and social organization. Although she is often associated with political movements, her ideas continue to be studied in broader discussions of equality and justice.`
+},
+
+{
+label:"Harriet Tubman",
+content:`Harriet Tubman was an American abolitionist and activist who escaped slavery and later helped others gain freedom through the Underground Railroad. She is remembered for her courage, leadership, and commitment to justice. Tubman also supported women's suffrage and worked as a nurse and spy during the American Civil War. Her life demonstrates the importance of resistance and collective action in challenging systems of oppression. Tubman's legacy continues to inspire movements for freedom and equality.`
+},
+
+{
+label:"Women in Politics",
+content:`Women in politics refers to the participation of women in political institutions and decision making processes. Increasing representation has been a key goal of feminist movements, as it helps ensure that diverse perspectives are included in governance. While progress has been made, women are still underrepresented in many political systems. Efforts to address this include policy reforms, support for candidates, and initiatives to reduce barriers. Greater participation is seen as essential for achieving more inclusive and representative democracies.`
+},
+
+{
+label:"Economic Equality",
+content:`Economic equality involves fair access to financial resources, opportunities, and outcomes. Feminist perspectives highlight how gender inequality can affect income, employment, and access to resources. Addressing economic inequality requires examining both structural factors and individual experiences. Efforts include promoting equal pay, supporting access to education, and creating policies that address disparities. Economic equality is closely linked to overall well being and the ability of individuals to participate fully in society.`
+},
+
+{
+label:"Gender Identity",
+content:`Gender identity refers to an individual's personal sense of their own gender. It may or may not correspond with the sex assigned at birth. Understanding gender identity is an important part of discussions about equality and inclusion. Feminist and related theories emphasize the importance of respecting diverse identities and experiences. Recognizing gender identity helps create environments where individuals can express themselves freely and participate fully in society.`
+},
+
+{
+label:"Sex and Gender",
+content:`Sex and gender are related but distinct concepts. Sex typically refers to biological characteristics, while gender involves social and cultural roles, behaviors, and identities. Feminist scholarship has emphasized the importance of understanding this distinction in order to challenge assumptions about what is considered natural or fixed. By examining how gender is constructed, it becomes possible to question and change limiting expectations. This distinction is central to many discussions about identity and equality.`
+},
+
+{
+label:"Power Structures",
+content:`Power structures refer to the ways in which power is distributed and exercised within a society. Feminist theory examines how these structures can create and maintain inequality. This includes analyzing institutions, cultural norms, and social practices. Understanding power structures helps identify the mechanisms that shape opportunities and outcomes. Challenging unequal power structures is an important step toward achieving fairness and inclusion.`
+},
+
+{
+label:"Marginalization",
+content:`Marginalization occurs when individuals or groups are pushed to the edges of society and denied full participation. This can happen due to factors such as gender, race, class, or other characteristics. Feminist perspectives highlight how marginalization affects access to resources, representation, and opportunities. Addressing marginalization involves recognizing these barriers and working to remove them. Creating inclusive systems requires attention to the experiences of those who have been historically excluded.`
+},
+
+{
+label:"Inclusion",
+content:`Inclusion involves creating environments where all individuals feel valued and able to participate fully. Feminist approaches to inclusion emphasize the importance of recognizing diversity and addressing barriers that limit participation. This can involve changes in policies, practices, and cultural attitudes. Inclusive environments benefit not only individuals but also communities by encouraging a wider range of perspectives and ideas. Inclusion is a key component of equality and social progress.`
+},
+
+{
+label:"Allyship",
+content:`Allyship refers to the practice of supporting and advocating for groups that one does not belong to. In feminist contexts, allyship involves listening, learning, and taking action to challenge inequality. Effective allyship requires ongoing effort and a willingness to reflect on one's own position and privilege. By working together, individuals and groups can contribute to broader movements for equality and justice.`
+},
+
+{
+label:"Advocacy",
+content:`Advocacy involves actively supporting a cause or policy. Feminist advocacy can take many forms, including raising awareness, influencing policy, and providing support to affected communities. Advocacy efforts aim to create change by addressing inequalities and promoting fairness. This work often involves collaboration between individuals, organizations, and institutions. Through sustained advocacy, significant progress can be made toward achieving equality.`
+},
+
+{
+label:"Equality Law",
+content:`Equality law refers to legislation designed to prevent discrimination and promote fairness. These laws often address issues such as employment, education, and access to services. Feminist movements have played a significant role in advocating for such legislation. While laws can establish important protections, their effectiveness depends on enforcement and public awareness. Continued efforts are needed to ensure that legal frameworks support real equality.`
+},
+
+{
+label:"Civic Participation",
+content:`Civic participation involves engaging in activities that influence public life and decision making. This can include voting, community organizing, and public discussion. Feminist perspectives emphasize the importance of ensuring that all individuals have the opportunity to participate. Barriers to participation can limit representation and affect outcomes. Encouraging civic engagement is an important part of strengthening democratic systems and promoting equality.`
+},
+
+{
+label:"Collective Action",
+content:`Collective action occurs when individuals come together to achieve a common goal. Feminist movements have relied on collective action to challenge inequality and advocate for change. This can include protests, campaigns, and community initiatives. Working together allows individuals to amplify their voices and increase their impact. Collective action has been a key factor in many social and political advancements.`
+},
+
+,
+{
+label:"Chimamanda Ngozi Adichie",
+content:`Chimamanda Ngozi Adichie is a Nigerian writer known for her work on identity, culture, and gender. She has spoken widely about feminism and the importance of challenging limiting expectations placed on women. Her work emphasizes that social norms can shape how individuals see themselves and others. By encouraging critical reflection, Adichie highlights the importance of creating more inclusive societies. Her writing and public speaking have contributed to global conversations about equality and representation.`
+},
+
+{
+label:"Mary Wollstonecraft Legacy",
+content:`Mary Wollstonecraft's work has had a lasting influence on discussions of women's rights and education. Her arguments for equality and rational education challenged the assumptions of her time. Later thinkers and activists have drawn on her ideas when advocating for expanded opportunities for women. Wollstonecraft's emphasis on independence and intellectual development continues to resonate in modern debates about equality. Her legacy demonstrates how early ideas can shape long term social change.`
+},
+
+{
+label:"Women's Movements",
+content:`Women's movements refer to organized efforts aimed at achieving greater equality and rights for women. These movements have taken place across different historical periods and cultural contexts. They have addressed issues such as voting rights, education, employment, and legal protections. While strategies and priorities may differ, these movements share a common goal of reducing inequality. Collective action within women's movements has led to significant social and political change over time.`
+},
+
+{
+label:"Cultural Change",
+content:`Cultural change involves shifts in beliefs, values, and practices within a society. Feminist movements often seek cultural change by challenging norms that limit opportunities for individuals. This can include addressing stereotypes, promoting representation, and encouraging new ways of thinking. Cultural change is often gradual and requires sustained effort. By influencing attitudes and behaviors, it can support broader social transformation.`
+},
+
+{
+label:"Barriers to Equality",
+content:`Barriers to equality can take many forms, including legal restrictions, economic challenges, and social attitudes. These barriers can limit access to opportunities and resources. Feminist perspectives focus on identifying and addressing these obstacles. Removing barriers requires coordinated efforts across different areas, including policy, education, and cultural change. Understanding the nature of these barriers is an important step toward achieving fairness.`
+},
+
+{
+label:"Women's Rights History",
+content:`The history of women's rights includes a wide range of movements and achievements aimed at improving equality. From early advocacy for education to campaigns for voting rights, these efforts have shaped modern societies. Progress has often been achieved through collective action and persistence. While many gains have been made, challenges remain. Studying this history helps provide context for current discussions about equality and justice.`
+},
+
+{
+label:"Public Participation",
+content:`Public participation involves individuals taking part in decisions that affect their communities. Feminist approaches emphasize the importance of inclusive participation, ensuring that diverse voices are heard. Barriers to participation can limit representation and influence outcomes. Encouraging broader involvement can strengthen democratic processes and promote fairness. Public participation is a key component of effective governance.`
+},
+
+{
+label:"Equal Opportunity",
+content:`Equal opportunity refers to the idea that individuals should have the same chances to succeed, regardless of their background. Feminist movements have emphasized the importance of removing obstacles that prevent fair access to education, employment, and other areas. Achieving equal opportunity requires addressing both visible and hidden forms of inequality. It is considered a fundamental aspect of a fair society.`
+},
+
+{
+label:"Bias",
+content:`Bias refers to a tendency to favor or disadvantage certain individuals or groups. Bias can be conscious or unconscious and can affect decisions in areas such as hiring, education, and social interactions. Feminist analysis examines how bias contributes to inequality and limits opportunities. Addressing bias involves increasing awareness, promoting fairness, and implementing practices that reduce its impact.`
+},
+
+{
+label:"Institutional Change",
+content:`Institutional change involves altering the structures and practices of organizations to promote fairness and equality. Feminist advocacy often focuses on transforming institutions such as schools, workplaces, and governments. This can include revising policies, improving representation, and addressing systemic barriers. Institutional change is essential for achieving lasting improvements in equality.`
+},
+
+{
+label:"Freedom",
+content:`Freedom is the ability of individuals to make choices and act without undue restriction. Feminist perspectives emphasize that freedom must be available to all individuals, regardless of gender. This includes freedom in personal, social, and economic aspects of life. Ensuring freedom often requires addressing barriers that limit opportunities and access. It is closely connected to broader discussions of human rights and equality.`
+},
+
+{
+label:"Equity in Education",
+content:`Equity in education involves providing resources and support based on individual needs to ensure fair outcomes. Feminist approaches to education emphasize the importance of addressing disparities that affect access and success. This can include targeted programs, inclusive curricula, and supportive environments. Promoting equity helps create opportunities for all students to succeed.`
+},
+
+{
+label:"Intersection of Identities",
+content:`The intersection of identities refers to how different aspects of a person's identity combine to shape their experiences. These aspects can include gender, race, class, and others. Feminist theory emphasizes that understanding these intersections is important for addressing inequality. Different individuals may face unique challenges based on how these identities interact. Recognizing this complexity helps create more effective approaches to inclusion.`
+},
+
+{
+label:"Participation in Work",
+content:`Participation in work refers to involvement in economic activities and employment. Feminist perspectives examine how barriers can limit participation for certain groups. This includes issues such as discrimination, unequal pay, and lack of access to opportunities. Increasing participation requires addressing these challenges and creating inclusive environments. Work is an important part of economic independence and social inclusion.`
+},
+
+{
+label:"Representation in Leadership",
+content:`Representation in leadership involves the presence of diverse individuals in positions of authority. Feminist advocacy has emphasized the importance of increasing representation to ensure that different perspectives are included in decision making. Greater diversity in leadership can lead to more inclusive policies and better outcomes. Efforts to improve representation include mentorship, policy changes, and awareness initiatives.`
+},
+
+{
+label:"Social Change",
+content:`Social change refers to significant shifts in societal structures, behaviors, and attitudes. Feminist movements have been a driving force behind many forms of social change. These efforts aim to address inequality and promote fairness. Social change often requires collaboration, persistence, and adaptation. By working toward shared goals, individuals and groups can contribute to lasting improvements.`
+},
+
+{
+label:"Advancing Equality",
+content:`Advancing equality involves taking steps to reduce disparities and promote fairness across different areas of life. Feminist approaches emphasize the importance of both individual and collective action. This can include education, advocacy, and policy reform. Progress toward equality often requires sustained effort and commitment. By addressing both immediate and long term challenges, societies can move closer to achieving fairness.`
+},
+
+{
+label:"Voice and Agency",
+content:`Voice and agency refer to the ability of individuals to express themselves and make decisions about their lives. Feminist perspectives emphasize the importance of ensuring that all individuals have opportunities to participate and be heard. Barriers to voice and agency can limit personal and social development. Supporting these capacities is an important part of promoting equality and empowerment.`
+},
+
+{
+label:"Access to Resources",
+content:`Access to resources includes the availability of education, health care, financial support, and other essential services. Feminist analysis examines how unequal access can contribute to disparities. Addressing these inequalities involves creating systems that provide fair distribution of resources. Ensuring access is a key step toward improving quality of life and promoting equality.`
+},
+
+{
+label:"Sustainable Equality",
+content:`Sustainable equality refers to long term approaches to achieving fairness that can be maintained over time. This involves addressing underlying causes of inequality and creating systems that support inclusion. Feminist perspectives emphasize the importance of combining policy, education, and cultural change. Sustainable approaches aim to ensure that progress is not temporary but continues across generations.`
+},
+
+{
+label:"Future Perspectives",
+content:`Future perspectives on equality involve considering how current actions will shape the experiences of future generations. Feminist thought encourages ongoing reflection and adaptation to address emerging challenges. By learning from past efforts and continuing to promote inclusion, societies can work toward more equitable outcomes. Future perspectives highlight the importance of long term thinking and collaboration.`
+},
+
+{
+label:"Shared Responsibility",
+content:`Shared responsibility refers to the idea that achieving equality requires the involvement of individuals, communities, and institutions. Feminist approaches emphasize collaboration and collective effort. Addressing inequality is not the task of one group alone, but a shared goal. By working together, societies can create more inclusive and supportive environments.`
+},
+
+{
+label:"Ethical Responsibility",
+content:`Ethical responsibility involves considering the impact of actions on others and striving to promote fairness and justice. Feminist perspectives often emphasize the importance of care, empathy, and accountability. Ethical responsibility extends beyond individual behavior to include institutions and systems. By prioritizing fairness, individuals and societies can contribute to positive change.`
+},
+
+{
+label:"Global Cooperation",
+content:`Global cooperation involves working across countries and cultures to address shared challenges. Feminist movements often emphasize the importance of international collaboration in promoting equality. Issues such as education, health care, and human rights require coordinated efforts. By sharing knowledge and resources, global cooperation can support progress toward common goals.`
+}
+
+];
+
+let selected=[];
+let current=0;
+let total=1;
+let startTime;
+let timerInterval;
+
+function startGame(){
+
+total = parseInt(document.getElementById("taskCount").value);
+
+selected = [];
+
+// keep adding shuffled batches until we reach total
+while(selected.length < total){
+
+// fresh copy of texts
+let pool = [...texts];
+
+// shuffle (Fisher-Yates)
+for(let i = pool.length - 1; i > 0; i--){
+let j = Math.floor(Math.random() * (i + 1));
+[pool[i], pool[j]] = [pool[j], pool[i]];
+}
+
+// add only what we still need
+let remaining = total - selected.length;
+selected = selected.concat(pool.slice(0, remaining));
+
+}
+
+// start game
+startTime = Date.now();
+startTimer();
+
+switchScreen("play");
+loadText();
+
+}
+
+function switchScreen(id){
+document.querySelectorAll(".screen").forEach(s=>s.classList.remove("active"));
+document.getElementById(id).classList.add("active");
+}
+
+function loadText(){
+let text=selected[current].content;
+document.getElementById("textLabel").innerText = "TEXT: " + selected[current].label;
+let words=text.split(" ");
+
+let html=words.map(w=>`<span class='word'>${w}</span>`).join(" ");
+
+document.getElementById("textDisplay").innerHTML=html;
+document.getElementById("inputBox").value="";
+document.getElementById("nextBtn").style.display="none";
+}
+
+function checkTyping(){
+let input=document.getElementById("inputBox").value.trim();
+let words=input.split(" ");
+
+let spans=document.querySelectorAll(".word");
+let correct=true;
+
+spans.forEach((span,i)=>{
+span.classList.remove("correct","incorrect");
+
+if(words[i]==null){correct=false; return}
+
+if(words[i]===span.innerText){
+span.classList.add("correct");
+}else{
+span.classList.add("incorrect");
+correct=false;
+}
+});
+
+if(words.length!==spans.length) correct=false;
+
+if(correct){
+document.getElementById("nextBtn").style.display="inline-block";
+}
+}
+
+function nextText(){
+current++;
+updateProgress();
+
+if(current>=total){
+endGame();
+}else{
+loadText();
+}
+}
+
+function updateProgress(){
+let percent=(current/total)*100;
+document.getElementById("progressFill").style.width=percent+"%";
+}
+
+function startTimer(){
+
+timerInterval=setInterval(()=>{
+let elapsed=Math.floor((Date.now()-startTime)/1000);
+
+let h=String(Math.floor(elapsed/3600)).padStart(2,'0');
+let m=String(Math.floor((elapsed%3600)/60)).padStart(2,'0');
+let s=String(elapsed%60).padStart(2,'0');
+
+document.getElementById("timer").innerText=`${h}:${m}:${s}`;
+
+},1000);
+}
+
+function endGame(){
+clearInterval(timerInterval);
+
+let elapsed=document.getElementById("timer").innerText;
+let id=Math.floor(100000000+Math.random()*900000000);
+
+let list=selected.map(t=>t.label).join(", ");
+
+let html=`
+Total Time Spent: ${elapsed}<br>
+Tasks Typed: ${total}<br>
+Game ID: ${id}<br><br>
+<div class='small'>${list}</div>
+`;
+
+document.getElementById("results").innerHTML=html;
+
+switchScreen("end");
+}
+
+</script>
+
+</body>
+</html>
