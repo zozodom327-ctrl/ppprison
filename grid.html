@@ -1,0 +1,533 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Perfection’s Lucky Grid</title>
+
+<style>
+body{
+    margin:0;
+    font-family:Arial, sans-serif;
+    color:#fff;
+    text-align:center;
+
+    background: linear-gradient(270deg, #ff00cc, #3333ff, #00ffcc, #ffcc00);
+    background-size: 800% 800%;
+    animation: neonBG 12s ease infinite;
+}
+
+@keyframes neonBG{
+    0%{background-position:0% 50%;}
+    50%{background-position:100% 50%;}
+    100%{background-position:0% 50%;}
+}
+
+#confetti{
+    position:fixed;
+    top:0;
+    left:0;
+    width:100%;
+    height:100%;
+    pointer-events:none;
+    z-index:998;
+}
+
+/* 🎪 BIG CARNIVAL TITLE */
+h1{
+    margin:20px;
+    font-size:42px;
+    font-weight:bold;
+    color:#fff;
+    text-shadow:
+        0 0 5px #fff,
+        0 0 10px #ff00ff,
+        0 0 20px #ff00ff,
+        0 0 40px #ff0080,
+        0 0 80px #ff0080;
+    animation: flicker 2s infinite alternate;
+}
+
+@keyframes flicker{
+    from{ opacity:1; }
+    to{ opacity:0.85; }
+}
+
+#game{
+    max-width:700px;
+    margin:auto;
+}
+
+#board{
+    background:#111;
+    padding:15px;
+    border-radius:12px;
+
+    /* neon border */
+    box-shadow:
+        0 0 10px #00ffff,
+        0 0 20px #ff00ff,
+        0 0 40px #ff00ff;
+
+    border:3px solid #fff;
+
+    margin:20px auto;
+}
+
+#grid{
+    display:grid;
+    grid-template-columns:repeat(11,1fr);
+    gap:6px;
+}
+
+.cell{
+    height:50px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-size:10px;
+    font-weight:bold;
+    color:white;
+    border-radius:6px;
+    transition:transform 0.1s;
+}
+
+/* active selector */
+.active{
+    outline:4px solid white;
+    transform:scale(1.1);
+    z-index:2;
+}
+
+/* 🌟 WIN TILE */
+.win{
+    color:black;
+    font-weight:bold;
+    box-shadow:
+        0 0 10px lime,
+        0 0 20px lime,
+        0 0 40px lime,
+        0 0 80px lime;
+    animation: winPulse 1s infinite alternate;
+}
+
+@keyframes winPulse{
+    from{ transform:scale(1); }
+    to{ transform:scale(1.05); }
+}
+
+#stats{
+    font-size:18px;
+}
+
+#message{
+    margin-top:20px;
+    font-size:28px;
+    height:60px;
+    font-weight:bold;
+    text-shadow: 0 0 10px #fff;
+}
+
+#victory{
+    display:none;
+    padding:40px;
+}
+#overlayMessage{
+    position:fixed;
+    top:50%;
+    left:50%;
+    transform:translate(-50%, -155%);
+    
+    font-size:64px;
+    font-weight:bold;
+    color:white;
+    text-align:center;
+
+    pointer-events:none;
+    opacity:0;
+
+    text-shadow:
+        0 0 10px #fff,
+        0 0 20px #ff0000,
+        0 0 40px #ff0000,
+        0 0 80px #ff0000;
+
+    transition:opacity 0.5s ease;
+    z-index:999;
+}
+
+#overlayMessage.show{
+    opacity:1;
+}
+</style>
+</head>
+
+<body>
+
+<div id="game">
+    <h1>Perfection’s Lucky Grid</h1>
+
+    <div id="board">
+    <div id="grid"></div>
+</div>
+
+    <p>(Click anywhere to spin)</p>
+
+    <div id="stats">
+        Time: <span id="time">00:00:00</span><br>
+        Failed Spins: <span id="fails">0</span>
+    </div>
+
+    <div id="message"></div>
+</div>
+
+<div id="victory">
+    <h1>Congratulations!</h1>
+    <p>You actually won. Did you have a good time?</p>
+    <p>Total Time: <span id="finalTime"></span></p>
+    <p>Total Spins: <span id="finalSpins"></span></p>
+    <p>Game ID: <span id="gameId"></span></p>
+</div>
+
+<canvas id="confetti"></canvas>
+
+<script>
+const grid = document.getElementById("grid");
+let cells = [];
+let spinning = false;
+let fails = 0;
+let startTime = Date.now();
+let currentIndex = 0;
+
+const confettiCanvas = document.getElementById("confetti");
+const ctx = confettiCanvas.getContext("2d");
+
+function resizeCanvas(){
+    confettiCanvas.width = window.innerWidth;
+    confettiCanvas.height = window.innerHeight;
+}
+resizeCanvas();
+window.addEventListener("resize", resizeCanvas);
+
+function launchConfetti(){
+    let pieces = [];
+
+    for(let i=0;i<480;i++){
+        pieces.push({
+            x: Math.random() * confettiCanvas.width,
+            y: -20,
+            size: Math.random()*8+4,
+            speed: Math.random()*3+2,
+            angle: Math.random()*Math.PI*2,
+            color: randomNeonColor(),
+            rotation: Math.random()*360
+        });
+    }
+
+    let duration = 2500;
+    let start = Date.now();
+
+    function animate(){
+        let elapsed = Date.now() - start;
+
+        ctx.clearRect(0,0,confettiCanvas.width, confettiCanvas.height);
+
+        pieces.forEach(p=>{
+            p.y += p.speed;
+            p.x += Math.sin(p.angle);
+
+            ctx.save();
+            ctx.translate(p.x, p.y);
+            ctx.rotate(p.rotation);
+            ctx.fillStyle = p.color;
+            ctx.fillRect(-p.size/2, -p.size/2, p.size, p.size);
+            ctx.restore();
+        });
+
+        if(elapsed < duration){
+            requestAnimationFrame(animate);
+        }else{
+            ctx.clearRect(0,0,confettiCanvas.width, confettiCanvas.height);
+        }
+    }
+
+    animate();
+}
+
+function randomNeonColor(){
+    const colors = [
+        "#ff00ff","#00ffff","#ffff00",
+        "#ff3300","#33ff00","#ff0080"
+    ];
+    return colors[Math.floor(Math.random()*colors.length)];
+}
+
+// build grid (1 win tile)
+function randomColor(){
+    const colors = [
+        "#ff4d4d","#ff9933","#ffff33","#66ff66",
+        "#33ccff","#6699ff","#cc66ff","#ff66cc"
+    ];
+    return colors[Math.floor(Math.random()*colors.length)];
+}
+
+function showOverlayMessage(text){
+    const el = document.getElementById("overlayMessage");
+
+    el.innerText = text;
+    el.classList.add("show");
+
+    // stay visible 3 seconds
+    setTimeout(()=>{
+        el.classList.remove("show");
+    }, 3000);
+}
+
+function buildGrid(){
+    grid.innerHTML="";
+    cells=[];
+
+    const size = 11;
+    const total = size * size;
+    const centerIndex = Math.floor(total / 2);
+
+    for(let i=0;i<total;i++){
+        let div = document.createElement("div");
+        div.className="cell";
+
+        div.style.background = randomColor();
+        div.innerText="LOSE";
+
+        if(i === centerIndex){
+            div.classList.add("win");
+            div.style.background = "lime";
+            div.innerText="WIN";
+        }
+
+        grid.appendChild(div);
+        cells.push(div);
+    }
+}
+
+buildGrid();
+
+// time tracker
+setInterval(()=>{
+    let t = Math.floor((Date.now()-startTime)/1000);
+    let h = String(Math.floor(t/3600)).padStart(2,'0');
+    let m = String(Math.floor((t%3600)/60)).padStart(2,'0');
+    let s = String(t%60).padStart(2,'0');
+    document.getElementById("time").innerText=`${h}:${m}:${s}`;
+},1000);
+
+// sounds
+function beep(short=true){
+    let a = new AudioContext();
+    let o = a.createOscillator();
+    o.frequency.value = short ? 800 : 200;
+    o.connect(a.destination);
+    o.start();
+    o.stop(a.currentTime + (short?0.02:0.3));
+}
+
+// messages
+const messages = [
+"HAHA nope!",
+"Not this time, hahaha!",
+"Oooh that looked promising… haha no.",
+"HAHAHA keep trying!",
+"Swing and a miss!",
+"Nice spin! Didn’t help though haha.",
+"Close! (Not even slightly) haha",
+"HAHA you really thought that was it?",
+"Perfection is laughing. Can you hear it?",
+"That one had style! No result though haha",
+"HAHA unlucky!",
+"Again! That was funny haha",
+"Perfection says: try again 😄",
+"Oooh dramatic… and still no haha",
+"HAHA nope nope nope",
+"That was adorable haha",
+"You looked confident there haha",
+"Perfection is entertained 😄",
+"HAHA that wasn’t it",
+"Spin it again! This is great haha",
+"Almost! (just kidding) haha",
+"Perfection approves of your effort 😂",
+"HAHA keep them coming!",
+"That one felt lucky! It wasn’t haha",
+"You’re on a roll! A losing one haha",
+"Perfection is clapping… slowly 😄",
+"HAHA still no!",
+"That spin had personality haha",
+"Oooh suspense… ruined haha",
+"HAHA unlucky again!",
+"You’re getting good at this! (losing) haha",
+"Perfection is enjoying this 😄",
+"That one had potential! Not really haha",
+"HAHA keep spinning!",
+"You’re making this look easy… to lose haha",
+"Perfection is impressed! Not by that though 😄",
+"HAHA nope, try again!",
+"That spin was bold haha",
+"Oooh big energy… no result haha",
+"Perfection is watching 👀 haha",
+"HAHA that wasn’t it either!",
+"You’re consistent! haha",
+"That one looked special… it wasn’t haha",
+"HAHA again!",
+"Perfection says: keep going 😄",
+"Nice try! Really! haha",
+"HAHA you’re committed!",
+"That spin had flair haha",
+"Oooh almost! (nope) haha",
+"Perfection is amused 😂",
+"HAHA still nothing!",
+"You’re doing great! (not really) haha",
+"That one felt different! haha",
+"HAHA nope again!",
+"Perfection is cheering you on 😄",
+"Keep going! This is hilarious haha",
+"That spin was… something haha",
+"HAHA unlucky!",
+"You’re getting closer! (you’re not) haha",
+"Perfection believes in you! haha",
+"That one looked lucky haha",
+"HAHA not today!",
+"Spin again! I insist haha",
+"That was fun to watch haha",
+"Perfection is smiling 😄",
+"HAHA keep it up!",
+"You almost convinced me haha",
+"That spin had hope haha",
+"HAHA nope!",
+"You’re entertaining haha",
+"Perfection says: more! 😄",
+"That one felt big haha",
+"HAHA still losing!",
+"You’re doing amazing! haha",
+"That spin had drama haha",
+"Oooh tension… gone haha",
+"Perfection is enjoying every second 😄",
+"HAHA nope nope!",
+"Keep going! This is great haha",
+"That one had confidence haha",
+"HAHA not even close!",
+"You’re getting the hang of this! haha",
+"Perfection is proud… kinda 😄",
+"That spin was exciting haha",
+"HAHA try again!",
+"You’re very persistent haha",
+"That one looked lucky haha",
+"HAHA still no win!",
+"Perfection is laughing 😄",
+"Keep spinning! haha",
+"That spin had style haha",
+"HAHA unlucky again!",
+"You’re committed now haha",
+"That one felt like it… nope haha",
+"Perfection says: don’t stop 😄",
+"HAHA nope!",
+"Just one more! haha",
+"That spin was bold haha",
+"HAHA still nothing!",
+"You’re doing great entertainment-wise haha",
+"Perfection is having fun 😄",
+"That one had energy haha",
+"HAHA try again!",
+"You’re not giving up haha",
+"That spin had hope haha",
+"HAHA nope!",
+"Perfection is still watching 😄",
+"Again! Again! haha",
+"That one looked promising haha",
+"HAHA not this time!",
+"You’re getting funnier haha",
+"Perfection approves of this chaos 😄",
+"HAHA keep going!"
+];
+
+// spin
+document.body.addEventListener("click", ()=>{
+    if(spinning) return;
+
+    spinning = true;
+    document.getElementById("message").innerText="";
+
+    // TRUE RNG
+    const steps = 300 + Math.floor(Math.random()*121);
+    animateSteps(steps);
+});
+
+function animateSteps(totalSteps){
+    let stepCount = 0;
+    let start = Date.now();
+    let duration = 20000;
+
+    function step(){
+        let t = (Date.now()-start)/duration;
+
+        if(t >= 1){
+            finishSpin();
+            return;
+        }
+
+        // ease out controls how many steps we should be at
+        let eased = 1 - Math.pow(1-t,3);
+        let targetStep = Math.floor(eased * totalSteps);
+
+        if(targetStep > stepCount){
+            stepCount++;
+            currentIndex = (currentIndex + 1) % 121;
+            highlight(currentIndex);
+            beep(true);
+        }
+
+        requestAnimationFrame(step);
+    }
+
+    step();
+}
+
+function highlight(i){
+    cells.forEach(c=>c.classList.remove("active"));
+    cells[i].classList.add("active");
+}
+
+function finishSpin(){
+    spinning = false;
+
+    beep(false);
+
+    // CHECK ACTUAL TILE
+    if(cells[currentIndex].classList.contains("win")){
+        showVictory();
+    }else{
+        fails++;
+		if(Math.random() < 0.05){
+    launchConfetti();
+}
+        document.getElementById("fails").innerText=fails;
+
+        let msg = messages[Math.floor(Math.random()*messages.length)];
+        showOverlayMessage(msg);
+    }
+}
+
+// victory
+function showVictory(){
+    document.getElementById("game").style.display="none";
+    document.getElementById("victory").style.display="block";
+
+    document.getElementById("finalTime").innerText =
+        document.getElementById("time").innerText;
+
+    document.getElementById("finalSpins").innerText = fails + 1;
+
+    let id = Math.floor(100000000 + Math.random()*900000000);
+    document.getElementById("gameId").innerText = id;
+}
+</script>
+<div id="overlayMessage"></div>
+
+</body>
+</html>
