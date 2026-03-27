@@ -92,6 +92,29 @@ button{
     display:inline-block;
     box-shadow:0 0 20px rgba(0,0,0,0.5);
 }
+
+#failScreen{
+    background:#a00000;
+    position:fixed;
+    top:0;
+    left:0;
+    width:100%;
+    height:100%;
+    display:none;
+}
+
+#failScreen.active{
+    display:flex;
+    justify-content:center;
+    align-items:center;
+}
+
+#failBox{
+    color:white;
+    font-size:5vmin;
+    font-weight:bold;
+}
+
 </style>
 </head>
 <body>
@@ -133,6 +156,13 @@ button{
     <p id="gameID"></p>
 
     <button onclick="location.reload()">Play Again</button>
+</div>
+
+<div id="failScreen" class="screen">
+    <div id="failBox">
+        <h1>You failed to watch the clock</h1><br><br>
+		<h1>Try again. Game restarting.</h1>
+    </div>
 </div>
 
 <script>
@@ -319,7 +349,7 @@ function gameLoop(){
     }
 
     switchTimer++;
-    if(switchTimer >= rand(20,30)){
+    if(switchTimer >= rand(10,20)){
         switchTimer = 0;
         keyWarning();
     }
@@ -379,9 +409,9 @@ function startFailTimer(){
         failCountdown--;
         el.innerText = failCountdown;
 
-        if(failCountdown <= 0){
-            location.reload();
-        }
+if(failCountdown <= 0){
+    triggerFail();
+}
     },1000);
 }
 
@@ -391,6 +421,19 @@ function stopFailTimer(){
     document.getElementById("failTimer").style.display = "none";
 }
 
+function triggerFail(){
+    clearInterval(gameInterval);
+    clearInterval(failInterval);
+    stopTicking();
+
+    document.getElementById("gameScreen").classList.remove("active");
+    document.getElementById("failScreen").classList.add("active");
+
+    setTimeout(()=>{
+        location.reload();
+    },10000); // 10 seconds
+}
+
 // KEY SYSTEM
 function pickNewKey(forceFail=false){
     const letters = "abcdefghijklmnopqrstuvwxyz";
@@ -398,7 +441,7 @@ function pickNewKey(forceFail=false){
 currentKey = currentKey.toLowerCase();
 
     document.getElementById("prompt").innerText =
-        "Hold the '" + currentKey + "' key";
+        "Hold the '" + currentKey.toUpperCase() + "' key";
 
     if(forceFail){
         holdingKey = false;
