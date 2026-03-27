@@ -100,14 +100,14 @@ button{
     <div class="startBox">
         <h1>WATCH THE CLOCK</h1>
 
-        <p>How long will you endure?</p>
+        <p>How long will you watch the clock?</p>
 
         Hours: <input type="number" id="hours" value="0" min="0"><br><br>
-        Minutes: <input type="number" id="minutes" value="1" min="0"><br><br>
+        Minutes: <input type="number" id="minutes" value="10" min="0"><br><br>
 
         <p>
         Make the clock move by holding the correct key!<br>
-        If you forget to hold the key for 10 seconds, start again!<br><br>
+        If you forget to hold the key for 3 seconds, start again!<br><br>
         </p>
 
         <button onclick="startGame()">BEGIN</button>
@@ -127,7 +127,7 @@ button{
 
 <div id="endScreen" class="screen">
     <h1>WATCH THE CLOCK</h1>
-    <h2>You endured.</h2>
+    <h2>You watched the clock!</h2>
 
     <p id="finalTime"></p>
     <p id="gameID"></p>
@@ -140,14 +140,15 @@ let targetTime = 0;
 let elapsed = 0;
 let holdingKey = false;
 let currentKey = "";
-let failCountdown = 5;
+let failCountdown = 3;
 let failInterval = null;
 let gameInterval;
 let switchTimer = 0;
 let hypnoRunning = false;
+let activeKeys = new Set();
 
 // HYPNO MESSAGES
-const messages = Array.from({length:100}, (_,i)=>[
+const messages = [
 "Are you getting sleepy?",
 "Tick... tock...",
 "Time is stretching...",
@@ -236,7 +237,7 @@ const messages = Array.from({length:100}, (_,i)=>[
 "You’re still giving time...",
 "Time is not yours anymore...",
 "Perfection is patient..."
-][i%10]);
+];
 
 // SIMPLE TICK SYSTEM
 let tickInterval = null;
@@ -318,7 +319,7 @@ function gameLoop(){
     }
 
     switchTimer++;
-    if(switchTimer >= rand(30,60)){
+    if(switchTimer >= rand(10,20)){
         switchTimer = 0;
         keyWarning();
     }
@@ -340,7 +341,12 @@ function updateClockHands(){
 
 // INPUT
 document.addEventListener("keydown", e=>{
-    if(e.key === currentKey){
+    // ignore weird keys
+    if(e.key.length > 1) return;
+
+    activeKeys.add(e.key.toLowerCase());
+
+    if(activeKeys.has(currentKey)){
         holdingKey = true;
         stopFailTimer();
         startTicking();
@@ -348,7 +354,11 @@ document.addEventListener("keydown", e=>{
 });
 
 document.addEventListener("keyup", e=>{
-    if(e.key === currentKey){
+    if(e.key.length > 1) return;
+
+    activeKeys.delete(e.key.toLowerCase());
+
+    if(!activeKeys.has(currentKey)){
         holdingKey = false;
         startFailTimer();
         stopTicking();
@@ -359,7 +369,7 @@ document.addEventListener("keyup", e=>{
 function startFailTimer(){
     if(failInterval) return;
 
-    failCountdown = 5;
+    failCountdown = 3;
     const el = document.getElementById("failTimer");
     el.innerText = failCountdown;
     el.style.display = "block";
@@ -385,6 +395,7 @@ function stopFailTimer(){
 function pickNewKey(forceFail=false){
     const letters = "abcdefghijklmnopqrstuvwxyz";
     currentKey = letters[Math.floor(Math.random()*letters.length)];
+currentKey = currentKey.toLowerCase();
 
     document.getElementById("prompt").innerText =
         "Hold the '" + currentKey + "' key";
@@ -396,7 +407,7 @@ function pickNewKey(forceFail=false){
 }
 
 function keyWarning(){
-    let count = 5;
+    let count = 3;
     const warn = setInterval(()=>{
         document.getElementById("prompt").innerText =
             "Changing in " + count;
