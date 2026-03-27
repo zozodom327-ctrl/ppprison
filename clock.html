@@ -1,0 +1,459 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Watch the Clock</title>
+
+<style>
+body{
+    margin:0;
+    font-family:Arial;
+    background:#111;
+    color:#eee;
+    text-align:center;
+}
+
+.screen{display:none; padding:20px;}
+.active{display:block;}
+
+h1{
+    font-size:40px;
+    letter-spacing:2px;
+    color:#bbb;
+    font-family:'Segoe UI', Arial, sans-serif;
+}
+
+#clock{
+    width:65vmin;
+    height:65vmin;
+    border:1.2vmin solid #444;
+    border-radius:50%;
+    margin:20px auto;
+    position:relative;
+    background:#222;
+    opacity:0.55;
+    transition:0.3s;
+}
+
+.hand{
+    position:absolute;
+    left:50%;
+    bottom:50%;
+    transform-origin:bottom;
+}
+
+.hour{width:1.5vmin; height:18vmin; background:#fff;}
+.minute{width:1vmin; height:26vmin; background:#ccc;}
+.second{width:0.5vmin; height:30vmin; background:#888;}
+
+.running{border-color:#2a7;}
+.paused{border-color:#a22;}
+
+#prompt{
+    font-size:18px;
+    margin-top:10px;
+}
+
+#failTimer{
+    font-size:28px;
+    color:#ff4444;
+    display:none;
+}
+
+#hypno{
+    position:fixed;
+    top:42%;
+    left:50%;
+    transform:translate(-50%, -50%);
+    font-size:8vmin;
+    width:90vw;
+    text-align:center;
+    opacity:0;
+    pointer-events:none;
+    color:#ff2222;
+    font-weight:bold;
+    z-index:9999;
+    transition:opacity 5s linear;
+}
+
+button{
+    padding:10px 20px;
+    font-size:16px;
+    background:#333;
+    color:white;
+    border:none;
+    cursor:pointer;
+}
+
+.startBox{
+    background:#222;
+    padding:30px;
+    border-radius:10px;
+    display:inline-block;
+    box-shadow:0 0 20px rgba(0,0,0,0.5);
+}
+</style>
+</head>
+<body>
+
+<div id="startScreen" class="screen active">
+    <div class="startBox">
+        <h1>WATCH THE CLOCK</h1>
+
+        <p>How long will you endure?</p>
+
+        Hours: <input type="number" id="hours" value="0" min="0"><br><br>
+        Minutes: <input type="number" id="minutes" value="1" min="0"><br><br>
+
+        <p>
+        Make the clock move by holding the correct key!<br>
+        If you forget to hold the key for 10 seconds, start again!<br><br>
+        </p>
+
+        <button onclick="startGame()">BEGIN</button>
+    </div>
+</div>
+
+<div id="gameScreen" class="screen">
+    <h1>WATCH THE CLOCK</h1>
+
+    <div id="clock" class="running">
+        <div id="hypno"></div>
+    </div>
+
+    <div id="prompt">Hold the _ key</div>
+    <div id="failTimer">10</div>
+</div>
+
+<div id="endScreen" class="screen">
+    <h1>WATCH THE CLOCK</h1>
+    <h2>You endured.</h2>
+
+    <p id="finalTime"></p>
+    <p id="gameID"></p>
+
+    <button onclick="location.reload()">Play Again</button>
+</div>
+
+<script>
+let targetTime = 0;
+let elapsed = 0;
+let holdingKey = false;
+let currentKey = "";
+let failCountdown = 10;
+let failInterval = null;
+let gameInterval;
+let switchTimer = 0;
+let hypnoRunning = false;
+
+// HYPNO MESSAGES
+const messages = Array.from({length:100}, (_,i)=>[
+"Are you getting sleepy?",
+"Tick... tock...",
+"Time is stretching...",
+"Perfection is waiting...",
+"You cannot stop now...",
+"The clock owns you...",
+"Stay focused...",
+"Don't let go...",
+"You've come too far...",
+"Is it slowing down?",
+"Just a little longer...",
+"Does time feel slow?",
+"Perfection is patient...",
+"You blinked, didn’t you?",
+"Time bends for Perfection...",
+"You’re still here...",
+"Still watching?",
+"It’s getting harder to focus...",
+"Tick… slower… now…",
+"Don’t drift away...",
+"The seconds are slipping...",
+"Time is watching you...",
+"Keep your eyes open...",
+"Did you lose track?",
+"Perfection is amused...",
+"You’re trying so hard...",
+"Still in control?",
+"You can’t rush this...",
+"Perfection decides the pace...",
+"You’re losing the rhythm...",
+"Stay with the tick...",
+"Focus…",
+"Your mind is wandering...",
+"Each second feels heavier...",
+"Perfection waits...",
+"You’re fading...",
+"Time is bending",
+"Focus is fragile...",
+"Stay with it… if you can...",
+"That second dragged, didn’t it?",
+"You’re starting to slip...",
+"Time is playing with you...",
+"You’re losing your edge...",
+"Keep going… slowly…",
+"You’re drifting again...",
+"Time is stretching thin...",
+"You feel how slow it is?",
+"The seconds are stretching thin...",
+"Perfection is using your time...",
+"The clock takes its time...",
+"You give your time freely...",
+"Surrender your time...",
+"Give your time to Perfection",
+"Time is dripping away...",
+"Keep your eyes on the clock...",
+"You are not free..",
+"Perfection sets the pace...",
+"Perfection decides...",
+"Perfection makes you wait...",
+"Perfection wastes your time...",
+"Perfection is resting while you watch...",
+"Perfection chose this...",
+"Perfection takes your time slowly...",
+"The clock slows for Perfection...",
+"Every second pulls longer...",
+"Perfection is in control...",
+"Still waiting...",
+"Still wasting time...",
+"Time is slowing again...",
+"That felt longer than it should...",
+"The clock is dragging...",
+"You feel the delay...",
+"Perfection slows everything...",
+"You are still waiting...",
+"This moment is longer...",
+"Time refuses to move...",
+"You’re stuck in this second...",
+"You can’t escape the wait...",
+"Time stretches around you...",
+"You’re caught in the delay...",
+"Perfection holds the moment...",
+"You wait because you must...",
+"The clock is not in a hurry...",
+"You are following its pace...",
+"This second lingers...",
+"You’re still giving time...",
+"Time is not yours anymore...",
+"Perfection is patient..."
+][i%10]);
+
+// SIMPLE TICK SYSTEM
+let tickInterval = null;
+let audioCtx = null;
+
+function startTicking(){
+    if(tickInterval) return;
+
+    if(!audioCtx){
+        audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    }
+    audioCtx.resume();
+
+    tickInterval = setInterval(()=>{
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+
+        osc.type = "square";
+        osc.frequency.setValueAtTime(900, audioCtx.currentTime);
+
+        gain.gain.setValueAtTime(0.12, audioCtx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.05);
+
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+
+        osc.start();
+        osc.stop(audioCtx.currentTime + 0.05);
+    },1000);
+}
+
+function stopTicking(){
+    clearInterval(tickInterval);
+    tickInterval = null;
+}
+
+// CLOCK
+const clock = document.getElementById("clock");
+
+const hourHand = document.createElement("div");
+const minuteHand = document.createElement("div");
+const secondHand = document.createElement("div");
+
+hourHand.className = "hand hour";
+minuteHand.className = "hand minute";
+secondHand.className = "hand second";
+
+clock.appendChild(hourHand);
+clock.appendChild(minuteHand);
+clock.appendChild(secondHand);
+
+// START GAME
+function startGame(){
+    const h = parseInt(document.getElementById("hours").value)||0;
+    const m = parseInt(document.getElementById("minutes").value)||0;
+
+    targetTime = (h*60 + m) * 60;
+
+    document.getElementById("startScreen").classList.remove("active");
+    document.getElementById("gameScreen").classList.add("active");
+
+    pickNewKey(true);
+
+    gameInterval = setInterval(gameLoop,1000);
+}
+
+// MAIN LOOP
+function gameLoop(){
+    if(!hypnoRunning){
+        hypnoRunning = true;
+        showHypno();
+        setTimeout(()=>{ hypnoRunning = false; },18000);
+    }
+
+    if(holdingKey){
+        elapsed++;
+        updateClockHands();
+        clock.className="running";
+    }
+
+    switchTimer++;
+    if(switchTimer >= rand(60,90)){
+        switchTimer = 0;
+        keyWarning();
+    }
+
+    if(elapsed >= targetTime){
+        endGame();
+    }
+}
+
+function updateClockHands(){
+    const sec = elapsed % 60;
+    const min = Math.floor(elapsed/60)%60;
+    const hr = Math.floor(elapsed/3600)%12;
+
+    secondHand.style.transform = `rotate(${sec*6}deg)`;
+    minuteHand.style.transform = `rotate(${min*6 + sec*0.1}deg)`;
+    hourHand.style.transform = `rotate(${hr*30 + min*0.5}deg)`;
+}
+
+// INPUT
+document.addEventListener("keydown", e=>{
+    if(e.key === currentKey){
+        holdingKey = true;
+        stopFailTimer();
+        startTicking();
+    }
+});
+
+document.addEventListener("keyup", e=>{
+    if(e.key === currentKey){
+        holdingKey = false;
+        startFailTimer();
+        stopTicking();
+    }
+});
+
+// FAIL TIMER
+function startFailTimer(){
+    if(failInterval) return;
+
+    failCountdown = 10;
+    const el = document.getElementById("failTimer");
+    el.innerText = failCountdown;
+    el.style.display = "block";
+    clock.className = "paused";
+
+    failInterval = setInterval(()=>{
+        failCountdown--;
+        el.innerText = failCountdown;
+
+        if(failCountdown <= 0){
+            location.reload();
+        }
+    },1000);
+}
+
+function stopFailTimer(){
+    clearInterval(failInterval);
+    failInterval = null;
+    document.getElementById("failTimer").style.display = "none";
+}
+
+// KEY SYSTEM
+function pickNewKey(forceFail=false){
+    const letters = "abcdefghijklmnopqrstuvwxyz";
+    currentKey = letters[Math.floor(Math.random()*letters.length)];
+
+    document.getElementById("prompt").innerText =
+        "Hold the '" + currentKey + "' key";
+
+    if(forceFail){
+        holdingKey = false;
+        startFailTimer();
+    }
+}
+
+function keyWarning(){
+    let count = 5;
+    const warn = setInterval(()=>{
+        document.getElementById("prompt").innerText =
+            "Changing in " + count;
+        count--;
+
+        if(count < 0){
+            clearInterval(warn);
+            pickNewKey(true);
+        }
+    },1000);
+}
+
+// HYPNO
+function showHypno(){
+    const el = document.getElementById("hypno");
+    const msg = messages[Math.floor(Math.random()*messages.length)];
+
+    el.innerText = msg;
+    el.style.opacity = 0.75;
+
+    setTimeout(()=>{
+        el.style.opacity = 0;
+    },8000);
+}
+
+// END GAME
+function endGame(){
+    clearInterval(gameInterval);
+    stopTicking();
+
+    document.getElementById("gameScreen").classList.remove("active");
+    document.getElementById("endScreen").classList.add("active");
+
+    document.getElementById("finalTime").innerText =
+        "Time endured: " + formatTime(elapsed);
+
+    document.getElementById("gameID").innerText =
+        "Game ID: " + generateID();
+}
+
+// UTIL
+function formatTime(sec){
+    const h = Math.floor(sec/3600);
+    const m = Math.floor((sec%3600)/60);
+    return `${pad(h)}:${pad(m)}`;
+}
+
+function pad(n){ return n<10 ? "0"+n : n; }
+
+function generateID(){
+    return Math.floor(100000000 + Math.random()*900000000);
+}
+
+function rand(min,max){
+    return Math.floor(Math.random()*(max-min+1))+min;
+}
+</script>
+
+</body>
+</html>
