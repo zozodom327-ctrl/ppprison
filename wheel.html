@@ -2,7 +2,7 @@
 <html>
 <head>
 <meta charset="UTF-8">
-<title>Punishment Wheel</title>
+<title>Perfection's Wheel</title>
 
 <style>
 
@@ -180,7 +180,7 @@ Perfection's Wheel of Fun
 </h1>
 
 <div id="startScreen" class="screen active">
-<h1>Punishment Wheel</h1>
+<h1>Spin the wheel, win fun prizes!</h1>
 <p>Enter your codeword.</p>
 <input id="codeInput" type="text">
 <br>
@@ -244,10 +244,17 @@ winText:"YOU GET TO GUESS {v} NUMBERS, AMAZING!"},
 /* --- NEW GAMES --- */
 
 {
+name:"Write for Perfection",
+url:"https://zozodom327-ctrl.github.io/ppprison/write.html",
+values:[10,20,40],
+winText:"YOU GET TO WRITE {v} PARAGRAPHS FOR PERFECTION!"
+},
+
+{
 name:"Meditation",
 url:"https://zozodom327-ctrl.github.io/ppprison/flowers.html",
 values:[10,30,50],
-winText:"YOU WON {v} MINUTES OF CALM."
+winText:"CALMLY IDENTIFY {v} PLANTS!"
 },
 
 {
@@ -414,6 +421,7 @@ if(name=="Mindbreaker") name="MINDBREAKER"
 if(name=="Meditation") name="MEDITATE"
 if(name=="Maze") name="MAZE"
 if(name=="Grid") name="GRID"
+if(name=="Write for Perfection") name="WRITE"
 
 text = name + " ("+wheelOptions[i].value+")"
 
@@ -425,10 +433,10 @@ text = wheelOptions[i].bonus.toUpperCase()
 
 if(wheelOptions[i].game?.scary){
 ctx.fillStyle="#ff4444"
-ctx.font="bold 26px Arial"
+ctx.font="bold 22px Arial"
 }else{
 ctx.fillStyle="white"
-ctx.font="bold 24px Arial"
+ctx.font="bold 20px Arial"
 }
 
 ctx.fillText(text,radius-10,0)
