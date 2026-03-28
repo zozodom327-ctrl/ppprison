@@ -2,114 +2,516 @@
 <html>
 <head>
 <title>Perfection's Mindbreaker</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Bebas+Neue&family=Russo+One&display=swap" rel="stylesheet">
 <style>
+:root {
+--red:        #ff3300;
+--red-bright: #ff3311;
+--red-dim:    #dd3311;
+    --amber:     #ffaa00;
+    --green:     #00cc44;
+    --grey-dark: #0a0a0a;
+    --grey-mid:  #111111;
+    --grey-line: #2a2a2a;
+    --grey-text: #888888;
+    --off-white: #dddddd;
+    --font-display: 'Bebas Neue', sans-serif;
+    --font-mono:    'Share Tech Mono', monospace;
+    --font-heavy:   'Russo One', sans-serif;
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+html {
+    font-size: clamp(14px, 1.4vw, 22px);
+}
+
 html, body {
-    margin: 0;
-    padding: 0;
-    background: black;
-    color: white;
-    font-family: Arial, sans-serif;
     height: 100%;
+    background: var(--grey-dark);
+    color: var(--off-white);
+    font-family: var(--font-mono);
+    overflow: hidden;
 }
 
-body {
+/* ── Scanline overlay ─────────────────────────── */
+body::before {
+    content: '';
+    position: fixed; inset: 0;
+    background: repeating-linear-gradient(
+        0deg,
+        transparent,
+        transparent 2px,
+        rgba(0,0,0,0.18) 2px,
+        rgba(0,0,0,0.18) 4px
+    );
+    pointer-events: none;
+    z-index: 9999;
+}
+
+/* ── Vignette ─────────────────────────────────── */
+body::after {
+    content: '';
+    position: fixed; inset: 0;
+    background: radial-gradient(ellipse at center, transparent 50%, rgba(0,0,0,0.4) 100%);
+    pointer-events: none;
+    z-index: 9998;
+}
+
+/* ── HUD bars ─────────────────────────────────── */
+.hud-bar {
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    height: 2.8rem;
+    background: #0d0d0d;
+    border-bottom: 1px solid var(--grey-line);
     display: flex;
-    justify-content: center;
     align-items: center;
+    justify-content: space-between;
+    padding: 0 1.2rem;
+    z-index: 100;
+    font-size: 1.5rem;
+    letter-spacing: 0.12em;
+    color: #ccc;
 }
 
+.hud-bar .hud-label { color: #aa3322; text-transform: uppercase; }
+.hud-bar .hud-value { color: var(--off-white); }
+
+.hud-dot {
+    width: 0.45rem; height: 0.45rem;
+    border-radius: 50%;
+    background: var(--red);
+    display: inline-block;
+    margin-right: 0.6rem;
+    animation: blink 1.4s step-start infinite;
+}
+@keyframes blink { 50% { opacity: 0; } }
+
+/* bottom bar */
+.hud-bottom {
+    position: fixed;
+    bottom: 0; left: 0; right: 0;
+    height: 2.2rem;
+    background: #0d0d0d;
+    border-top: 1px solid var(--grey-line);
+    display: flex;
+    align-items: center;
+    padding: 0 1.2rem;
+    font-size: 1.5rem;
+    letter-spacing: 0.1em;
+    color: #ccc;
+    z-index: 100;
+}
+.hud-bottom span { margin-right: 2.5rem; }
+
+/* ── Screens ──────────────────────────────────── */
 .screen {
     display: none;
+    position: absolute;
+    inset: 2.8rem 0 2.2rem 0;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
     text-align: center;
-    width: 100%;
+    padding: 1.5rem;
+}
+.screen.active { display: flex; }
+
+/* ── START SCREEN ─────────────────────────────── */
+#startScreen {
+    gap: 0;
 }
 
-.active {
-    display: block;
+.title-block {
+    margin-bottom: 2rem;
 }
 
-input, button {
-    font-size: 18px;
-    padding: 8px;
-    margin-top: 15px;
-}
-
-.bigText {
-    font-size: 60px;
-    font-weight: bold;
-    margin: 40px 0;
-}
-
-.blueText { color: #66ccff; }
-.greenText { color: #00ff00; }
-.redText { color: #ff3333; }
-
-.smallInfo {
-    color: #888;
-    position: fixed;
-    top: 10px;
-    font-size: 14px;
-}
-
-#taskCounter { left: 10px; }
-#timeCounter { right: 10px; }
-
-#instructionText {
-    color: #cccccc;
-    font-size: 32px;
-    margin-bottom: 20px;
-    font-weight: bold;
+.title-eyebrow {
+    font-size: 0.75rem;
+    letter-spacing: 0.35em;
+    color: #aa3322;
+    text-transform: uppercase;
+    margin-bottom: 0.6rem;
 }
 
 #gameTitle {
-    font-size: 64px;
-    font-weight: bold;
-    letter-spacing: 3px;
-    margin-bottom: 40px;
+    font-family: var(--font-display);
+    font-size: clamp(3rem, 8vw, 7rem);
+    letter-spacing: 0.06em;
+    color: var(--red-bright);
+    line-height: 0.9;
     text-transform: uppercase;
-    color: #ff3333;
+    text-shadow:
+        0 0 40px rgba(204,34,0,0.6),
+        0 0 80px rgba(204,34,0,0.2);
+    animation: title-flicker 8s infinite;
 }
 
-/* 🔒 Prevent selecting challenge text */
+@keyframes title-flicker {
+    0%,96%,100%  { opacity:1; }
+    97%          { opacity:0.7; }
+    98%          { opacity:1; }
+    99%          { opacity:0.5; }
+}
+
+.divider {
+    width: 100%;
+    max-width: 30rem;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--red-dim), transparent);
+    margin: 1.5rem auto;
+}
+
+.assign-label {
+    font-size: 0.85rem;
+    letter-spacing: 0.3em;
+    color: #999;
+    text-transform: uppercase;
+    margin-bottom: 0.75rem;
+}
+
+.input-row {
+    display: flex;
+    gap: 0;
+    max-width: 20rem;
+    width: 100%;
+    margin: 0 auto;
+}
+
+#taskInput {
+    flex: 1;
+    background: #0d0d0d;
+    border: 1px solid var(--grey-line);
+    border-right: none;
+    color: var(--off-white);
+    font-family: var(--font-mono);
+    font-size: 1.3rem;
+    padding: 0.6rem 0.9rem;
+    outline: none;
+    text-align: center;
+    transition: border-color 0.2s;
+    -moz-appearance: textfield;
+}
+#taskInput::-webkit-inner-spin-button,
+#taskInput::-webkit-outer-spin-button { -webkit-appearance: none; }
+#taskInput:focus { border-color: var(--red-dim); }
+
+#beginBtn {
+    background: var(--red);
+    border: 1px solid var(--red-bright);
+    color: white;
+    font-family: var(--font-display);
+    font-size: 1.4rem;
+    letter-spacing: 0.1em;
+    padding: 0.6rem 1.2rem;
+    cursor: pointer;
+    transition: background 0.15s, box-shadow 0.15s;
+    white-space: nowrap;
+}
+#beginBtn:hover {
+    background: var(--red-bright);
+    box-shadow: 0 0 20px rgba(255,51,17,0.5);
+}
+#beginBtn:active { transform: scale(0.97); }
+
+.instructions {
+    margin-top: 1.8rem;
+    font-size: 0.85rem;
+    letter-spacing: 0.2em;
+    color: #888;
+    line-height: 2.2;
+    text-transform: uppercase;
+}
+.instructions em {
+    color: #555;
+    font-style: normal;
+}
+
+/* ── GAME SCREEN ──────────────────────────────── */
+#gameScreen {
+    gap: 1.2rem;
+}
+
+#instructionText {
+    font-family: var(--font-mono);
+    font-size: 1.1rem;
+    letter-spacing: 0.35em;
+    color: #bb3322;
+    text-transform: uppercase;
+    height: 1.6rem;
+}
+
 #mainDisplay {
+    font-family: var(--font-display);
+    font-size: clamp(3rem, 7vw, 6.5rem);
+    letter-spacing: 0.04em;
+    color: var(--off-white);
+    line-height: 1.1;
     user-select: none;
     -webkit-user-select: none;
-    -ms-user-select: none;
+    min-height: 8rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+}
+
+#mainDisplay.state-focus {
+    color: var(--amber);
+    text-shadow: 0 0 30px rgba(255,170,0,0.4);
+    font-size: clamp(4rem, 8vw, 8rem);
+    animation: stress-pulse 0.8s ease-in-out infinite alternate;
+}
+
+@keyframes stress-pulse {
+    from { opacity: 0.85; }
+    to   { opacity: 1; }
+}
+
+#mainDisplay.state-memorize {
+    color: var(--off-white);
+    text-shadow: none;
+    animation: none;
+}
+
+#mainDisplay.state-countdown {
+    font-family: var(--font-mono);
+    font-size: clamp(1.4rem, 2.5vw, 2.4rem);
+    color: #777;
+    letter-spacing: 0.02em;
+}
+
+#mainDisplay.state-timer {
+    color: var(--red-bright);
+    text-shadow: 0 0 20px rgba(255,51,17,0.6);
+    animation: timer-throb 0.5s ease-in-out infinite alternate;
+}
+@keyframes timer-throb {
+    from { transform: scale(1); }
+    to   { transform: scale(1.04); }
+}
+
+#mainDisplay.state-correct {
+    color: var(--green);
+    text-shadow: 0 0 20px rgba(0,204,68,0.5);
+    animation: none;
+}
+
+#mainDisplay.state-error {
+    color: var(--red-bright);
+    text-shadow: 0 0 30px rgba(255,51,17,0.6);
+    animation: shake 0.4s ease;
+}
+
+@keyframes shake {
+    0%,100% { transform: translateX(0); }
+    20%      { transform: translateX(-8px); }
+    40%      { transform: translateX(8px); }
+    60%      { transform: translateX(-6px); }
+    80%      { transform: translateX(6px); }
+}
+
+.error-sub {
+    font-family: var(--font-mono);
+    font-size: 0.85rem;
+    color: var(--off-white);
+    letter-spacing: 0.15em;
+    margin-top: 0.5rem;
+    opacity: 0.7;
+}
+
+/* answer zone */
+.answer-zone {
+    display: flex;
+    gap: 0;
+    max-width: 26rem;
+    width: 100%;
+}
+
+#answerBox {
+    flex: 1;
+    background: #0d0d0d;
+    border: 1px solid var(--grey-line);
+    border-right: none;
+    color: var(--off-white);
+    font-family: var(--font-mono);
+    font-size: 1.1rem;
+    padding: 0.6rem 0.9rem;
+    outline: none;
+    letter-spacing: 0.1em;
+    transition: border-color 0.2s;
+}
+#answerBox:focus { border-color: var(--red-dim); }
+
+#submitBtn {
+    background: #1a1a1a;
+    border: 1px solid var(--grey-line);
+    color: var(--off-white);
+    font-family: var(--font-display);
+    font-size: 1.1rem;
+    letter-spacing: 0.12em;
+    padding: 0.6rem 1.1rem;
+    cursor: pointer;
+    transition: background 0.15s, border-color 0.15s;
+    white-space: nowrap;
+}
+#submitBtn:hover {
+    background: #222;
+    border-color: var(--red-dim);
+}
+
+/* ── END SCREEN ───────────────────────────────── */
+#endScreen {
+    gap: 0;
+}
+
+.end-title {
+    font-family: var(--font-display);
+    font-size: clamp(2.5rem, 5vw, 5rem);
+    color: var(--off-white);
+    letter-spacing: 0.08em;
+    margin-bottom: 0.4rem;
+}
+
+.end-sub {
+    font-size: 0.75rem;
+    letter-spacing: 0.3em;
+    color: var(--grey-text);
+    text-transform: uppercase;
+    margin-bottom: 2rem;
+}
+
+.stats-grid {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    gap: 0;
+    max-width: 28rem;
+    width: 100%;
+    border: 1px solid var(--grey-line);
+    margin-bottom: 1.5rem;
+}
+
+.stat-row {
+    display: contents;
+}
+
+.stat-label, .stat-value {
+    padding: 0.6rem 1rem;
+    font-size: 0.85rem;
+    border-bottom: 1px solid var(--grey-line);
+}
+.stat-label {
+    color: #888;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    text-align: left;
+    border-right: 1px solid var(--grey-line);
+    white-space: nowrap;
+}
+.stat-value {
+    color: var(--off-white);
+    font-family: var(--font-mono);
+    text-align: right;
+}
+.stat-value.highlight { color: var(--red-bright); }
+
+.game-id-line {
+    font-size: 0.65rem;
+    letter-spacing: 0.3em;
+    color: #555;
+    text-transform: uppercase;
+    margin-bottom: 1.8rem;
+}
+
+#restartBtn {
+    background: transparent;
+    border: 1px solid var(--grey-line);
+    color: var(--grey-text);
+    font-family: var(--font-display);
+    font-size: 1.1rem;
+    letter-spacing: 0.2em;
+    padding: 0.6rem 1.8rem;
+    cursor: pointer;
+    transition: all 0.2s;
+    text-transform: uppercase;
+}
+#restartBtn:hover {
+    border-color: var(--red-dim);
+    color: var(--off-white);
 }
 </style>
 </head>
 <body>
 
-<div id="taskCounter" class="smallInfo"></div>
-<div id="timeCounter" class="smallInfo"></div>
-
-<div id="startScreen" class="screen active">
-    <div id="gameTitle">Perfection's Mindbreaker</div>
-    <h1>You have been assigned to complete _______ tasks.</h1>
-    <input type="number" id="taskInput" min="1" max="1000">
-    <br>
-    <button onclick="startGame()">BEGIN</button>
-    <p style="margin-top:30px;">
-	Instructions: <br><br>
-        Enter, Memorise, Input, Repeat.<br>
-    </p>
+<!-- HUD top -->
+<div class="hud-bar" id="hudBar">
+    <div>
+        <span class="hud-dot"></span>
+        <span class="hud-label">TASK </span>
+        <span class="hud-value" id="taskCounter">—</span>
+    </div>
+    <div style="letter-spacing:0.06em; color:#333; font-size:10px;">
+        PERFECTION'S MINDBREAKER
+    </div>
+    <div>
+        <span class="hud-label">ELAPSED </span>
+        <span class="hud-value" id="timeCounter">00:00:00</span>
+    </div>
 </div>
 
+<!-- HUD bottom -->
+<div class="hud-bottom">
+    <span>STATUS: <span id="statusText" style="color:var(--red-dim)">AWAITING INPUT</span></span>
+    <span>ERRORS: <span id="errorCount">0</span></span>
+</div>
+
+<!-- ── START SCREEN ── -->
+<div id="startScreen" class="screen active">
+    <div class="title-block">
+        <div class="title-eyebrow">Welcome to...</div>
+        <div id="gameTitle">Perfection's<br>Mindbreaker</div>
+    </div>
+
+    <div class="divider"></div>
+
+    <div class="assign-label">Assigned task quota:</div>
+    <div class="input-row">
+        <input type="number" id="taskInput" min="1" max="1000" placeholder="—">
+        <button id="beginBtn" onclick="startGame()">BEGIN</button>
+    </div>
+
+    <div class="instructions">
+        <em>Instructions:</em>&nbsp; Enter &nbsp;·&nbsp; Memorise &nbsp;·&nbsp; Input &nbsp;·&nbsp; Repeat<br>
+        <em>Errors and timeouts will incur additional tasks.</em>
+    </div>
+</div>
+
+<!-- ── GAME SCREEN ── -->
 <div id="gameScreen" class="screen">
     <div id="instructionText"></div>
-    <div id="mainDisplay" class="bigText"></div>
-    <input type="text" id="answerBox" style="display:none;">
-    <br>
-    <button id="submitBtn" style="display:none;" onclick="submitAnswer()">SUBMIT</button>
+    <div id="mainDisplay"></div>
+    <div class="answer-zone" id="answerZone" style="display:none;">
+        <input type="text" id="answerBox" autocomplete="off" spellcheck="false">
+        <button id="submitBtn" onclick="submitAnswer()">SUBMIT</button>
+    </div>
 </div>
 
+<!-- ── END SCREEN ── -->
 <div id="endScreen" class="screen">
-    <h1>Assignment Complete</h1>
-    <p id="finalStats"></p>
-	<div id="game-id"></div> 
+    <div class="end-title">Assignment Complete</div>
+
+    <div class="stats-grid" id="statsGrid"></div>
+
+    <div class="game-id-line" id="gameIdLine"></div>
+
+    <button id="restartBtn" onclick="restartGame()">NEW ASSIGNMENT</button>
 </div>
 
 <script>
+// ── State ──────────────────────────────────────────────
 let totalTasks = 0;
 let baseTasks = 0;
 let currentTask = 1;
@@ -119,10 +521,10 @@ let startTime;
 let overallTimer;
 let recallInterval;
 let correctAnswer = "";
-let currentChallenge = 1;
 
 const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
 
+// ── Word banks ─────────────────────────────────────────
 const focusWords = [
 "FOCUS","OBEY","SUFFER","SUBMIT","ATTENTION REQUIRED",
 "PAY ATTENTION","CONFORM","COMPLY","TOIL","PAIN",
@@ -201,6 +603,7 @@ const wordBank = [
 "SIGH"
 ];
 
+// ── Game flow ──────────────────────────────────────────
 function startGame(){
     baseTasks = parseInt(document.getElementById("taskInput").value);
     if(!baseTasks || baseTasks < 1 || baseTasks > 1000) return;
@@ -211,388 +614,354 @@ function startGame(){
     timerAdded = 0;
     startTime = Date.now();
 
+    setStatus("ACTIVE");
+    updateErrorCount();
+
     document.getElementById("startScreen").classList.remove("active");
     document.getElementById("gameScreen").classList.add("active");
 
-    overallTimer = setInterval(updateOverallTimer,1000);
+    overallTimer = setInterval(updateOverallTimer, 1000);
     nextRound();
 }
 
-function formatTime(totalSeconds){
-    const hours = Math.floor(totalSeconds / 3600);
-    const minutes = Math.floor((totalSeconds % 3600) / 60);
-    const seconds = totalSeconds % 60;
+function restartGame(){
+    document.getElementById("endScreen").classList.remove("active");
+    document.getElementById("startScreen").classList.add("active");
+    document.getElementById("taskInput").value = "";
+    setStatus("AWAITING INPUT");
+    document.getElementById("taskCounter").textContent = "—";
+    document.getElementById("timeCounter").textContent = "00:00:00";
+    document.getElementById("errorCount").textContent = "0";
+}
 
-    return (
-        String(hours).padStart(2,"0") + ":" +
-        String(minutes).padStart(2,"0") + ":" +
-        String(seconds).padStart(2,"0") + "s"
-    );
+function formatTime(totalSeconds){
+    const h = Math.floor(totalSeconds / 3600);
+    const m = Math.floor((totalSeconds % 3600) / 60);
+    const s = totalSeconds % 60;
+    return String(h).padStart(2,"0") + ":" + String(m).padStart(2,"0") + ":" + String(s).padStart(2,"0");
 }
 
 function updateOverallTimer(){
-    let totalSeconds = Math.floor((Date.now()-startTime)/1000);
-    document.getElementById("timeCounter").innerText = formatTime(totalSeconds);
+    let t = Math.floor((Date.now() - startTime) / 1000);
+    document.getElementById("timeCounter").textContent = formatTime(t);
 }
 
 function updateTaskCounter(){
-    document.getElementById("taskCounter").innerText = `Task ${currentTask}/${totalTasks}`;
+    document.getElementById("taskCounter").textContent = `${currentTask} / ${totalTasks}`;
+}
+
+function updateErrorCount(){
+    document.getElementById("errorCount").textContent = errorAdded + timerAdded;
+}
+
+function setStatus(text){
+    document.getElementById("statusText").textContent = text;
 }
 
 function nextRound(){
-    if(currentTask > totalTasks){
-        endGame();
-        return;
-    }
+    if(currentTask > totalTasks){ endGame(); return; }
 
     updateTaskCounter();
+    setStatus("LOADING");
 
     let countdown = 3;
-    let display = document.getElementById("mainDisplay");
+    const display = document.getElementById("mainDisplay");
+    setDisplay("state-countdown", `TASK ${currentTask} OF ${totalTasks} — BEGINNING IN ${countdown}`);
+    document.getElementById("instructionText").textContent = "";
 
-    display.className = "";
-    display.style.fontSize = "28px";
-    display.style.fontWeight = "normal";
-
-    display.innerText = `Task ${currentTask} of ${totalTasks} beginning in ${countdown}`;
-
-    let interval = setInterval(()=>{
+    let interval = setInterval(() => {
         countdown--;
-        display.innerText = `Task ${currentTask} of ${totalTasks} beginning in ${countdown}`;
         if(countdown <= 0){
             clearInterval(interval);
-            display.style.fontSize = "";
-            display.style.fontWeight = "";
-            display.className = "bigText";
             showChallenge();
+        } else {
+            setDisplay("state-countdown", `TASK ${currentTask} OF ${totalTasks} — BEGINNING IN ${countdown}`);
         }
-    },1000);
+    }, 1000);
 }
 
+// ── Challenges ─────────────────────────────────────────
 function showChallenge(){
-    currentChallenge = Math.floor(Math.random()*5)+1;
-    let display = document.getElementById("mainDisplay");
-    let instruction = document.getElementById("instructionText");
+    const type = Math.floor(Math.random() * 5) + 1;
 
-    display.className = "bigText";
-    instruction.innerText = "";
-
-    if(currentChallenge === 1){
-        let nums = Array.from({length:8},()=>Math.floor(Math.random()*10));
+    if(type === 1){
+        let nums = Array.from({length:8}, () => Math.floor(Math.random()*10));
         correctAnswer = nums.join(" ");
-        display.innerText = correctAnswer;
-        instruction.innerText = "Memorize. Repeat.";
+        setDisplay("state-memorize", nums.join("  "));
+        setInstruction("MEMORIZE · REPEAT");
     }
-
-    else if(currentChallenge === 2){
-        let nums = Array.from({length:4},()=>Math.floor(Math.random()*90+10));
+    else if(type === 2){
+        let nums = Array.from({length:4}, () => Math.floor(Math.random()*90+10));
         correctAnswer = nums.join(" ");
-        display.innerText = correctAnswer;
-        instruction.innerText = "Memorize. Repeat.";
+        setDisplay("state-memorize", nums.join("  "));
+        setInstruction("MEMORIZE · REPEAT");
     }
-
-    else if(currentChallenge === 3){
-        let words = Array.from({length:6},()=>wordBank[Math.floor(Math.random()*wordBank.length)]);
+    else if(type === 3){
+        let words = Array.from({length:6}, () => wordBank[Math.floor(Math.random()*wordBank.length)]);
         correctAnswer = words.join(" ");
-        display.innerText = correctAnswer;
-        instruction.innerText = "Memorize. Repeat.";
+        setDisplay("state-memorize", words.join("  "));
+        setInstruction("MEMORIZE · REPEAT");
     }
-
-    else if(currentChallenge === 4){
+    else if(type === 4){
         let question, answer;
-        let type = Math.floor(Math.random()*3);
-
-        if(type === 0){
-            let nums = Array.from({length:4},()=>Math.floor(Math.random()*9)+1);
-            answer = nums.reduce((a,b)=>a+b,0);
-            question = `${nums.join(" + ")} = ?`;
-        }
-        else if(type === 1){
+        let t = Math.floor(Math.random()*3);
+        if(t === 0){
+            let ns = Array.from({length:4}, () => Math.floor(Math.random()*9)+1);
+            answer = ns.reduce((a,b)=>a+b,0);
+            question = ns.join(" + ") + " = ?";
+        } else if(t === 1){
             let base = Math.floor(Math.random()*900)+100;
-            let nums = Array.from({length:3},()=>Math.floor(Math.random()*9)+1);
-            answer = base - nums.reduce((a,b)=>a+b,0);
-            question = `${base} - ${nums.join(" - ")} = ?`;
-        }
-        else{
+            let ns = Array.from({length:3}, () => Math.floor(Math.random()*9)+1);
+            answer = base - ns.reduce((a,b)=>a+b,0);
+            question = base + " − " + ns.join(" − ") + " = ?";
+        } else {
             let a = Math.floor(Math.random()*9)+1;
-            let b = Math.floor(Math.random()*90) + 10;
-            answer = a*b;
-            question = `${a} x ${b} = ?`;
+            let b = Math.floor(Math.random()*90)+10;
+            answer = a * b;
+            question = a + " × " + b + " = ?";
         }
-
         correctAnswer = String(answer);
-        display.innerText = question;
-        instruction.innerText = "Calculate. Answer.";
+        setDisplay("state-memorize", question);
+        setInstruction("CALCULATE · ANSWER");
     }
-	
-	else if(currentChallenge === 5){
-    let letters = Array.from({length:7}, () => 
-        String.fromCharCode(65 + Math.floor(Math.random()*26))
-    );
-    correctAnswer = letters.join(" ");
-    display.innerText = correctAnswer;
-    instruction.innerText = "Memorize. Repeat.";
-}
+    else {
+        let letters = Array.from({length:7}, () => String.fromCharCode(65 + Math.floor(Math.random()*26)));
+        correctAnswer = letters.join(" ");
+        setDisplay("state-memorize", letters.join("  "));
+        setInstruction("MEMORIZE · REPEAT");
+    }
 
-    setTimeout(showFocusPhase,3000);
+    setStatus("MEMORIZE");
+    setTimeout(showFocusPhase, 3000);
 }
 
 function showFocusPhase(){
-    document.getElementById("instructionText").innerText = "";
-    let display = document.getElementById("mainDisplay");
-    display.className="bigText blueText";
-    display.innerText = focusWords[Math.floor(Math.random()*focusWords.length)];
-    setTimeout(startRecallPhase,5000);
+    setInstruction("");
+    setStatus("DISRUPTION");
+    const word = focusWords[Math.floor(Math.random()*focusWords.length)];
+    setDisplay("state-focus", word);
+    setTimeout(startRecallPhase, 5000);
 }
 
 function startRecallPhase(){
-    let display = document.getElementById("mainDisplay");
-    let answerBox = document.getElementById("answerBox");
-    let submitBtn = document.getElementById("submitBtn");
+    setDisplay("state-timer", "10");
+    setInstruction("INPUT REQUIRED");
+    setStatus("RECALL");
 
-    display.className="bigText";
-    answerBox.style.display="inline";
-    submitBtn.style.display="inline";
-    answerBox.value="";
+    const answerZone = document.getElementById("answerZone");
+    const answerBox  = document.getElementById("answerBox");
+    answerZone.style.display = "flex";
+    answerBox.value = "";
     answerBox.focus();
 
-    let timeLeft=10;
-    display.innerText=timeLeft;
+    let timeLeft = 10;
 
-    recallInterval=setInterval(()=>{
+    recallInterval = setInterval(() => {
         timeLeft--;
         playBeep();
-        display.innerText=timeLeft;
-
-        if(timeLeft<=0){
+        if(timeLeft <= 0){
             clearInterval(recallInterval);
             timerAdded++;
             totalTasks++;
-            showError("Out of time: additional task added");
+            updateErrorCount();
+            showError("TIMEOUT — ADDITIONAL TASK ASSIGNED");
+        } else {
+            setDisplay("state-timer", String(timeLeft));
         }
-    },1000);
+    }, 1000);
 }
 
 function submitAnswer(){
     clearInterval(recallInterval);
 
-    let user = document.getElementById("answerBox").value
-        .trim()
-        .toUpperCase()
-        .replace(/\s+/g, "");   // remove all spaces
-
-    let expected = correctAnswer
-        .toUpperCase()
-        .replace(/\s+/g, "");   // remove all spaces
+    const user     = document.getElementById("answerBox").value.trim().toUpperCase().replace(/\s+/g,"");
+    const expected = correctAnswer.toUpperCase().replace(/\s+/g,"");
 
     if(user === expected){
         showCorrect();
     } else {
         errorAdded++;
         totalTasks++;
-        showError("Incorrect: additional task added");
+        updateErrorCount();
+        showError("INCORRECT — ADDITIONAL TASK ASSIGNED");
     }
 }
 
 function showCorrect(){
-    document.getElementById("instructionText").innerText = "";
-    let display=document.getElementById("mainDisplay");
-    display.className="bigText greenText";
-    display.innerHTML="✓<br>CORRECT";
+    setInstruction("");
+    setStatus("CORRECT");
     hideInput();
-
-    setTimeout(()=>{
-        currentTask++;
-        nextRound();
-    },2000);
+    setDisplay("state-correct", "✓\nCORRECT");
+    setTimeout(() => { currentTask++; nextRound(); }, 2000);
 }
 
 function showError(message){
-	
-    document.getElementById("instructionText").innerText = "";
-    let display=document.getElementById("mainDisplay");
-    display.className="bigText redText";
-    display.innerHTML="✖<br>ERROR<br><span style='font-size:20px;color:white;'>"+message+"</span>";
+    setInstruction("");
+    setStatus("ERROR");
     hideInput();
+    playErrorBeep();
 
-    setTimeout(()=>{
-        nextRound();
-    },3000);
-}
+    const display = document.getElementById("mainDisplay");
+    display.className = "state-error";
+    display.innerHTML = `✖&nbsp; ERROR<div class="error-sub">${message}</div>`;
 
-function generateGameID() {
-  let id = "";
-  for (let i = 0; i < 9; i++) {
-    id += Math.floor(Math.random() * 10);
-  }
-  return id;
-}
-
-function hideInput(){
-    document.getElementById("answerBox").style.display="none";
-    document.getElementById("submitBtn").style.display="none";
+    setTimeout(() => nextRound(), 3000);
 }
 
 function endGame(){
     clearInterval(overallTimer);
+    setStatus("COMPLETE");
     document.getElementById("gameScreen").classList.remove("active");
     document.getElementById("endScreen").classList.add("active");
 
-    let totalSeconds = Math.floor((Date.now()-startTime)/1000);
-    let formattedTime = formatTime(totalSeconds);
+    const totalSeconds = Math.floor((Date.now() - startTime) / 1000);
 
-    document.getElementById("finalStats").innerHTML=
-    `Number of tasks selected at start of game: ${baseTasks}<br>
-     Number of tasks added due to errors: ${errorAdded}<br>
-     Number of tasks added due to timer: ${timerAdded}<br>
-     Total number of tasks completed: ${totalTasks}<br>
-     Total time taken: ${formattedTime}`;
-	 
-	     const gameID = generateGameID();
-    document.getElementById("game-id").textContent = "GameID: " + gameID;
+    const stats = [
+        ["Tasks at start",          baseTasks,                   false],
+        ["Tasks added — errors",     errorAdded,                  errorAdded > 0],
+        ["Tasks added — timeout",    timerAdded,                  timerAdded > 0],
+        ["Total tasks completed",    totalTasks,                  false],
+        ["Total time elapsed",       formatTime(totalSeconds),    false],
+    ];
+
+    const grid = document.getElementById("statsGrid");
+    grid.innerHTML = stats.map(([label, val, hi]) => `
+        <div class="stat-label">${label}</div>
+        <div class="stat-value${hi ? " highlight" : ""}">${val}</div>
+    `).join("");
+
+    document.getElementById("gameIdLine").textContent = "SESSION ID: " + generateGameID();
 }
 
+// ── Helpers ────────────────────────────────────────────
+function setDisplay(stateClass, text){
+    const d = document.getElementById("mainDisplay");
+    d.className = stateClass;
+    // preserve newlines
+    d.innerHTML = text.replace(/\n/g, "<br>");
+}
+
+function setInstruction(text){
+    document.getElementById("instructionText").textContent = text;
+}
+
+function hideInput(){
+    document.getElementById("answerZone").style.display = "none";
+}
+
+function generateGameID(){
+    return Array.from({length:9}, () => Math.floor(Math.random()*10)).join("");
+}
+
+// ── Audio ──────────────────────────────────────────────
 function playBeep(){
-    const oscillator = audioCtx.createOscillator();
-    const gainNode = audioCtx.createGain();
-
-    oscillator.type = "sine";
-    oscillator.frequency.value = 650;
-
-    gainNode.gain.setValueAtTime(0.4, audioCtx.currentTime);
-    gainNode.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.2);
-
-    oscillator.connect(gainNode);
-    gainNode.connect(audioCtx.destination);
-
-    oscillator.start();
-    oscillator.stop(audioCtx.currentTime + 0.2);
+    const osc  = audioCtx.createOscillator();
+    const gain = audioCtx.createGain();
+    osc.type = "sine";
+    osc.frequency.value = 650;
+    gain.gain.setValueAtTime(0.4, audioCtx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.2);
+    osc.connect(gain);
+    gain.connect(audioCtx.destination);
+    osc.start();
+    osc.stop(audioCtx.currentTime + 0.2);
 }
 
 function playErrorBeep(){
     const now = audioCtx.currentTime;
 
-    // MASTER
     const master = audioCtx.createGain();
     master.gain.setValueAtTime(2.2, now);
     master.connect(audioCtx.destination);
 
-    // DISTORTION (grit but not tinny)
     const distortion = audioCtx.createWaveShaper();
     distortion.curve = makeDistortionCurve(250);
     distortion.oversample = "4x";
     distortion.connect(master);
 
-    // LOWPASS FILTER (removes tinny highs)
     const filter = audioCtx.createBiquadFilter();
     filter.type = "lowpass";
     filter.frequency.setValueAtTime(1200, now);
     filter.Q.value = 1.2;
     filter.connect(distortion);
 
-    // SUB OSC (deep body)
-    const subOsc = audioCtx.createOscillator();
+    // Sub
+    const subOsc  = audioCtx.createOscillator();
     const subGain = audioCtx.createGain();
-
     subOsc.type = "sine";
     subOsc.frequency.setValueAtTime(95, now);
     subOsc.frequency.exponentialRampToValueAtTime(70, now + 0.4);
-
     subGain.gain.setValueAtTime(1.8, now);
     subGain.gain.exponentialRampToValueAtTime(0.001, now + 0.45);
+    subOsc.connect(subGain); subGain.connect(filter);
+    subOsc.start(now); subOsc.stop(now + 0.45);
 
-    subOsc.connect(subGain);
-    subGain.connect(filter);
-
-    subOsc.start(now);
-    subOsc.stop(now + 0.45);
-
-    // MAIN BUZZ LAYER (low + thick)
-    const buzz1 = audioCtx.createOscillator();
-    const buzzGain1 = audioCtx.createGain();
-
+    // Buzz 1
+    const buzz1  = audioCtx.createOscillator();
+    const bGain1 = audioCtx.createGain();
     buzz1.type = "sawtooth";
     buzz1.frequency.setValueAtTime(110, now);
     buzz1.frequency.exponentialRampToValueAtTime(80, now + 0.4);
+    bGain1.gain.setValueAtTime(1.2, now);
+    bGain1.gain.exponentialRampToValueAtTime(0.001, now + 0.45);
+    buzz1.connect(bGain1); bGain1.connect(filter);
+    buzz1.start(now); buzz1.stop(now + 0.45);
 
-    buzzGain1.gain.setValueAtTime(1.2, now);
-    buzzGain1.gain.exponentialRampToValueAtTime(0.001, now + 0.45);
-
-    buzz1.connect(buzzGain1);
-    buzzGain1.connect(filter);
-
-    buzz1.start(now);
-    buzz1.stop(now + 0.45);
-
-    // DETUNE FOR HEAVY BEATING
-    const buzz2 = audioCtx.createOscillator();
-    const buzzGain2 = audioCtx.createGain();
-
+    // Buzz 2 (detuned)
+    const buzz2  = audioCtx.createOscillator();
+    const bGain2 = audioCtx.createGain();
     buzz2.type = "sawtooth";
-    buzz2.frequency.setValueAtTime(114, now); // slight detune
+    buzz2.frequency.setValueAtTime(114, now);
+    bGain2.gain.setValueAtTime(1.0, now);
+    bGain2.gain.exponentialRampToValueAtTime(0.001, now + 0.45);
+    buzz2.connect(bGain2); bGain2.connect(filter);
+    buzz2.start(now); buzz2.stop(now + 0.45);
 
-    buzzGain2.gain.setValueAtTime(1.0, now);
-    buzzGain2.gain.exponentialRampToValueAtTime(0.001, now + 0.45);
+    // FIX: tremolo now modulates a dedicated gain node, not master.gain directly
+    const tremoloGain = audioCtx.createGain();
+    tremoloGain.gain.value = 1.0;
+    master.disconnect();
+    master.connect(tremoloGain);
+    tremoloGain.connect(audioCtx.destination);
 
-    buzz2.connect(buzzGain2);
-    buzzGain2.connect(filter);
+    const tremOsc  = audioCtx.createOscillator();
+    const tremDepth = audioCtx.createGain();
+    tremOsc.type = "sine";
+    tremOsc.frequency.value = 18;
+    tremDepth.gain.value = 0.4;
+    tremOsc.connect(tremDepth);
+    tremDepth.connect(tremoloGain.gain);
+    tremOsc.start(now); tremOsc.stop(now + 0.45);
 
-    buzz2.start(now);
-    buzz2.stop(now + 0.45);
-
-    // Slow Tremolo (makes it feel like a heavy buzz)
-    const tremolo = audioCtx.createOscillator();
-    const tremGain = audioCtx.createGain();
-
-    tremolo.type = "sine";
-    tremolo.frequency.value = 18; // slow wobble
-    tremGain.gain.value = 0.4;
-
-    tremolo.connect(tremGain);
-    tremGain.connect(master.gain);
-
-    tremolo.start(now);
-    tremolo.stop(now + 0.45);
-
-    // Stronger vibration punch
-    if (navigator.vibrate) {
-        navigator.vibrate([150, 40, 150]);
-    }
+    if(navigator.vibrate) navigator.vibrate([150, 40, 150]);
 }
 
-
-// Distortion helper
-function makeDistortionCurve(amount) {
-    const k = typeof amount === 'number' ? amount : 50,
-          n_samples = 44100,
-          curve = new Float32Array(n_samples),
-          deg = Math.PI / 180;
-
-    for (let i = 0; i < n_samples; ++i) {
-        const x = i * 2 / n_samples - 1;
+function makeDistortionCurve(amount){
+    const k = amount || 50;
+    const n = 44100;
+    const curve = new Float32Array(n);
+    const deg = Math.PI / 180;
+    for(let i = 0; i < n; i++){
+        const x = i * 2 / n - 1;
         curve[i] = (3 + k) * x * 20 * deg / (Math.PI + k * Math.abs(x));
     }
     return curve;
 }
 
-/* 🔒 Anti-copy protections */
+// ── Input guards ───────────────────────────────────────
 const mainDisplay = document.getElementById("mainDisplay");
-const answerBox = document.getElementById("answerBox");
+const answerBox   = document.getElementById("answerBox");
 
-mainDisplay.addEventListener("copy", function(e){ e.preventDefault(); });
-mainDisplay.addEventListener("contextmenu", function(e){ e.preventDefault(); });
-answerBox.addEventListener("paste", function(e){ e.preventDefault(); });
+mainDisplay.addEventListener("copy",        e => e.preventDefault());
+mainDisplay.addEventListener("contextmenu", e => e.preventDefault());
+answerBox.addEventListener("paste",         e => e.preventDefault());
 
-document.addEventListener("keydown", function(event) {
-    if (event.key === "Enter") {
-        if (answerBox.style.display !== "none") {
-            submitAnswer();
-        }
+document.addEventListener("keydown", e => {
+    if(e.key === "Enter"){
+        const az = document.getElementById("answerZone");
+        if(az.style.display !== "none") submitAnswer();
     }
 });
 </script>
-
 </body>
-
 </html>
-
