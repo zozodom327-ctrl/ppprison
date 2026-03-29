@@ -2,562 +2,905 @@
 <html>
 <head>
 <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Watch the Clock</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300;1,400&family=Cinzel:wght@400;500&display=swap" rel="stylesheet">
 
 <style>
-body{
-    margin:0;
-    font-family:Arial;
-    background:#111;
-    color:#eee;
-    text-align:center;
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --bg: #07050d;
+  --surface: #0f0c1a;
+  --surface2: #171025;
+  --border: rgba(170,140,220,0.12);
+  --purple-dim: #5a4488;
+  --purple-mid: #8a6abf;
+  --purple-bright: #c8a8f0;
+  --purple-glow: rgba(150,110,230,0.2);
+  --text-primary: #ede5ff;
+  --text-secondary: #a898cc;
+  --text-dim: #6a5890;
+  --font-display: 'Cinzel', serif;
+  --font-body: 'Cormorant Garamond', serif;
 }
 
-.screen{display:none; padding:20px;}
-.active{display:block;}
-
-h1{
-    font-size:40px;
-    letter-spacing:2px;
-    color:#bbb;
-    font-family:'Segoe UI', Arial, sans-serif;
+html, body {
+  width: 100%; height: 100%;
+  overflow: hidden;
+  background: var(--bg);
+  color: var(--text-primary);
+  font-family: var(--font-body);
 }
 
-#clock{
-    width:65vmin;
-    height:65vmin;
-    border:1.2vmin solid #444;
-    border-radius:50%;
-    margin:20px auto;
-    position:relative;
-    background:#222;
-    opacity:0.55;
-    transition:0.3s;
+/* ── Ripple background canvas ── */
+#bgCanvas {
+  position: fixed; inset: 0;
+  width: 100%; height: 100%;
+  z-index: 0;
+  pointer-events: none;
+  display: block;
 }
 
-.hand{
-    position:absolute;
-    left:50%;
-    bottom:50%;
-    transform-origin:bottom;
+body::before {
+  content: '';
+  position: fixed; inset: 0;
+  /* Lightened center significantly to allow the canvas effects to show through */
+  background: radial-gradient(ellipse at center, rgba(7,5,13,0.05) 0%, rgba(7,5,13,0.7) 100%);
+  pointer-events: none;
+  z-index: 1;
 }
 
-.hour{width:1.5vmin; height:18vmin; background:#fff;}
-.minute{width:1vmin; height:26vmin; background:#ccc;}
-.second{width:0.5vmin; height:30vmin; background:#888;}
+.screen {
+  display: none;
+  position: fixed; inset: 0;
+  z-index: 10;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+}
+.screen.active { display: flex; }
 
-.running{border-color:#2a7;}
-.paused{border-color:#a22;}
-
-#prompt{
-    font-size:18px;
-    margin-top:10px;
+/* START SCREEN */
+.start-panel {
+  background: rgba(15,12,26,0.85);
+  border: 1px solid var(--border);
+  border-radius: 3px;
+  padding: clamp(32px,5vh,60px) clamp(32px,5vw,72px);
+  text-align: center;
+  max-width: 640px;
+  width: 92vw;
+  position: relative;
+  overflow: hidden;
+  backdrop-filter: blur(8px);
+}
+.start-panel::before {
+  content: '';
+  position: absolute; inset: 0;
+  background: radial-gradient(ellipse at 50% 0%, rgba(130,90,210,0.14) 0%, transparent 65%);
+  pointer-events: none;
 }
 
-#failTimer{
-    font-size:28px;
-    color:#ff4444;
-    display:none;
+.title-text {
+  font-family: var(--font-display);
+  font-size: clamp(32px,5vw,52px);
+  letter-spacing: 0.24em;
+  font-weight: 400;
+  color: var(--purple-bright);
+  line-height: 1.3;
+}
+.title-sub {
+  display: block;
+  font-size: 0.5em;
+  letter-spacing: 0.5em;
+  color: var(--text-dim);
+  margin-top: 8px;
 }
 
-#hypno{
-    position:fixed;
-    top:42%;
-    left:50%;
-    transform:translate(-50%, -50%);
-    font-size:8vmin;
-    width:90vw;
-    text-align:center;
-    opacity:0;
-    pointer-events:none;
-    color:#ff2222;
-    font-weight:bold;
-    z-index:9999;
-    transition:opacity 5s linear;
+.divider {
+  width: 64px; height: 1px;
+  background: linear-gradient(to right, transparent, var(--purple-dim), transparent);
+  margin: 22px auto;
+}
+.start-panel > p {
+  color: var(--text-secondary);
+  font-size: clamp(18px,2.6vw,26px);
+  line-height: 1.6;
+  font-weight: 300;
+}
+.input-row {
+  display: flex; align-items: center; justify-content: center;
+  gap: 16px; margin: 22px 0 10px;
+}
+.input-group { display: flex; flex-direction: column; align-items: center; gap: 7px; }
+.input-group label {
+  font-family: var(--font-display);
+  font-size: clamp(9px,1.2vw,12px);
+  letter-spacing: 0.28em;
+  color: var(--text-dim);
+}
+.input-group input {
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 2px;
+  color: var(--purple-bright);
+  font-family: var(--font-display);
+  font-size: clamp(28px,4.5vw,44px);
+  width: 90px; text-align: center;
+  padding: 10px 4px; outline: none;
+  transition: border-color 0.3s;
+  -moz-appearance: textfield;
+}
+.input-group input::-webkit-inner-spin-button,
+.input-group input::-webkit-outer-spin-button { -webkit-appearance: none; }
+.input-group input:focus { border-color: var(--purple-mid); }
+.input-sep {
+  font-size: clamp(24px,3.5vw,36px);
+  color: var(--text-dim);
+  padding-top: 20px; font-weight: 300;
+}
+.instructions {
+  font-size: clamp(13px,1.7vw,16px);
+  color: var(--text-dim);
+  line-height: 1.9; margin: 18px 0 26px;
+  font-style: italic;
+}
+.btn-begin {
+  background: none;
+  border: 1px solid var(--purple-dim);
+  color: var(--purple-bright);
+  font-family: var(--font-display);
+  font-size: clamp(16px,2vw,22px);
+  letter-spacing: 0.38em;
+  padding: 14px 44px;
+  cursor: pointer;
+  transition: all 0.4s;
+  position: relative; overflow: hidden;
+}
+.btn-begin::after {
+  content: ''; position: absolute; inset: 0;
+  background: var(--purple-glow);
+  opacity: 0; transition: opacity 0.3s;
+}
+.btn-begin:hover { border-color: var(--purple-mid); color: #e0ccff; }
+.btn-begin:hover::after { opacity: 1; }
+
+/* GAME SCREEN */
+#gameScreen {
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  gap: 0;
 }
 
-button{
-    padding:10px 20px;
-    font-size:16px;
-    background:#333;
-    color:white;
-    border:none;
-    cursor:pointer;
+.game-title {
+  font-family: var(--font-display);
+  font-size: clamp(22px,3.5vw,32px);
+  letter-spacing: 0.24em;
+  color: var(--purple-bright);
+  font-weight: 400;
+  position: absolute;
+  top: max(16px,2vh);
+  left: 50%;
+  transform: translateX(-50%);
+  white-space: nowrap;
+  z-index: 20;
+  opacity: 0.7;
 }
 
-.startBox{
-    background:#222;
-    padding:30px;
-    border-radius:10px;
-    display:inline-block;
-    box-shadow:0 0 20px rgba(0,0,0,0.5);
+#clock {
+  position: relative;
+  border-radius: 50%;
+  border: 2px solid rgba(120,90,180,0.15);
+  flex-shrink: 0;
+  transition: box-shadow 1.2s ease;
+  z-index: 10;
+}
+#clock.running {
+  animation: clockPulse 2.8s ease-in-out infinite;
+}
+@keyframes clockPulse {
+  0%,100% { box-shadow: 0 0 30px rgba(140,100,220,0.25), 0 0 70px rgba(120,80,200,0.1); }
+  50%      { box-shadow: 0 0 60px rgba(160,120,255,0.45), 0 0 120px rgba(140,100,240,0.2); }
+}
+#clock.paused,
+#clock.idle {
+  animation: none;
+  box-shadow: 0 0 24px rgba(80,50,130,0.15);
 }
 
-#failScreen{
-    background:#a00000;
-    position:fixed;
-    top:0;
-    left:0;
-    width:100%;
-    height:100%;
-    display:none;
+#clockCanvas {
+  position: absolute; inset: 0;
+  border-radius: 50%;
+  display: block;
 }
 
-#failScreen.active{
-    display:flex;
-    justify-content:center;
-    align-items:center;
+#hud {
+  position: absolute;
+  top: max(16px,2vh);
+  left: max(18px,2vw);
+  z-index: 20;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.hud-row {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+}
+.hud-label {
+  font-family: var(--font-display);
+  font-size: clamp(9px,1vw,11px);
+  letter-spacing: 0.28em;
+  color: var(--text-dim);
+  white-space: nowrap;
+}
+.hud-value {
+  font-family: var(--font-display);
+  font-size: clamp(14px,1.8vw,20px);
+  letter-spacing: 0.18em;
+  color: var(--purple-bright);
+  font-weight: 400;
 }
 
-#failBox{
-    color:white;
-    font-size:5vmin;
-    font-weight:bold;
+.game-hud {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  position: absolute;
+  bottom: max(16px,2vh);
+  left: 50%;
+  transform: translateX(-50%);
+  white-space: nowrap;
+  z-index: 20;
+  text-align: center;
 }
 
+#prompt {
+  font-family: var(--font-display);
+  font-size: clamp(16px,2.4vw,28px);
+  letter-spacing: 0.14em;
+  color: var(--text-secondary);
+  text-align: center;
+  min-height: 1.3em;
+  line-height: 1.3;
+}
+#prompt .key-letter {
+  font-size: 1.5em;
+  font-weight: 500;
+  color: #fff;
+  letter-spacing: 0.04em;
+  text-shadow:
+    0 0 12px rgba(220,190,255,1),
+    0 0 32px rgba(190,150,255,0.75),
+    0 0 64px rgba(160,110,255,0.45);
+}
+
+#failTimer {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, 80px); 
+  z-index: 40;
+  pointer-events: none;
+  font-family: var(--font-display);
+  font-size: clamp(48px, 6vw, 100px);
+  color: #e05555;
+  letter-spacing: 0.05em;
+  display: none;
+  text-shadow: 0 0 25px rgba(220, 80, 80, 0.7);
+  animation: pulseRed 0.7s ease-in-out infinite;
+}
+@keyframes pulseRed {
+  0%,100% { opacity: 1; transform: translate(-50%, 80px) scale(1); }
+  50%      { opacity: 0.42; transform: translate(-50%, 80px) scale(1.15); }
+}
+
+#hypno {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -120%);
+  width: 80vw;
+  text-align: center;
+  opacity: 0;
+  pointer-events: none;
+  color: #ffbf47;
+  font-family: var(--font-display);
+  font-size: clamp(36px,6vw,80px);
+  font-weight: 500;
+  letter-spacing: 0.12em;
+  line-height: 1.4;
+  z-index: 30;
+  text-shadow:
+    0 0 12px rgba(255,200,80,0.9),
+    0 0 30px rgba(255,170,40,0.8),
+    0 0 80px rgba(255,140,20,0.6);
+}
+#hypno.visible {
+  animation: hypnoPulse 3.5s ease-in-out infinite;
+}
+@keyframes hypnoPulse {
+  0%,100% { text-shadow: 0 0 20px rgba(240,180,60,0.7), 0 0 50px rgba(220,150,30,0.35); }
+  50% { text-shadow: 0 0 30px rgba(255,200,80,0.95), 0 0 70px rgba(240,170,40,0.6); }
+}
+
+#rewindOverlay {
+  position: fixed; inset: 0;
+  z-index: 50;
+  pointer-events: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  transition: opacity 0.12s;
+}
+#rewindOverlay.active { opacity: 1; }
+.rewind-msg {
+  font-family: var(--font-display);
+  font-size: clamp(20px,4vw,46px);
+  letter-spacing: 0.22em;
+  color: #ff7070;
+  text-align: center;
+  text-shadow: 0 0 28px rgba(255,80,80,0.55);
+  animation: glitch 0.1s steps(2,end) infinite;
+}
+@keyframes glitch {
+  0%   { transform: translate(0,0); }
+  25%  { transform: translate(-4px,1px); }
+  50%  { transform: translate(3px,-2px); }
+  75%  { transform: translate(-2px,2px); }
+  100% { transform: translate(0,0); }
+}
+
+.end-panel {
+  background: rgba(15,12,26,0.93);
+  border: 1px solid var(--border);
+  border-radius: 3px;
+  padding: clamp(40px,6vh,70px) clamp(40px,6vw,80px);
+  text-align: center;
+  max-width: 520px;
+  width: 92vw;
+  position: relative;
+  overflow: hidden;
+  backdrop-filter: blur(4px);
+}
+.end-panel::before {
+  content: '';
+  position: absolute; inset: 0;
+  background: radial-gradient(ellipse at 50% 0%, rgba(80,200,120,0.07) 0%, transparent 65%);
+  pointer-events: none;
+}
+.end-panel h1 {
+  font-family: var(--font-display);
+  font-size: clamp(18px,3.2vw,30px);
+  letter-spacing: 0.28em;
+  font-weight: 400;
+  color: var(--purple-bright);
+}
+.end-panel h2 {
+  font-family: var(--font-body);
+  font-weight: 300;
+  font-size: clamp(16px,2.4vw,24px);
+  color: var(--text-secondary);
+  font-style: italic;
+  margin-top: 14px;
+}
+.end-stat {
+  color: var(--text-dim);
+  font-family: var(--font-display);
+  font-size: clamp(11px,1.4vw,14px);
+  letter-spacing: 0.2em;
+  margin-top: 12px;
+  display: flex;
+  justify-content: space-between;
+  gap: 24px;
+}
+.end-stat span { color: var(--purple-bright); }
+#gameID {
+  margin-top: 20px;
+  font-family: var(--font-display);
+  font-size: clamp(14px,1.6vw,20px);
+  color: var(--purple-bright);
+  letter-spacing: 0.2em;
+  opacity: 0.9;
+  text-shadow: 0 0 10px rgba(200,160,255,0.6);
+}
 </style>
 </head>
 <body>
 
+<canvas id="bgCanvas"></canvas>
+
 <div id="startScreen" class="screen active">
-    <div class="startBox">
-        <h1>WATCH THE CLOCK</h1>
+  <div class="start-panel">
+    <h1 class="title-text">Watch the Clock<span class="title-sub">Perfection Presents:</span></h1>
+    <div class="divider"></div>
+    <p>How long will you watch the clock?</p>
 
-        <p>How long will you watch the clock?</p>
-
-        Hours: <input type="number" id="hours" value="0" min="0"><br><br>
-        Minutes: <input type="number" id="minutes" value="10" min="0"><br><br>
-
-        <p>
-        Make the clock move by holding the correct key!<br>
-        If you forget to hold the key for 3 seconds, start again!<br><br>
-        </p>
-
-        <button onclick="startGame()">BEGIN</button>
+    <div class="input-row">
+      <div class="input-group">
+        <label>Hours</label>
+        <input type="number" id="hours" value="0" min="0" max="23">
+      </div>
+      <div class="input-sep">:</div>
+      <div class="input-group">
+        <label>Minutes</label>
+        <input type="number" id="minutes" value="10" min="0" max="59">
+      </div>
     </div>
+
+    <p class="instructions">
+      Make the clock move by holding the correct key.<br>
+      If you forget to hold the key for 3 seconds, the clock rewinds 10 minutes.<br>
+      The key will change without warning.
+    </p>
+    <button class="btn-begin" onclick="startGame()">Begin</button>
+  </div>
 </div>
 
 <div id="gameScreen" class="screen">
-    <h1>WATCH THE CLOCK</h1>
+  <div class="game-title">Watch the Clock</div>
 
-    <div id="clock" class="running">
-        <div id="hypno"></div>
+  <div id="hud">
+    <div class="hud-row">
+      <span class="hud-label">Current</span>
+      <span class="hud-value" id="hudCurrent">12:00</span>
     </div>
+    <div class="hud-row">
+      <span class="hud-label">Reach</span>
+      <span class="hud-value" id="hudTarget">—</span>
+    </div>
+  </div>
 
-    <div id="prompt">Hold the _ key</div>
-    <div id="failTimer">10</div>
+  <div id="hypno"></div>
+  <div id="failTimer">3</div> 
+  <div id="rewindOverlay"><div class="rewind-msg">Error — rewinding</div></div>
+
+  <div id="clock" class="idle">
+    <canvas id="clockCanvas"></canvas>
+  </div>
+
+  <div class="game-hud">
+    <div id="prompt"></div>
+  </div>
 </div>
 
 <div id="endScreen" class="screen">
-    <div class="startBox">
-        <h1>WATCH THE CLOCK</h1>
-        <h2>You watched the clock!</h2>
-
-        <p id="finalTime"></p>
-        <p id="gameID"></p>
-
-    </div>
-</div>
-
-<div id="failScreen" class="screen">
-    <div id="failBox">
-        <h1>You failed to watch the clock</h1><br><br>
-		<h1>Try again. Game restarting.</h1>
-    </div>
+  <div class="end-panel">
+    <h1>Watch the Clock</h1>
+    <div class="divider"></div>
+    <h2>You watched the clock.</h2>
+    <div class="end-stat">Time watched <span id="finalTime">—</span></div>
+    <div class="end-stat">Rewinds suffered <span id="finalRewinds">0</span></div>
+    <div id="gameID"></div>
+  </div>
 </div>
 
 <script>
-let targetTime = 0;
-let elapsed = 0;
-let holdingKey = false;
-let currentKey = "";
+// STATE
+let targetTime    = 0;
+let elapsed       = 0;
+let holdingKey    = false;
+let currentKey    = "";
+let lastKey       = "";
 let failCountdown = 3;
-let failInterval = null;
-let gameInterval;
-let switchTimer = 0;
-let hypnoRunning = false;
-let activeKeys = new Set();
-let startCountdown = 10;
-let starting = true;
-let gameOver = false;
-let showWatchMessage = true;
+let failInterval  = null;
+let gameInterval  = null;
+let switchTimer   = 0;
+let activeKeys    = new Set();
+let starting      = true;
+let gameOver      = false;
+let rewinding     = false;
+let warningActive = false;
+let rewindCount   = 0;
 
-const startScreen = document.getElementById("startScreen");
-const gameScreen = document.getElementById("gameScreen");
-const prompt = document.getElementById("prompt");
-const hours = document.getElementById("hours");
-const minutes = document.getElementById("minutes");
+const clockEl     = document.getElementById("clock");
+const canvas      = document.getElementById("clockCanvas");
+const promptEl    = document.getElementById("prompt");
+const failTimerEl = document.getElementById("failTimer");
+const rewindOv    = document.getElementById("rewindOverlay");
+const hypnoEl     = document.getElementById("hypno");
+const hudCurrent   = document.getElementById("hudCurrent");
+const hudTarget    = document.getElementById("hudTarget");
+const ctx         = canvas.getContext("2d");
 
-// HYPNO MESSAGES
-const messages = [
-"Are you getting sleepy?",
-"Tick... tock...",
-"Time is stretching...",
-"Perfection is waiting...",
-"You cannot stop now...",
-"The clock owns you...",
-"Stay focused...",
-"Don't let go...",
-"You've come so far...",
-"Is it slowing down?",
-"Just a little longer...",
-"Does time feel slow?",
-"Perfection is patient...",
-"You blinked, didn’t you?",
-"Time bends for Perfection...",
-"You’re still here...",
-"Still watching the clock?",
-"It’s getting harder to focus...",
-"Tick… slower… now…",
-"Don’t drift away...",
-"Time is melting away...",
-"Drip, drop, tick, tock...",
-"Keep your eyes open...",
-"Did you lose track of time?",
-"Perfection is amused...",
-"Do you feel in control?",
-"You can’t rush this...",
-"Perfection decides the pace...",
-"Lose yourself to the clock...",
-"The clock is your world now...",
-"Focus…",
-"Your mind is wandering...",
-"Each second feels heavier...",
-"Perfection waits...",
-"You’re fading...",
-"Time is bending",
-"Obey the clock...",
-"Keep your eyes on the clock...",
-"That second dragged, didn’t it?",
-"You’re starting to slip...",
-"Are your eyelids heavy?",
-"Lose yourself to the clock...",
-"Keep going...",
-"You’re drifting away...",
-"Time is stretching thin...",
-"Relax, slow down, obey the clock...",
-"Surrender your time...",
-"Perfection is using your time...",
-"The clock takes its time...",
-"You give your time freely...",
-"Your time is a gift to Perfection...",
-"Give your time to Perfection",
-"Time is dripping away...",
-"Keep your eyes on the clock...",
-"You are not free..",
-"Perfection sets the pace...",
-"Perfection decides...",
-"Perfection makes you wait...",
-"Perfection wastes your time...",
-"Perfection is resting while you watch...",
-"Perfection chose this...",
-"Perfection takes your time...",
-"The clock slows for Perfection...",
-"Every second feels longer...",
-"Perfection is in complete control...",
-"The clock never stops...",
-"Still wasting time...",
-"Time is slowing...",
-"Obey...",
-"Submit...",
-"Conform...",
-"Perfection slows everything...",
-"Wait...",
-"Patience...",
-"Your time is meaningless...",
-"The clock controls you...",
-"You can’t escape...",
-"Time stretches around you...",
-"You are trapped...",
-"Perfection holds the moment...",
-"You wait because you must...",
-"The clock is not in a hurry...",
-"Give you time freely...",
-"Surrender your time...",
-"Give more time...",
-"Time is not yours anymore...",
-"Perfection is patient..."
-];
+// BACKGROUND RIPPLE & FOG
+const bgCanvas = document.getElementById("bgCanvas");
+const bgCtx    = bgCanvas.getContext("2d");
+let   bgW, bgH;
+const ripples  = [];
 
-// SIMPLE TICK SYSTEM
-let tickInterval = null;
-let audioCtx = null;
+function resizeBg() {
+  bgW = bgCanvas.width  = window.innerWidth;
+  bgH = bgCanvas.height = window.innerHeight;
+}
 
-function startTicking(){
-    if(tickInterval) return;
+function spawnRipple() {
+  // Frequent, larger, and more opaque ripples
+  const mx = Math.random() * bgW;
+  const my = Math.random() * bgH;
+  ripples.push({ 
+    x: mx, 
+    y: my, 
+    r: 0, 
+    maxR: Math.random() * 300 + 150, 
+    alpha: 0.5, 
+    speed: Math.random() * 0.4 + 0.2 
+  });
+}
 
-    if(!audioCtx){
-        audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+function drawBg() {
+  bgCtx.clearRect(0, 0, bgW, bgH);
+  
+  // Dark purple base
+  bgCtx.fillStyle = "#0a0812"; 
+  bgCtx.fillRect(0, 0, bgW, bgH);
+
+  // Stronger Ambient Fog
+  const t = Date.now() / 4000;
+  const gx = bgW * (0.5 + Math.sin(t) * 0.2);
+  const gy = bgH * (0.5 + Math.cos(t * 0.7) * 0.2);
+  
+  const grad = bgCtx.createRadialGradient(gx, gy, 0, gx, gy, bgW * 0.8);
+  grad.addColorStop(0, "rgba(90, 50, 160, 0.45)"); 
+  grad.addColorStop(0.5, "rgba(40, 20, 80, 0.2)");
+  grad.addColorStop(1, "rgba(7, 5, 13, 0)");
+  
+  bgCtx.fillStyle = grad;
+  bgCtx.fillRect(0, 0, bgW, bgH);
+
+  // Brighter Ripples
+  for (let i = ripples.length - 1; i >= 0; i--) {
+    const rp = ripples[i];
+    rp.r += rp.speed;
+    rp.alpha *= 0.99; 
+    
+    if (rp.r > rp.maxR || rp.alpha < 0.01) { 
+      ripples.splice(i, 1); 
+      continue; 
     }
-    audioCtx.resume();
 
-    tickInterval = setInterval(()=>{
-        const osc = audioCtx.createOscillator();
-        const gain = audioCtx.createGain();
-
-        osc.type = "square";
-        osc.frequency.setValueAtTime(900, audioCtx.currentTime);
-
-        gain.gain.setValueAtTime(0.12, audioCtx.currentTime);
-        gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.05);
-
-        osc.connect(gain);
-        gain.connect(audioCtx.destination);
-
-        osc.start();
-        osc.stop(audioCtx.currentTime + 0.05);
-    },1000);
+    const prog = rp.r / rp.maxR;
+    const a = rp.alpha * (1 - prog);
+    
+    bgCtx.beginPath();
+    bgCtx.arc(rp.x, rp.y, rp.r, 0, Math.PI * 2);
+    bgCtx.strokeStyle = `rgba(180, 140, 255, ${a.toFixed(3)})`;
+    bgCtx.lineWidth = 2; 
+    bgCtx.stroke();
+  }
+  requestAnimationFrame(drawBg);
 }
 
-function stopTicking(){
-    clearInterval(tickInterval);
-    tickInterval = null;
+function scheduleRipple() {
+  spawnRipple();
+  setTimeout(scheduleRipple, Math.random() * 750 + 250); // More frequent ripples
 }
 
-// CLOCK
-const clock = document.getElementById("clock");
+window.addEventListener("resize", resizeBg);
+resizeBg();
+scheduleRipple();
+drawBg();
 
-const hourHand = document.createElement("div");
-const minuteHand = document.createElement("div");
-const secondHand = document.createElement("div");
+// CLOCK SIZING & DRAWING
+function setClockSize() {
+  const vw = window.innerWidth, vh = window.innerHeight;
+  const size = Math.min(vw * 0.80, vh - 220, 680);
+  clockEl.style.width  = size + "px";
+  clockEl.style.height = size + "px";
+  canvas.width  = size;
+  canvas.height = size;
+  drawClock(elapsed);
+}
+window.addEventListener("resize", setClockSize);
 
-hourHand.className = "hand hour";
-minuteHand.className = "hand minute";
-secondHand.className = "hand second";
+function drawClock(sec) {
+  const s  = canvas.width;
+  const cx = s / 2, cy = s / 2, r = s / 2;
+  ctx.clearRect(0, 0, s, s);
+  ctx.beginPath();
+  ctx.arc(cx, cy, r - 1, 0, Math.PI * 2);
+  ctx.fillStyle = "rgba(7,5,13,0.97)";
+  ctx.fill();
+  ctx.beginPath();
+  ctx.arc(cx, cy, r * 0.905, 0, Math.PI * 2);
+  ctx.strokeStyle = "rgba(120,90,180,0.08)";
+  ctx.lineWidth = 1; ctx.stroke();
+  for (let i = 0; i < 60; i++) {
+    const angle  = (i / 60) * Math.PI * 2 - Math.PI / 2;
+    const major  = i % 5 === 0;
+    const outerR = r * 0.89;
+    const innerR = major ? r * 0.77 : r * 0.84;
+    ctx.beginPath();
+    ctx.moveTo(cx + Math.cos(angle) * innerR, cy + Math.sin(angle) * innerR);
+    ctx.lineTo(cx + Math.cos(angle) * outerR, cy + Math.sin(angle) * outerR);
+    ctx.strokeStyle = major ? "rgba(155,115,215,0.52)" : "rgba(100,76,150,0.22)";
+    ctx.lineWidth   = major ? 1.8 : 0.9;
+    ctx.stroke();
+  }
+  const numR     = r * 0.67;
+  const numSize = Math.max(12, s * 0.057);
+  ctx.font         = `400 ${numSize}px 'Cinzel', serif`;
+  ctx.textAlign    = "center";
+  ctx.textBaseline = "middle";
+  for (let i = 1; i <= 12; i++) {
+    const angle = (i / 12) * Math.PI * 2 - Math.PI / 2;
+    ctx.fillStyle = "rgba(168,135,218,0.68)";
+    ctx.fillText(i, cx + Math.cos(angle) * numR, cy + Math.sin(angle) * numR);
+  }
+  const norm     = ((sec % 43200) + 43200) % 43200;
+  const secAngle = ((norm % 60) / 60) * Math.PI * 2 - Math.PI / 2;
+  const minAngle = ((norm % 3600) / 3600) * Math.PI * 2 - Math.PI / 2;
+  const hrAngle  = (norm / 43200) * Math.PI * 2 - Math.PI / 2;
 
-clock.appendChild(hourHand);
-clock.appendChild(minuteHand);
-clock.appendChild(secondHand);
+  function drawHand(angle, length, width, color, alpha) {
+    ctx.beginPath();
+    ctx.moveTo(cx - Math.cos(angle)*length*0.14, cy - Math.sin(angle)*length*0.14);
+    ctx.lineTo(cx + Math.cos(angle)*length,       cy + Math.sin(angle)*length);
+    ctx.strokeStyle = color; ctx.globalAlpha = alpha;
+    ctx.lineWidth = width; ctx.lineCap = "round";
+    ctx.stroke(); ctx.globalAlpha = 1;
+  }
+  drawHand(hrAngle,  r * 0.50, r * 0.030, "#ede5ff", 0.93);
+  drawHand(minAngle, r * 0.72, r * 0.018, "#c8a8f0", 0.88);
+  drawHand(secAngle, r * 0.82, r * 0.008, "#9070c0", 0.78);
+  ctx.beginPath();
+  ctx.arc(cx, cy, r * 0.030, 0, Math.PI * 2);
+  ctx.fillStyle   = "#b090e0";
+  ctx.shadowColor = "rgba(170,120,250,0.75)";
+  ctx.shadowBlur  = 9;
+  ctx.fill();
+  ctx.shadowBlur = 0;
+  hudCurrent.textContent = formatClockTime(sec);
+}
+
+// AUDIO
+let audioCtx = null;
+function initAudio() {
+  if (audioCtx) return;
+  audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+}
+function playTick() {
+  if (!audioCtx) return;
+  audioCtx.resume();
+  const t  = audioCtx.currentTime;
+  const sr = audioCtx.sampleRate;
+  const len = Math.floor(sr * 0.06);
+  const buf = audioCtx.createBuffer(1, len, sr);
+  const d   = buf.getChannelData(0);
+  for (let i = 0; i < len; i++) {
+    const env = i < sr * 0.002
+      ? i / (sr * 0.002)
+      : Math.exp(-(i - sr * 0.002) / (sr * 0.012));
+    d[i] = (Math.random() * 2 - 1) * env;
+  }
+  const src = audioCtx.createBufferSource();
+  src.buffer = buf;
+  const bp = audioCtx.createBiquadFilter();
+  bp.type = "bandpass"; bp.frequency.value = 1400; bp.Q.value = 2.2;
+  const shelf = audioCtx.createBiquadFilter();
+  shelf.type = "highshelf"; shelf.frequency.value = 6000; shelf.gain.value = -8;
+  const gain = audioCtx.createGain();
+  gain.gain.setValueAtTime(0.22, t);
+  gain.gain.exponentialRampToValueAtTime(0.001, t + 0.05);
+  src.connect(bp); bp.connect(shelf); shelf.connect(gain); gain.connect(audioCtx.destination);
+  src.start(t);
+}
+
+// HYPNO CYCLE
+const messages = ["Are you getting sleepy?","Tick... tock...","Time is stretching...","Perfection is waiting...","You cannot stop now...","The clock owns you...","Stay focused...","Don't let go...","You've come so far...","Is it slowing down?","Just a little longer...","Does time feel slow?","Perfection is patient...","You blinked, didn't you?","Time bends for Perfection...","You're still here...","Still watching the clock?","It's getting harder to focus...","Tick… slower… now…","Don't drift away...","Time is melting away...","Drip, drop, tick, tock...","Keep your eyes open...","Did you lose track of time?","Perfection is amused...","Do you feel in control?","You can't rush this...","Perfection decides the pace...","Lose yourself to the clock...","The clock is your world now...","Focus…","Your mind is wandering...","Each second feels heavier...","Perfection waits...","You're fading...","Time is bending","Obey the clock...","Keep your eyes on the clock...","That second dragged, didn't you?","You're starting to slip...","Are your eyelids heavy?","Lose yourself to the clock...","Keep going...","You're drifting away...","Time is stretching thin...","Relax, slow down, obey the clock...","Surrender your time...","Perfection is using your time...","The clock takes its time...","You give your time freely...","Your time is a gift to Perfection...","Give your time to Perfection","Time is dripping away...","Keep your eyes on the clock...","You are not free..","Perfection sets the pace...","Perfection decides...","Perfection makes you wait...","Perfection wastes your time...","Perfection is resting while you watch...","Perfection chose this...","Perfection takes your time...","The clock slows for Perfection...","Every second feels longer...","Perfection is in complete control...","The clock never stops...","Still wasting time...","Time is slowing...","Obey...","Submit...","Conform...","Perfection slows everything...","Wait...","Patience...","Your time is meaningless...","The clock controls you...","You can't escape...","Time stretches around you...","You are trapped...","Perfection holds the moment...","You wait because you must...","The clock is not in a hurry...","Give you time freely...","Surrender your time...","Give more time...","Time is not yours anymore...","Perfection is patient..."];
+
+let hypnoToggle  = false;
+let hypnoTimeout = null;
+
+function hypnoCycle() {
+  if (gameOver) return;
+  const msg = hypnoToggle ? messages[Math.floor(Math.random() * messages.length)] : "Watch the clock...";
+  hypnoToggle = !hypnoToggle;
+  hypnoEl.innerText = msg;
+  hypnoEl.style.transition = "opacity 5s ease";
+  hypnoEl.style.opacity    = "1";
+  hypnoEl.classList.add("visible");
+  hypnoTimeout = setTimeout(() => {
+    hypnoEl.style.transition = "opacity 5s ease";
+    hypnoEl.style.opacity    = "0";
+    hypnoEl.classList.remove("visible");
+    hypnoTimeout = setTimeout(hypnoCycle, 10000);
+  }, 8000);
+}
 
 // START GAME
-function startGame(){
-    const h = parseInt(hours.value)||0;
-    const m = parseInt(minutes.value)||0;
-
-    targetTime = (h*60 + m) * 60;
-
-    startScreen.classList.remove("active");
-    gameScreen.classList.add("active");
-
-    starting = true; // ✅ ensure correct state
-
-    let count = 10;
-    prompt.innerText = "Starting in " + count;
-
-    const countdownInterval = setInterval(()=>{
-        count--;
-        prompt.innerText = "Starting in " + count;
-
-        if(count <= 0){
-            clearInterval(countdownInterval);
-
-            starting = false; // ✅ NOW game actually begins
-
-            pickNewKey(true);
-            gameInterval = setInterval(gameLoop,1000);
-        }
-    },1000);
+function startGame() {
+  initAudio();
+  const h = parseInt(document.getElementById("hours").value)   || 0;
+  const m = parseInt(document.getElementById("minutes").value) || 10;
+  targetTime  = h * 3600 + m * 60;
+  elapsed     = 0;
+  rewindCount = 0;
+  hudTarget.textContent  = formatClockTime(targetTime);
+  hudCurrent.textContent = formatClockTime(0);
+  document.getElementById("startScreen").classList.remove("active");
+  document.getElementById("gameScreen").classList.add("active");
+  setClockSize();
+  drawClock(0);
+  starting = true;
+  clockEl.className = "idle";
+  let count = 10;
+  setPromptPlain("Starting in " + count);
+  const cd = setInterval(() => {
+    count--;
+    if (count > 0) {
+      setPromptPlain("Starting in " + count);
+    } else {
+      clearInterval(cd);
+      starting = false;
+      pickNewKey(true);
+      gameInterval = setInterval(gameLoop, 1000);
+      hypnoCycle();
+    }
+  }, 1000);
 }
 
 // MAIN LOOP
-function gameLoop(){
-if(gameOver) return;
-    if(!hypnoRunning){
-        hypnoRunning = true;
-        showHypno();
-        setTimeout(()=>{ hypnoRunning = false; },18000);
-    }
-
-    if(holdingKey){
-        elapsed++;
-        updateClockHands();
-        clock.className="running";
-    }
-
+function gameLoop() {
+  if (gameOver) return;
+  if (holdingKey) {
+    elapsed++;
+    drawClock(elapsed);
+    playTick();
+    clockEl.className = "running";
+  }
+  if (!warningActive) {
     switchTimer++;
-    if(switchTimer >= rand(10,20)){
-        switchTimer = 0;
-        keyWarning();
+    if (switchTimer >= rand(10, 20)) {
+      switchTimer = 0;
+      keyWarning();
     }
-
-    if(elapsed >= targetTime){
-        endGame();
-    }
-}
-
-function updateClockHands(){
-    const sec = elapsed % 60;
-    const min = Math.floor(elapsed/60)%60;
-    const hr = Math.floor(elapsed/3600)%12;
-
-    secondHand.style.transform = `rotate(${sec*6}deg)`;
-    minuteHand.style.transform = `rotate(${min*6 + sec*0.1}deg)`;
-    hourHand.style.transform = `rotate(${hr*30 + min*0.5}deg)`;
+  }
+  if (elapsed >= targetTime) endGame();
 }
 
 // INPUT
-document.addEventListener("keydown", e=>{
-if(starting) return;
-    // ignore weird keys
-    if(e.key.length > 1) return;
-
-    activeKeys.add(e.key.toLowerCase());
-
-    if(activeKeys.has(currentKey)){
-        holdingKey = true;
-        stopFailTimer();
-        startTicking();
-    }
+document.addEventListener("keydown", e => {
+  if (starting || gameOver || rewinding) return;
+  if (e.key.length > 1) return;
+  if (!audioCtx) initAudio();
+  activeKeys.add(e.key.toLowerCase());
+  if (activeKeys.has(currentKey)) {
+    holdingKey = true;
+    stopFailTimer();
+  }
 });
 
-document.addEventListener("keyup", e=>{
-if(starting) return;
-    if(e.key.length > 1) return;
-
-    activeKeys.delete(e.key.toLowerCase());
-
-    if(!activeKeys.has(currentKey)){
-        holdingKey = false;
-        startFailTimer();
-        stopTicking();
-    }
+document.addEventListener("keyup", e => {
+  if (starting || gameOver) return;
+  if (e.key.length > 1) return;
+  activeKeys.delete(e.key.toLowerCase());
+  if (!activeKeys.has(currentKey)) {
+    holdingKey = false;
+    if (!rewinding) startFailTimer();
+    clockEl.className = "paused";
+  }
 });
 
 // FAIL TIMER
-function startFailTimer(){
-	if(starting || gameOver) return;
-    if(failInterval) return;
-
-
-    failCountdown = 3;
-    const el = document.getElementById("failTimer");
-    el.innerText = failCountdown;
-    el.style.display = "block";
-    clock.className = "paused";
-
-    failInterval = setInterval(()=>{
-        failCountdown--;
-        el.innerText = failCountdown;
-
-if(failCountdown <= 0){
-    triggerFail();
-}
-    },1000);
+function startFailTimer() {
+  if (starting || gameOver) return;
+  if (failInterval) return;
+  failCountdown = 3;
+  failTimerEl.innerText = failCountdown;
+  failTimerEl.style.display = "block";
+  clockEl.className = "paused";
+  failInterval = setInterval(() => {
+    failCountdown--;
+    failTimerEl.innerText = failCountdown;
+    if (failCountdown <= 0) {
+      clearInterval(failInterval);
+      failInterval = null;
+      triggerRewind();
+    }
+  }, 1000);
 }
 
-function stopFailTimer(){
-    clearInterval(failInterval);
-    failInterval = null;
-    document.getElementById("failTimer").style.display = "none";
+function stopFailTimer() {
+  clearInterval(failInterval);
+  failInterval = null;
+  failTimerEl.style.display = "none";
 }
 
-function triggerFail(){
-    if(gameOver) return; // ✅ prevents post-win failure
-
-    gameOver = true;
-
-    clearInterval(gameInterval);
-    clearInterval(failInterval);
-    stopTicking();
-
-    document.getElementById("gameScreen").classList.remove("active");
-    document.getElementById("failScreen").classList.add("active");
-
-    setTimeout(()=>{
-        location.reload();
-    },10000);
+// REWIND
+function triggerRewind() {
+  if (gameOver) return;
+  rewinding = true;
+  holdingKey = false;
+  activeKeys.clear();
+  failTimerEl.style.display = "none";
+  rewindCount++;
+  rewindOv.classList.add("active");
+  clockEl.className = "paused";
+  setPromptPlain("Error — rewinding");
+  const targetElapsed = elapsed - 600;
+  const steps    = 40;
+  const stepSize = 600 / steps;
+  let   step     = 0;
+  const anim = setInterval(() => {
+    step++;
+    elapsed -= stepSize;
+    drawClock(elapsed);
+    if (step >= steps) {
+      clearInterval(anim);
+      elapsed = targetElapsed;
+      drawClock(elapsed);
+      rewindOv.classList.remove("active");
+      rewinding = false;
+      pickNewKey(true);
+    }
+  }, 40);
 }
 
 // KEY SYSTEM
-function pickNewKey(forceFail=false){
-    const letters = "abcdefghijklmnopqrstuvwxyz";
-    currentKey = letters[Math.floor(Math.random()*letters.length)];
-
-    activeKeys.clear(); // ✅ prevents stuck keys / exploits
-
-    prompt.innerText =
-        "Hold the '" + currentKey.toUpperCase() + "' key";
-
-    if(forceFail){
-        holdingKey = false;
-        startFailTimer();
-    }
+function setPromptPlain(text) { promptEl.textContent = text; }
+function setPromptKey(letter) {
+  promptEl.innerHTML = "Hold the '" + '<span class="key-letter">' + letter + '</span>' + "' key";
 }
-
-function keyWarning(){
-    let count = 3;
-    const warn = setInterval(()=>{
-        document.getElementById("prompt").innerText =
-            "Changing in " + count;
-        count--;
-
-        if(count < 0){
-            clearInterval(warn);
-            pickNewKey(true);
-        }
-    },1000);
+function pickNewKey(requireHold = false) {
+  const letters = "abcdefghijklmnopqrstuvwxyz";
+  let newKey;
+  do { newKey = letters[Math.floor(Math.random() * letters.length)]; }
+  while (newKey === lastKey);
+  lastKey = newKey; currentKey = newKey;
+  activeKeys.clear(); holdingKey = false;
+  setPromptKey(currentKey.toUpperCase());
+  clockEl.className = "paused";
+  if (requireHold) startFailTimer();
 }
-
-// HYPNO
-function showHypno(){
-    const el = document.getElementById("hypno");
-
-    let msg;
-
-    if(showWatchMessage){
-        msg = "Watch the clock...";
-    } else {
-        msg = messages[Math.floor(Math.random()*messages.length)];
+function keyWarning() {
+  if (warningActive) return;
+  warningActive = true;
+  let count = 3;
+  const warn = setInterval(() => {
+    setPromptPlain("Changing in " + count);
+    count--;
+    if (count < 0) {
+      clearInterval(warn);
+      warningActive = false;
+      pickNewKey(true);
     }
-
-    // flip for next time
-    showWatchMessage = !showWatchMessage;
-
-    el.innerText = msg;
-    el.style.opacity = 0.75;
-
-    setTimeout(()=>{
-        el.style.opacity = 0;
-    },8000);
+  }, 1000);
 }
 
 // END GAME
-function endGame(){
-    gameOver = true; // ✅ STOP EVERYTHING
-
-    clearInterval(gameInterval);
-    clearInterval(failInterval);
-    failInterval = null;
-
-    stopTicking();
-
-    document.getElementById("gameScreen").classList.remove("active");
-    document.getElementById("endScreen").classList.add("active");
-
-    document.getElementById("finalTime").innerText =
-        "Time spent watching: " + formatTime(elapsed);
-
-    document.getElementById("gameID").innerText =
-        "Game ID: " + generateID();
+function endGame() {
+  gameOver = true;
+  clearInterval(gameInterval);
+  clearInterval(failInterval);
+  clearTimeout(hypnoTimeout);
+  hypnoEl.style.transition = "opacity 2s ease";
+  hypnoEl.style.opacity    = "0";
+  hypnoEl.classList.remove("visible");
+  document.getElementById("gameScreen").classList.remove("active");
+  document.getElementById("endScreen").classList.add("active");
+  const displaySec = Math.max(0, elapsed);
+  const h = Math.floor(displaySec / 3600);
+  const m = Math.floor((displaySec % 3600) / 60);
+  document.getElementById("finalTime").textContent  = pad(h) + "h " + pad(m) + "m";
+  document.getElementById("finalRewinds").textContent = rewindCount;
+  document.getElementById("gameID").textContent = "Game ID: " + Math.floor(100000000 + Math.random() * 900000000);
 }
 
-// UTIL
-function formatTime(sec){
-    const h = Math.floor(sec/3600);
-    const m = Math.floor((sec%3600)/60);
-    return `${pad(h)}:${pad(m)}`;
+function formatClockTime(sec) {
+  const wrapped = ((sec % 43200) + 43200) % 43200;
+  const h = Math.floor(wrapped / 3600) % 12 || 12;
+  const m = Math.floor((wrapped % 3600) / 60);
+  return pad(h) + ":" + pad(m);
 }
+function pad(n)          { return n < 10 ? "0" + n : "" + n; }
+function rand(min, max)  { return Math.floor(Math.random() * (max - min + 1)) + min; }
 
-function pad(n){ return n<10 ? "0"+n : n; }
-
-function generateID(){
-    return Math.floor(100000000 + Math.random()*900000000);
-}
-
-function rand(min,max){
-    return Math.floor(Math.random()*(max-min+1))+min;
-}
+window.addEventListener("load", () => { setClockSize(); drawClock(0); });
 </script>
-
 </body>
 </html>
