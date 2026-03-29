@@ -45,7 +45,6 @@ html, body {
 body::before {
   content: '';
   position: fixed; inset: 0;
-  /* Lightened center significantly to allow the canvas effects to show through */
   background: radial-gradient(ellipse at center, rgba(7,5,13,0.05) 0%, rgba(7,5,13,0.7) 100%);
   pointer-events: none;
   z-index: 1;
@@ -195,6 +194,8 @@ body::before {
   flex-shrink: 0;
   transition: box-shadow 1.2s ease;
   z-index: 10;
+  background: rgba(7, 5, 13, 0.4); 
+  backdrop-filter: blur(2px);
 }
 #clock.running {
   animation: clockPulse 2.8s ease-in-out infinite;
@@ -203,16 +204,23 @@ body::before {
   0%,100% { box-shadow: 0 0 30px rgba(140,100,220,0.25), 0 0 70px rgba(120,80,200,0.1); }
   50%      { box-shadow: 0 0 60px rgba(160,120,255,0.45), 0 0 120px rgba(140,100,240,0.2); }
 }
-#clock.paused,
-#clock.idle {
-  animation: none;
-  box-shadow: 0 0 24px rgba(80,50,130,0.15);
-}
 
 #clockCanvas {
   position: absolute; inset: 0;
   border-radius: 50%;
   display: block;
+}
+
+/* NEW: The Hypno Mask */
+#hypnoMask {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background: radial-gradient(circle at 50% 30%, rgba(7,5,13,0.95) 0%, rgba(7,5,13,0.6) 40%, transparent 75%);
+  z-index: 25; /* Sits above hands, below text */
+  opacity: 0;
+  transition: opacity 5s ease;
+  pointer-events: none;
 }
 
 #hud {
@@ -286,16 +294,12 @@ body::before {
   z-index: 40;
   pointer-events: none;
   font-family: var(--font-display);
-  font-size: clamp(48px, 6vw, 100px);
-  color: #e05555;
+  font-size: clamp(24px, 3vw, 40px);
+  color: #801a1a;
   letter-spacing: 0.05em;
   display: none;
-  text-shadow: 0 0 25px rgba(220, 80, 80, 0.7);
+  text-shadow: 0 0 20px rgba(100, 0, 0, 0.8);
   animation: pulseRed 0.7s ease-in-out infinite;
-}
-@keyframes pulseRed {
-  0%,100% { opacity: 1; transform: translate(-50%, 80px) scale(1); }
-  50%      { opacity: 0.42; transform: translate(-50%, 80px) scale(1.15); }
 }
 
 #hypno {
@@ -315,16 +319,16 @@ body::before {
   line-height: 1.4;
   z-index: 30;
   text-shadow:
-    0 0 12px rgba(255,200,80,0.9),
-    0 0 30px rgba(255,170,40,0.8),
-    0 0 80px rgba(255,140,20,0.6);
+    0 0 10px rgba(0,0,0,0.9),
+    0 0 20px rgba(255,200,80,0.8),
+    0 0 40px rgba(255,140,20,0.4);
 }
 #hypno.visible {
   animation: hypnoPulse 3.5s ease-in-out infinite;
 }
 @keyframes hypnoPulse {
-  0%,100% { text-shadow: 0 0 20px rgba(240,180,60,0.7), 0 0 50px rgba(220,150,30,0.35); }
-  50% { text-shadow: 0 0 30px rgba(255,200,80,0.95), 0 0 70px rgba(240,170,40,0.6); }
+  0%,100% { text-shadow: 0 0 10px rgba(0,0,0,0.8), 0 0 20px rgba(240,180,60,0.7), 0 0 50px rgba(220,150,30,0.35); }
+  50% { text-shadow: 0 0 10px rgba(0,0,0,0.9), 0 0 30px rgba(255,200,80,0.95), 0 0 70px rgba(240,170,40,0.6); }
 }
 
 #rewindOverlay {
@@ -347,13 +351,6 @@ body::before {
   text-shadow: 0 0 28px rgba(255,80,80,0.55);
   animation: glitch 0.1s steps(2,end) infinite;
 }
-@keyframes glitch {
-  0%   { transform: translate(0,0); }
-  25%  { transform: translate(-4px,1px); }
-  50%  { transform: translate(3px,-2px); }
-  75%  { transform: translate(-2px,2px); }
-  100% { transform: translate(0,0); }
-}
 
 .end-panel {
   background: rgba(15,12,26,0.93);
@@ -366,12 +363,6 @@ body::before {
   position: relative;
   overflow: hidden;
   backdrop-filter: blur(4px);
-}
-.end-panel::before {
-  content: '';
-  position: absolute; inset: 0;
-  background: radial-gradient(ellipse at 50% 0%, rgba(80,200,120,0.07) 0%, transparent 65%);
-  pointer-events: none;
 }
 .end-panel h1 {
   font-family: var(--font-display);
@@ -398,7 +389,6 @@ body::before {
   justify-content: space-between;
   gap: 24px;
 }
-.end-stat span { color: var(--purple-bright); }
 #gameID {
   margin-top: 20px;
   font-family: var(--font-display);
@@ -460,7 +450,7 @@ body::before {
   <div id="rewindOverlay"><div class="rewind-msg">Error — rewinding</div></div>
 
   <div id="clock" class="idle">
-    <canvas id="clockCanvas"></canvas>
+    <div id="hypnoMask"></div> <canvas id="clockCanvas"></canvas>
   </div>
 
   <div class="game-hud">
@@ -503,11 +493,12 @@ const promptEl    = document.getElementById("prompt");
 const failTimerEl = document.getElementById("failTimer");
 const rewindOv    = document.getElementById("rewindOverlay");
 const hypnoEl     = document.getElementById("hypno");
+const maskEl      = document.getElementById("hypnoMask");
 const hudCurrent   = document.getElementById("hudCurrent");
 const hudTarget    = document.getElementById("hudTarget");
 const ctx         = canvas.getContext("2d");
 
-// BACKGROUND RIPPLE & FOG
+// BACKGROUND RIPPLE
 const bgCanvas = document.getElementById("bgCanvas");
 const bgCtx    = bgCanvas.getContext("2d");
 let   bgW, bgH;
@@ -519,13 +510,10 @@ function resizeBg() {
 }
 
 function spawnRipple() {
-  // Frequent, larger, and more opaque ripples
   const mx = Math.random() * bgW;
   const my = Math.random() * bgH;
   ripples.push({ 
-    x: mx, 
-    y: my, 
-    r: 0, 
+    x: mx, y: my, r: 0, 
     maxR: Math.random() * 300 + 150, 
     alpha: 0.5, 
     speed: Math.random() * 0.4 + 0.2 
@@ -534,38 +522,26 @@ function spawnRipple() {
 
 function drawBg() {
   bgCtx.clearRect(0, 0, bgW, bgH);
-  
-  // Dark purple base
   bgCtx.fillStyle = "#0a0812"; 
   bgCtx.fillRect(0, 0, bgW, bgH);
 
-  // Stronger Ambient Fog
   const t = Date.now() / 4000;
   const gx = bgW * (0.5 + Math.sin(t) * 0.2);
   const gy = bgH * (0.5 + Math.cos(t * 0.7) * 0.2);
-  
   const grad = bgCtx.createRadialGradient(gx, gy, 0, gx, gy, bgW * 0.8);
   grad.addColorStop(0, "rgba(90, 50, 160, 0.45)"); 
   grad.addColorStop(0.5, "rgba(40, 20, 80, 0.2)");
   grad.addColorStop(1, "rgba(7, 5, 13, 0)");
-  
   bgCtx.fillStyle = grad;
   bgCtx.fillRect(0, 0, bgW, bgH);
 
-  // Brighter Ripples
   for (let i = ripples.length - 1; i >= 0; i--) {
     const rp = ripples[i];
     rp.r += rp.speed;
     rp.alpha *= 0.99; 
-    
-    if (rp.r > rp.maxR || rp.alpha < 0.01) { 
-      ripples.splice(i, 1); 
-      continue; 
-    }
-
+    if (rp.r > rp.maxR || rp.alpha < 0.01) { ripples.splice(i, 1); continue; }
     const prog = rp.r / rp.maxR;
     const a = rp.alpha * (1 - prog);
-    
     bgCtx.beginPath();
     bgCtx.arc(rp.x, rp.y, rp.r, 0, Math.PI * 2);
     bgCtx.strokeStyle = `rgba(180, 140, 255, ${a.toFixed(3)})`;
@@ -577,15 +553,13 @@ function drawBg() {
 
 function scheduleRipple() {
   spawnRipple();
-  setTimeout(scheduleRipple, Math.random() * 750 + 250); // More frequent ripples
+  setTimeout(scheduleRipple, Math.random() * 750 + 250); 
 }
 
 window.addEventListener("resize", resizeBg);
-resizeBg();
-scheduleRipple();
-drawBg();
+resizeBg(); scheduleRipple(); drawBg();
 
-// CLOCK SIZING & DRAWING
+// CLOCK DRAWING
 function setClockSize() {
   const vw = window.innerWidth, vh = window.innerHeight;
   const size = Math.min(vw * 0.80, vh - 220, 680);
@@ -621,17 +595,17 @@ function drawClock(sec) {
     ctx.lineWidth   = major ? 1.8 : 0.9;
     ctx.stroke();
   }
-  const numR     = r * 0.67;
+  const numR = r * 0.67;
   const numSize = Math.max(12, s * 0.057);
-  ctx.font         = `400 ${numSize}px 'Cinzel', serif`;
-  ctx.textAlign    = "center";
+  ctx.font = `400 ${numSize}px 'Cinzel', serif`;
+  ctx.textAlign = "center";
   ctx.textBaseline = "middle";
   for (let i = 1; i <= 12; i++) {
     const angle = (i / 12) * Math.PI * 2 - Math.PI / 2;
     ctx.fillStyle = "rgba(168,135,218,0.68)";
     ctx.fillText(i, cx + Math.cos(angle) * numR, cy + Math.sin(angle) * numR);
   }
-  const norm     = ((sec % 43200) + 43200) % 43200;
+  const norm = ((sec % 43200) + 43200) % 43200;
   const secAngle = ((norm % 60) / 60) * Math.PI * 2 - Math.PI / 2;
   const minAngle = ((norm % 3600) / 3600) * Math.PI * 2 - Math.PI / 2;
   const hrAngle  = (norm / 43200) * Math.PI * 2 - Math.PI / 2;
@@ -639,14 +613,15 @@ function drawClock(sec) {
   function drawHand(angle, length, width, color, alpha) {
     ctx.beginPath();
     ctx.moveTo(cx - Math.cos(angle)*length*0.14, cy - Math.sin(angle)*length*0.14);
-    ctx.lineTo(cx + Math.cos(angle)*length,       cy + Math.sin(angle)*length);
+    ctx.lineTo(cx + Math.cos(angle)*length, cy + Math.sin(angle)*length);
     ctx.strokeStyle = color; ctx.globalAlpha = alpha;
     ctx.lineWidth = width; ctx.lineCap = "round";
     ctx.stroke(); ctx.globalAlpha = 1;
   }
-  drawHand(hrAngle,  r * 0.50, r * 0.030, "#ede5ff", 0.93);
-  drawHand(minAngle, r * 0.72, r * 0.018, "#c8a8f0", 0.88);
-  drawHand(secAngle, r * 0.82, r * 0.008, "#9070c0", 0.78);
+  drawHand(hrAngle,  r * 0.50, r * 0.040, "#ede5ff", 1.0);
+  drawHand(minAngle, r * 0.72, r * 0.025, "#c8a8f0", 1.0);
+  drawHand(secAngle, r * 0.82, r * 0.012, "#9070c0", 1.0);
+
   ctx.beginPath();
   ctx.arc(cx, cy, r * 0.030, 0, Math.PI * 2);
   ctx.fillStyle   = "#b090e0";
@@ -659,41 +634,33 @@ function drawClock(sec) {
 
 // AUDIO
 let audioCtx = null;
-function initAudio() {
-  if (audioCtx) return;
-  audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-}
+function initAudio() { if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)(); }
 function playTick() {
   if (!audioCtx) return;
   audioCtx.resume();
-  const t  = audioCtx.currentTime;
+  const t = audioCtx.currentTime;
   const sr = audioCtx.sampleRate;
   const len = Math.floor(sr * 0.06);
   const buf = audioCtx.createBuffer(1, len, sr);
-  const d   = buf.getChannelData(0);
+  const d = buf.getChannelData(0);
   for (let i = 0; i < len; i++) {
-    const env = i < sr * 0.002
-      ? i / (sr * 0.002)
-      : Math.exp(-(i - sr * 0.002) / (sr * 0.012));
+    const env = i < sr * 0.002 ? i / (sr * 0.002) : Math.exp(-(i - sr * 0.002) / (sr * 0.012));
     d[i] = (Math.random() * 2 - 1) * env;
   }
   const src = audioCtx.createBufferSource();
   src.buffer = buf;
   const bp = audioCtx.createBiquadFilter();
   bp.type = "bandpass"; bp.frequency.value = 1400; bp.Q.value = 2.2;
-  const shelf = audioCtx.createBiquadFilter();
-  shelf.type = "highshelf"; shelf.frequency.value = 6000; shelf.gain.value = -8;
   const gain = audioCtx.createGain();
   gain.gain.setValueAtTime(0.22, t);
   gain.gain.exponentialRampToValueAtTime(0.001, t + 0.05);
-  src.connect(bp); bp.connect(shelf); shelf.connect(gain); gain.connect(audioCtx.destination);
+  src.connect(bp); bp.connect(gain); gain.connect(audioCtx.destination);
   src.start(t);
 }
 
-// HYPNO CYCLE
+// HYPNO CYCLE (With Masking Logic)
 const messages = ["Are you getting sleepy?","Tick... tock...","Time is stretching...","Perfection is waiting...","You cannot stop now...","The clock owns you...","Stay focused...","Don't let go...","You've come so far...","Is it slowing down?","Just a little longer...","Does time feel slow?","Perfection is patient...","You blinked, didn't you?","Time bends for Perfection...","You're still here...","Still watching the clock?","It's getting harder to focus...","Tick… slower… now…","Don't drift away...","Time is melting away...","Drip, drop, tick, tock...","Keep your eyes open...","Did you lose track of time?","Perfection is amused...","Do you feel in control?","You can't rush this...","Perfection decides the pace...","Lose yourself to the clock...","The clock is your world now...","Focus…","Your mind is wandering...","Each second feels heavier...","Perfection waits...","You're fading...","Time is bending","Obey the clock...","Keep your eyes on the clock...","That second dragged, didn't you?","You're starting to slip...","Are your eyelids heavy?","Lose yourself to the clock...","Keep going...","You're drifting away...","Time is stretching thin...","Relax, slow down, obey the clock...","Surrender your time...","Perfection is using your time...","The clock takes its time...","You give your time freely...","Your time is a gift to Perfection...","Give your time to Perfection","Time is dripping away...","Keep your eyes on the clock...","You are not free..","Perfection sets the pace...","Perfection decides...","Perfection makes you wait...","Perfection wastes your time...","Perfection is resting while you watch...","Perfection chose this...","Perfection takes your time...","The clock slows for Perfection...","Every second feels longer...","Perfection is in complete control...","The clock never stops...","Still wasting time...","Time is slowing...","Obey...","Submit...","Conform...","Perfection slows everything...","Wait...","Patience...","Your time is meaningless...","The clock controls you...","You can't escape...","Time stretches around you...","You are trapped...","Perfection holds the moment...","You wait because you must...","The clock is not in a hurry...","Give you time freely...","Surrender your time...","Give more time...","Time is not yours anymore...","Perfection is patient..."];
-
-let hypnoToggle  = false;
+let hypnoToggle = false;
 let hypnoTimeout = null;
 
 function hypnoCycle() {
@@ -701,42 +668,47 @@ function hypnoCycle() {
   const msg = hypnoToggle ? messages[Math.floor(Math.random() * messages.length)] : "Watch the clock...";
   hypnoToggle = !hypnoToggle;
   hypnoEl.innerText = msg;
-  hypnoEl.style.transition = "opacity 5s ease";
-  hypnoEl.style.opacity    = "1";
+  
+  // Fade IN text and mask
+  hypnoEl.style.transition = "opacity 7s ease";
+  hypnoEl.style.opacity = "1";
   hypnoEl.classList.add("visible");
+  
+  maskEl.style.opacity = "1"; // Fade in center blackout
+  
   hypnoTimeout = setTimeout(() => {
+    // Fade OUT text and mask
     hypnoEl.style.transition = "opacity 5s ease";
-    hypnoEl.style.opacity    = "0";
+    hypnoEl.style.opacity = "0";
     hypnoEl.classList.remove("visible");
+    
+    maskEl.style.opacity = "0"; // Fade out center blackout
+    
     hypnoTimeout = setTimeout(hypnoCycle, 10000);
-  }, 8000);
+  }, 4000);
 }
 
-// START GAME
+// GAMEPLAY LOGIC
 function startGame() {
   initAudio();
-  const h = parseInt(document.getElementById("hours").value)   || 0;
+  const h = parseInt(document.getElementById("hours").value) || 0;
   const m = parseInt(document.getElementById("minutes").value) || 10;
-  targetTime  = h * 3600 + m * 60;
-  elapsed     = 0;
-  rewindCount = 0;
-  hudTarget.textContent  = formatClockTime(targetTime);
+  targetTime = h * 3600 + m * 60;
+  elapsed = 0; rewindCount = 0;
+  hudTarget.textContent = formatClockTime(targetTime);
   hudCurrent.textContent = formatClockTime(0);
   document.getElementById("startScreen").classList.remove("active");
   document.getElementById("gameScreen").classList.add("active");
-  setClockSize();
-  drawClock(0);
+  setClockSize(); drawClock(0);
   starting = true;
   clockEl.className = "idle";
   let count = 10;
   setPromptPlain("Starting in " + count);
   const cd = setInterval(() => {
     count--;
-    if (count > 0) {
-      setPromptPlain("Starting in " + count);
-    } else {
-      clearInterval(cd);
-      starting = false;
+    if (count > 0) setPromptPlain("Starting in " + count);
+    else {
+      clearInterval(cd); starting = false;
       pickNewKey(true);
       gameInterval = setInterval(gameLoop, 1000);
       hypnoCycle();
@@ -744,162 +716,89 @@ function startGame() {
   }, 1000);
 }
 
-// MAIN LOOP
 function gameLoop() {
   if (gameOver) return;
-  if (holdingKey) {
-    elapsed++;
-    drawClock(elapsed);
-    playTick();
-    clockEl.className = "running";
-  }
+  if (holdingKey) { elapsed++; drawClock(elapsed); playTick(); clockEl.className = "running"; }
   if (!warningActive) {
     switchTimer++;
-    if (switchTimer >= rand(10, 20)) {
-      switchTimer = 0;
-      keyWarning();
-    }
+    if (switchTimer >= rand(20, 30)) { switchTimer = 0; keyWarning(); }
   }
   if (elapsed >= targetTime) endGame();
 }
 
-// INPUT
 document.addEventListener("keydown", e => {
   if (starting || gameOver || rewinding) return;
   if (e.key.length > 1) return;
-  if (!audioCtx) initAudio();
   activeKeys.add(e.key.toLowerCase());
-  if (activeKeys.has(currentKey)) {
-    holdingKey = true;
-    stopFailTimer();
-  }
+  if (activeKeys.has(currentKey)) { holdingKey = true; stopFailTimer(); }
 });
 
 document.addEventListener("keyup", e => {
   if (starting || gameOver) return;
   if (e.key.length > 1) return;
   activeKeys.delete(e.key.toLowerCase());
-  if (!activeKeys.has(currentKey)) {
-    holdingKey = false;
-    if (!rewinding) startFailTimer();
-    clockEl.className = "paused";
-  }
+  if (!activeKeys.has(currentKey)) { holdingKey = false; if (!rewinding) startFailTimer(); clockEl.className = "paused"; }
 });
 
-// FAIL TIMER
 function startFailTimer() {
-  if (starting || gameOver) return;
-  if (failInterval) return;
-  failCountdown = 3;
-  failTimerEl.innerText = failCountdown;
-  failTimerEl.style.display = "block";
-  clockEl.className = "paused";
+  if (starting || gameOver || failInterval) return;
+  failCountdown = 3; failTimerEl.innerText = failCountdown; failTimerEl.style.display = "block";
   failInterval = setInterval(() => {
-    failCountdown--;
-    failTimerEl.innerText = failCountdown;
-    if (failCountdown <= 0) {
-      clearInterval(failInterval);
-      failInterval = null;
-      triggerRewind();
-    }
+    failCountdown--; failTimerEl.innerText = failCountdown;
+    if (failCountdown <= 0) { clearInterval(failInterval); failInterval = null; triggerRewind(); }
   }, 1000);
 }
+function stopFailTimer() { clearInterval(failInterval); failInterval = null; failTimerEl.style.display = "none"; }
 
-function stopFailTimer() {
-  clearInterval(failInterval);
-  failInterval = null;
-  failTimerEl.style.display = "none";
-}
-
-// REWIND
 function triggerRewind() {
   if (gameOver) return;
-  rewinding = true;
-  holdingKey = false;
-  activeKeys.clear();
-  failTimerEl.style.display = "none";
-  rewindCount++;
-  rewindOv.classList.add("active");
-  clockEl.className = "paused";
-  setPromptPlain("Error — rewinding");
+  rewinding = true; holdingKey = false; activeKeys.clear(); failTimerEl.style.display = "none";
+  rewindCount++; rewindOv.classList.add("active"); setPromptPlain("Error — rewinding");
   const targetElapsed = elapsed - 600;
-  const steps    = 40;
-  const stepSize = 600 / steps;
-  let   step     = 0;
+  const steps = 40; const stepSize = 600 / steps; let step = 0;
   const anim = setInterval(() => {
-    step++;
-    elapsed -= stepSize;
-    drawClock(elapsed);
-    if (step >= steps) {
-      clearInterval(anim);
-      elapsed = targetElapsed;
-      drawClock(elapsed);
-      rewindOv.classList.remove("active");
-      rewinding = false;
-      pickNewKey(true);
-    }
+    step++; elapsed -= stepSize; drawClock(elapsed);
+    if (step >= steps) { clearInterval(anim); elapsed = targetElapsed; drawClock(elapsed); rewindOv.classList.remove("active"); rewinding = false; pickNewKey(true); }
   }, 40);
 }
 
-// KEY SYSTEM
 function setPromptPlain(text) { promptEl.textContent = text; }
-function setPromptKey(letter) {
-  promptEl.innerHTML = "Hold the '" + '<span class="key-letter">' + letter + '</span>' + "' key";
-}
+function setPromptKey(letter) { promptEl.innerHTML = "Hold the '" + '<span class="key-letter">' + letter + '</span>' + "' key"; }
 function pickNewKey(requireHold = false) {
   const letters = "abcdefghijklmnopqrstuvwxyz";
-  let newKey;
-  do { newKey = letters[Math.floor(Math.random() * letters.length)]; }
-  while (newKey === lastKey);
-  lastKey = newKey; currentKey = newKey;
-  activeKeys.clear(); holdingKey = false;
-  setPromptKey(currentKey.toUpperCase());
-  clockEl.className = "paused";
+  let newKey; do { newKey = letters[Math.floor(Math.random() * letters.length)]; } while (newKey === lastKey);
+  lastKey = newKey; currentKey = newKey; activeKeys.clear(); holdingKey = false;
+  setPromptKey(currentKey.toUpperCase()); clockEl.className = "paused";
   if (requireHold) startFailTimer();
 }
 function keyWarning() {
   if (warningActive) return;
-  warningActive = true;
-  let count = 3;
+  warningActive = true; let count = 3;
   const warn = setInterval(() => {
-    setPromptPlain("Changing in " + count);
-    count--;
-    if (count < 0) {
-      clearInterval(warn);
-      warningActive = false;
-      pickNewKey(true);
-    }
+    setPromptPlain("Changing in " + count); count--;
+    if (count < 0) { clearInterval(warn); warningActive = false; pickNewKey(true); }
   }, 1000);
 }
 
-// END GAME
 function endGame() {
-  gameOver = true;
-  clearInterval(gameInterval);
-  clearInterval(failInterval);
-  clearTimeout(hypnoTimeout);
-  hypnoEl.style.transition = "opacity 2s ease";
-  hypnoEl.style.opacity    = "0";
-  hypnoEl.classList.remove("visible");
+  gameOver = true; clearInterval(gameInterval); clearInterval(failInterval); clearTimeout(hypnoTimeout);
+  hypnoEl.style.opacity = "0"; maskEl.style.opacity = "0";
   document.getElementById("gameScreen").classList.remove("active");
   document.getElementById("endScreen").classList.add("active");
   const displaySec = Math.max(0, elapsed);
-  const h = Math.floor(displaySec / 3600);
-  const m = Math.floor((displaySec % 3600) / 60);
-  document.getElementById("finalTime").textContent  = pad(h) + "h " + pad(m) + "m";
+  const h = Math.floor(displaySec / 3600), m = Math.floor((displaySec % 3600) / 60);
+  document.getElementById("finalTime").textContent = pad(h) + "h " + pad(m) + "m";
   document.getElementById("finalRewinds").textContent = rewindCount;
   document.getElementById("gameID").textContent = "Game ID: " + Math.floor(100000000 + Math.random() * 900000000);
 }
 
 function formatClockTime(sec) {
   const wrapped = ((sec % 43200) + 43200) % 43200;
-  const h = Math.floor(wrapped / 3600) % 12 || 12;
-  const m = Math.floor((wrapped % 3600) / 60);
+  const h = Math.floor(wrapped / 3600) % 12 || 12, m = Math.floor((wrapped % 3600) / 60);
   return pad(h) + ":" + pad(m);
 }
-function pad(n)          { return n < 10 ? "0" + n : "" + n; }
-function rand(min, max)  { return Math.floor(Math.random() * (max - min + 1)) + min; }
-
+function pad(n) { return n < 10 ? "0" + n : "" + n; }
+function rand(min, max) { return Math.floor(Math.random() * (max - min + 1)) + min; }
 window.addEventListener("load", () => { setClockSize(); drawClock(0); });
 </script>
 </body>
