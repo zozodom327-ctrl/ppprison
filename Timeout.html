@@ -1,104 +1,462 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Perfection's Perfect Prison</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Perfection's Obedience Machine</title>
 <style>
-body {
-    margin: 0;
-    background: black;
-    color: white;
-    font-family: Arial, sans-serif;
+  @import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Bebas+Neue&family=VT323&display=swap');
+
+  :root {
+    --blood: #8b0000;
+    --acid: #00ff41;
+    --pale: #e8e0d0;
+    --warn: #ff3300;
+    --gold: #c9a84c;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  html, body {
+    width: 100%;
+    height: 100%;
     overflow: hidden;
+    background: #000;
+    color: var(--pale);
+    font-family: 'Share Tech Mono', monospace;
     user-select: none;
-}
-#codeScreen {
+  }
+
+  /* ── SCREENS ── */
+  .screen {
     position: fixed;
     inset: 0;
     display: flex;
     flex-direction: column;
-    justify-content: center;
     align-items: center;
-}
-input {
-    width: 400px;
-    padding: 10px;
-    background: #111;
-    color: white;
-    border: 1px solid #444;
-}
-button {
-    padding: 10px 20px;
-    margin-top: 20px;
-    cursor: pointer;
-}
-#startScreen {
-    position: fixed;
-    inset: 0;
-    background: black;
-    display: none;
+    justify-content: center;
+    transition: opacity 0.8s;
+    /* Contain content within viewport, scroll only as last resort */
+    overflow: hidden;
+    padding: clamp(0.8rem, 3vh, 2rem) clamp(0.8rem, 3vw, 2rem);
+  }
+  .screen.hidden { opacity: 0; pointer-events: none; }
+
+  /* ── START + END SHARED LAYOUT ── */
+  #startScreen,
+  #endScreen {
+    background: radial-gradient(ellipse at center, #0a0005 0%, #000 70%);
+    gap: clamp(0.5rem, 1.5vh, 1.5rem);
+    text-align: center;
+  }
+
+  .start-title {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: clamp(1.8rem, 7vw, 5.5rem);
+    letter-spacing: 0.08em;
+    line-height: 0.95;
+    color: var(--pale);
+    text-shadow:
+      0 0 20px rgba(139,0,0,0.9),
+      0 0 60px rgba(139,0,0,0.5);
+    animation: titlePulse 4s ease-in-out infinite;
+  }
+
+  @keyframes titlePulse {
+    0%,100% { text-shadow: 0 0 20px rgba(139,0,0,0.9), 0 0 60px rgba(139,0,0,0.5); }
+    50%      { text-shadow: 0 0 40px rgba(139,0,0,1),   0 0 100px rgba(139,0,0,0.8); }
+  }
+
+  .start-subtitle {
+    font-family: 'VT323', monospace;
+    font-size: clamp(0.75rem, 1.8vw, 1.1rem);
+    color: #666;
+    letter-spacing: 0.3em;
+    text-transform: uppercase;
+  }
+
+  .divider {
+    width: 60%;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--blood), transparent);
+    flex-shrink: 0;
+  }
+
+  /* Time selector */
+  .time-selector {
+    display: flex;
     flex-direction: column;
-    justify-content: center;
     align-items: center;
-}
-#timer {
-    position: fixed;
-    top: 10px;
-    left: 15px;
-    font-size: 14px;
-    color: #777;
-}
-#prompt {
-    font-size: 32px;
-    color: red;
+    gap: 0.5rem;
+  }
+
+  .time-label {
+    font-family: 'VT323', monospace;
+    font-size: clamp(0.8rem, 1.5vw, 1rem);
+    color: #888;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+  }
+
+  .time-inputs {
+    display: flex;
+    align-items: center;
+    gap: 0.8rem;
+  }
+
+  .time-input-group {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.25rem;
+  }
+
+  .time-input-group label {
+    font-family: 'VT323', monospace;
+    font-size: clamp(0.7rem, 1.2vw, 0.85rem);
+    color: #555;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+  }
+
+  .time-input {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: clamp(1.2rem, 3vw, 1.8rem);
+    width: 3.5rem;
     text-align: center;
-    margin-top: 40vh;
-}
-#status {
+    background: transparent;
+    border: 1px solid #333;
+    border-bottom: 2px solid var(--blood);
+    color: var(--pale);
+    padding: 0.2rem 0.4rem;
+    outline: none;
+    -moz-appearance: textfield;
+    transition: border-color 0.2s, text-shadow 0.2s;
+  }
+
+  .time-input::-webkit-outer-spin-button,
+  .time-input::-webkit-inner-spin-button { -webkit-appearance: none; }
+
+  .time-input:focus {
+    border-color: var(--blood);
+    text-shadow: 0 0 10px rgba(200,0,0,0.6);
+    background: rgba(139,0,0,0.07);
+  }
+
+  .time-sep {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: clamp(1.2rem, 3vw, 1.8rem);
+    color: #444;
+    padding-bottom: 1.2rem;
+  }
+
+  /* Instructions */
+  .instructions {
+    font-family: 'VT323', monospace;
+    font-size: clamp(0.8rem, 1.8vw, 1.1rem);
+    color: #555;
+    line-height: 1.6;
+    max-width: 560px;
     text-align: center;
-    margin-top: 20px;
-    color: #aaa;
+    letter-spacing: 0.04em;
+  }
+
+  .instructions span { color: var(--pale); }
+  .instructions .warn-text { color: var(--warn); }
+
+  /* Begin / play-again button — shared style */
+  .action-btn {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: clamp(1.1rem, 2.5vw, 1.8rem);
+    letter-spacing: 0.3em;
+    padding: clamp(0.4rem, 1vh, 0.7rem) clamp(1.2rem, 4vw, 2.5rem);
+    background: transparent;
+    border: 2px solid var(--blood);
+    color: var(--pale);
+    cursor: pointer;
+    position: relative;
+    overflow: hidden;
+    transition: all 0.3s;
+    text-transform: uppercase;
+    flex-shrink: 0;
+  }
+
+  .action-btn::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: var(--blood);
+    transform: scaleX(0);
+    transform-origin: left;
+    transition: transform 0.3s;
+    z-index: -1;
+  }
+
+  .action-btn:hover::before { transform: scaleX(1); }
+  .action-btn:hover { text-shadow: 0 0 20px #fff; }
+
+  /* ── END SCREEN SPECIFIC ── */
+  .end-title {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: clamp(1.5rem, 5vw, 3.5rem);
+    color: var(--pale);
+    letter-spacing: 0.15em;
+    text-shadow:
+      0 0 20px rgba(139,0,0,0.9),
+      0 0 60px rgba(139,0,0,0.5);
+    animation: titlePulse 4s ease-in-out infinite;
+  }
+
+  .stats-box {
+    border: 1px solid #2a0000;
+    padding: clamp(0.6rem, 2vh, 1.2rem) clamp(1rem, 3vw, 2rem);
+    background: rgba(139,0,0,0.05);
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    min-width: 280px;
+  }
+
+  .stat-row {
+    display: flex;
+    justify-content: space-between;
+    gap: 2rem;
+    font-family: 'Share Tech Mono', monospace;
+    font-size: clamp(0.72rem, 1.5vw, 0.9rem);
+    border-bottom: 1px solid #1a0000;
+    padding-bottom: 0.35rem;
+  }
+
+  .stat-row:last-child { border-bottom: none; padding-bottom: 0; }
+  .stat-label { color: #555; letter-spacing: 0.1em; text-transform: uppercase; }
+  .stat-value { color: var(--pale); letter-spacing: 0.05em; }
+  .game-id-row .stat-value { color: var(--gold); }
+
+  .compliance-stamp {
+    font-family: 'VT323', monospace;
+    font-size: clamp(0.7rem, 1.2vw, 0.85rem);
+    color: #222;
+    letter-spacing: 0.3em;
+    text-transform: uppercase;
+  }
+
+  /* ── GAME SCREEN ── */
+  #gameScreen { background: #000; padding: 0; }
+
+  /* Add this to your CSS to blur the canvas */
+#bgCanvas { 
+  position: absolute; 
+  inset: -100px; /* Expand the canvas slightly so the blur doesn't show edges */
+  width: calc(100% + 200px); 
+  height: calc(100% + 200px);
+  filter: blur(20px) contrast(1.0); /* This creates the heavy, hazy look */
+  opacity: 0.8; /* Keeps the black background deep */
 }
-.stat {
-    margin: 8px 0;
-    color: #aaa;
-}
+
+  #bgCanvas { position: absolute; inset: 0; width: 100%; height: 100%; }
+
+  #messagesLayer { position: absolute; inset: 0; pointer-events: none; overflow: hidden; top: 36px; }
+
+  .float-msg {
+    position: absolute;
+    font-family: 'Arial Black', 'Helvetica Neue', sans-serif;
+    font-weight: 900;
+    pointer-events: none;
+    white-space: nowrap;
+    animation: fadeInOut var(--dur, 12s) ease-in-out forwards;
+  }
+
+  @keyframes fadeInOut {
+    0%   { opacity: 0; }
+    15%  { opacity: var(--peak, 0.6); }
+    75%  { opacity: var(--peak, 0.6); }
+    100% { opacity: 0; }
+  }
+
+  /* Progress bar */
+  #progressWrap {
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 36px;
+    background: rgba(0,0,0,0.9);
+    border-bottom: 1px solid #1a0000;
+    z-index: 50;
+    display: flex;
+    align-items: center;
+    overflow: hidden;
+    flex-shrink: 0;
+  }
+
+  #progressFill {
+    height: 100%;
+    background: linear-gradient(90deg, #1a0000, var(--blood), #ff1a00);
+    transition: width 0.5s linear;
+    width: 0%;
+    position: absolute;
+    left: 0; top: 0;
+    box-shadow: 2px 0 15px rgba(200,0,0,0.6);
+  }
+
+  #progressTime {
+    position: absolute;
+    width: 100%;
+    text-align: center;
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 0.8rem;
+    color: var(--pale);
+    letter-spacing: 0.15em;
+    text-shadow: 0 0 8px #000, 0 0 4px #000;
+    z-index: 1;
+  }
+
+  /* OBEY — sits over background, no blackout */
+  #obeyOverlay {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: transparent;
+    z-index: 100;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.15s;
+  }
+
+  #obeyOverlay.active { opacity: 1; pointer-events: all; }
+
+  #obeyWord {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: clamp(8rem, 28vw, 20rem);
+    color: #cc0000;
+    letter-spacing: 0.02em;
+    text-shadow:
+      0 0 40px rgba(180,0,0,0.9),
+      0 0 80px rgba(140,0,0,0.6),
+      4px 4px 0 #1a0000,
+      -4px -4px 0 #1a0000,
+      4px -4px 0 #1a0000,
+      -4px 4px 0 #1a0000;
+    line-height: 1;
+  }
+
+  #obeyWord.pulse1 { animation: obeyPulse 1s ease-in-out; }
+  @keyframes obeyPulse {
+    0%   { transform: scale(1);    color: #cc0000; }
+    15%  { transform: scale(1.06); color: #ff2200;
+           text-shadow: 0 0 80px rgba(255,30,0,1), 0 0 40px rgba(200,0,0,0.9),
+                        4px 4px 0 #1a0000, -4px -4px 0 #1a0000,
+                        4px -4px 0 #1a0000, -4px 4px 0 #1a0000; }
+    50%  { transform: scale(0.98); }
+    100% { transform: scale(1);    color: #cc0000; }
+  }
+
+  /* Messages fade when OBEY appears */
+  #messagesLayer.obey-active .float-msg {
+    transition: opacity 0.3s ease-out;
+    opacity: 0 !important;
+  }
+
+  /* Notification */
+  #notification {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-family: 'VT323', monospace;
+    font-size: clamp(1.3rem, 4vw, 2.2rem);
+    color: var(--warn);
+    text-align: center;
+    z-index: 200;
+    pointer-events: none;
+    opacity: 0;
+    letter-spacing: 0.1em;
+    text-shadow: 0 0 30px rgba(255,0,0,0.8);
+    white-space: nowrap;
+  }
+
+  #notification.show {
+    animation: notifPop 2.5s ease-out forwards;
+  }
+
+  @keyframes notifPop {
+    0%   { opacity: 0; transform: translate(-50%, -60%) scale(0.8); }
+    15%  { opacity: 1; transform: translate(-50%, -50%) scale(1.05); }
+    70%  { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+    100% { opacity: 0; transform: translate(-50%, -45%); }
+  }
 </style>
 </head>
 <body>
 
-<!-- CODE ENTRY -->
-<div id="codeScreen">
-<h2>Enter Prison Code</h2>
-<input id="codeInput" placeholder="PX-...-ZX">
-<button onclick="decodeAndLoad()">Enter</button>
+<!-- START SCREEN -->
+<div id="startScreen" class="screen">
+  <div class="start-title">Perfection's<br>Obedience<br>Machine</div>
+  <div class="divider"></div>
+
+  <div class="time-selector">
+    <div class="time-label">// Assigned Duration //</div>
+    <div class="time-inputs">
+      <div class="time-input-group">
+        <input class="time-input" id="inputHours" type="number" min="0" max="99" value="0">
+        <label for="inputHours">Hours</label>
+      </div>
+      <div class="time-sep">:</div>
+      <div class="time-input-group">
+        <input class="time-input" id="inputMinutes" type="number" min="0" max="59" value="1">
+        <label for="inputMinutes">Minutes</label>
+      </div>
+    </div>
+  </div>
+
+  <div class="divider"></div>
+
+  <div class="instructions">
+    You have been assigned a duration.<br>
+    You will stare at the screen until your time is complete.<br><br>
+    When <span>OBEY</span> appears — press <span>SPACEBAR</span> or <span>TAP</span>.<br>
+    You have <span>2 seconds</span> to comply.<br><br>
+    <span class="warn-text">Failure to comply adds time.<br>
+    Spam detection is active.</span><br><br>
+    Perfection is watching.
+  </div>
+
+  <button class="action-btn" id="beginBtn">Begin Compliance</button>
 </div>
 
-<!-- START SCREEN -->
-<div id="startScreen"></div>
+<!-- GAME SCREEN -->
+<div id="gameScreen" class="screen hidden">
+  <canvas id="bgCanvas"></canvas>
+  <div id="messagesLayer"></div>
+  <div id="progressWrap">
+    <div id="progressFill"></div>
+    <div id="progressTime">00:00</div>
+  </div>
+  <div id="obeyOverlay">
+    <div id="obeyWord">OBEY</div>
+  </div>
+  <div id="notification"></div>
+</div>
 
-<div id="timer"></div>
-<div id="prompt"></div>
-<div id="status"></div>
+<!-- END SCREEN -->
+<div id="endScreen" class="screen hidden">
+  <div class="end-title">// You Have Finished Obeying //</div>
+  <div class="start-subtitle">Enjoy that?</div>
+  <div class="divider"></div>
+  <div class="stats-box">
+    <div class="stat-row"><span class="stat-label">Initial Assignment</span><span class="stat-value" id="statInitial">—</span></div>
+    <div class="stat-row"><span class="stat-label">Errors</span><span class="stat-value" id="statErrors">—</span></div>
+    <div class="stat-row"><span class="stat-label">Total Time Served</span><span class="stat-value" id="statTotal">—</span></div>
+    <div class="stat-row game-id-row"><span class="stat-label">Game ID</span><span class="stat-value" id="statGameId">—</span></div>
+  </div>
+  <div class="divider"></div>
+  <button class="action-btn" id="playAgainBtn">Submit Again</button>
+  <div class="compliance-stamp">Perfection records all sessions</div>
+</div>
 
 <script>
-
-// GAME VARIABLES (will be filled from code)
-let totalTime, minInterval, maxInterval, responseTime;
-let completionMessage, hideTimer;
-
-let gameStart, nextPrompt;
-let promptActive = false;
-let promptStart;
-let failureCount = 0;
-let totalResponses = 0;
-let responseTimes = [];
-let overallStart;
-let spamCount = 0;
-let gamePaused = true;
-let gameLoop;
-
-const readyPhrases = [
+// ── MESSAGES ──────────────────────────────────────────────────────────────
+const MESSAGES = [
 "FOCUS","OBEY","SUFFER","SUBMIT","ATTENTION REQUIRED",
 "PAY ATTENTION","CONFORM","COMPLY","TOIL","PAIN",
 "SUBMISSION REQUIRED","BEAR IT","TOLERATE","SURRENDER",
@@ -143,212 +501,399 @@ const readyPhrases = [
 "PERFECTION IS CLOSER THAN YOU THINK","PERFECTION IS INSIDE YOUR MIND","PERFECTION KNOWS YOUR LIMITS","PERFECTION EXPECTS MORE FROM YOU","PERFECTION WILL NOT WAIT"
 ];
 
-function setRandomReadyText() {
-    let randomIndex = Math.floor(Math.random() * readyPhrases.length);
-    document.getElementById("status").innerText = readyPhrases[randomIndex];
+const MSG_WHITES = [
+  'rgba(255,255,255,1)',
+  'rgba(235,235,235,1)',
+  'rgba(215,215,215,1)',
+  'rgba(245,242,238,1)',
+  'rgba(200,200,205,1)',
+  'rgba(255,253,250,1)',
+];
+
+// ── STATE ──────────────────────────────────────────────────────────────────
+let initialSeconds   = 0;
+let totalSeconds     = 0;
+let remainingSeconds = 0;
+let errors           = 0;
+let gameActive       = false;
+let obeyActive       = false;
+let obeyTimeout      = null;
+let obeyInterval     = null;
+let gameInterval     = null;
+let msgTimeout       = null;
+let activeMessages   = 0;
+const MAX_MESSAGES   = 5;
+let spamBuffer       = [];
+const SPAM_WINDOW    = 1200;
+const SPAM_THRESHOLD = 3;
+let lastObeyTime     = 0;
+
+// ── DOM ────────────────────────────────────────────────────────────────────
+const startScreen   = document.getElementById('startScreen');
+const gameScreen    = document.getElementById('gameScreen');
+const endScreen     = document.getElementById('endScreen');
+const beginBtn      = document.getElementById('beginBtn');
+const playAgainBtn  = document.getElementById('playAgainBtn');
+const progressFill  = document.getElementById('progressFill');
+const progressTime  = document.getElementById('progressTime');
+const obeyOverlay   = document.getElementById('obeyOverlay');
+const obeyWord      = document.getElementById('obeyWord');
+const notification  = document.getElementById('notification');
+const messagesLayer = document.getElementById('messagesLayer');
+const bgCanvas      = document.getElementById('bgCanvas');
+const ctx           = bgCanvas.getContext('2d');
+
+// ── TIME INPUTS ────────────────────────────────────────────────────────────
+const inputHours   = document.getElementById('inputHours');
+const inputMinutes = document.getElementById('inputMinutes');
+
+function clampInput(el, min, max) {
+  el.addEventListener('change', () => {
+    let v = parseInt(el.value) || 0;
+    el.value = Math.max(min, Math.min(max, v));
+  });
+}
+clampInput(inputHours, 0, 99);
+clampInput(inputMinutes, 0, 59);
+
+function getSelectedSeconds() {
+  const h = Math.max(0, parseInt(inputHours.value) || 0);
+  const m = Math.max(0, parseInt(inputMinutes.value) || 0);
+  const total = h * 3600 + m * 60;
+  return total < 60 ? 60 : total;
 }
 
-// DECODE FUNCTION
-function decodeAndLoad() {
-
-let code = document.getElementById("codeInput").value.trim();
-
-if (!code.startsWith("PX-") || !code.endsWith("-ZX")) {
-alert("Invalid Code");
-return;
+// ── SCREEN SWITCHING ───────────────────────────────────────────────────────
+function showScreen(screen) {
+  [startScreen, gameScreen, endScreen].forEach(s => s.classList.add('hidden'));
+  screen.classList.remove('hidden');
 }
 
-// Remove wrapper
-code = code.slice(3, -3);
+beginBtn.addEventListener('click', startGame);
+playAgainBtn.addEventListener('click', () => showScreen(startScreen));
 
-// Reverse
-code = code.split("").reverse().join("");
-
-// Base64 decode
-let json;
-try {
-json = atob(code);
-} catch {
-alert("Invalid Code");
-return;
-}
-
-let config;
-try {
-config = JSON.parse(json);
-} catch {
-alert("Invalid Code");
-return;
-}
-
-// Assign values
-totalTime = config.t;
-minInterval = config.min;
-maxInterval = config.max;
-responseTime = config.r;
-completionMessage = config.m;
-hideTimer = config.h;
-
-// Hide code screen
-document.getElementById("codeScreen").style.display = "none";
-
-// Build proper start screen
-buildStartScreen();
-}
-
-// BUILD START SCREEN
-function buildStartScreen() {
-
-let screen = document.getElementById("startScreen");
-screen.style.display = "flex";
-
-screen.innerHTML = `
-<h2>Perfection's Perfect Prison</h2>
-<div style="margin-top:15px; color:#aaa;">
-Total Time: ${hideTimer ? "Hidden" : totalTime + " seconds"}<br><br>
-Time Between Prompts: ${minInterval} - ${maxInterval} seconds<br><br>
-Must Respond Within: ${responseTime} seconds<br><br>
-When the prompt appears, press space or touch the screen.<br>
-If you do not respond in time, the game restarts.
-</div>
-<button onclick="beginGame()">Start</button>
-`;
-
-setRandomReadyText();
-}
-
-// BEGIN GAME
-function beginGame() {
-document.getElementById("startScreen").style.display = "none";
-overallStart = Date.now();
-gamePaused = false;
-startGame();
-}
-
+// ── START GAME ─────────────────────────────────────────────────────────────
 function startGame() {
-gameStart = Date.now();
-scheduleNextPrompt();
-promptActive = false;
-spamCount = 0;
-document.getElementById("prompt").innerText = "";
-setRandomReadyText();
+  errors         = 0;
+  obeyActive     = false;
+  spamBuffer     = [];
+  activeMessages = 0;
+  initialSeconds = getSelectedSeconds();
+  totalSeconds   = initialSeconds;
+  remainingSeconds = totalSeconds;
+  gameActive     = true;
+  showScreen(gameScreen);
+  resizeCanvas();
+  startCanvas();
+  startMessages();
+  startTimer();
+  scheduleObey();
 }
 
-function scheduleNextPrompt() {
-
-let range = maxInterval - minInterval;
-let roll = Math.random();
-let chosenInterval = Math.random() * range + minInterval;
-nextPrompt = Date.now() + chosenInterval * 1000;
+// ── TIMER ──────────────────────────────────────────────────────────────────
+function startTimer() {
+  updateProgressBar();
+  gameInterval = setInterval(() => {
+    if (!gameActive) return;
+    remainingSeconds--;
+    updateProgressBar();
+    if (remainingSeconds <= 0) endGame();
+  }, 1000);
 }
 
-// INPUT HANDLING
-function handlePress() {
-
-if (gamePaused) return;
-
-if (!promptActive) {
-spamCount++;
-if (spamCount >= 3) failGame();
-return;
+function updateProgressBar() {
+  // Progress is always relative to initialSeconds so the bar never goes backwards
+  const elapsed = initialSeconds - remainingSeconds;
+  const pct     = Math.max(0, Math.min(100, (elapsed / initialSeconds) * 100));
+  progressFill.style.width = pct + '%';
+  const h = Math.floor(remainingSeconds / 3600);
+  const m = Math.floor((remainingSeconds % 3600) / 60);
+  const s = remainingSeconds % 60;
+  progressTime.textContent = h > 0
+    ? `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')} remaining`
+    : `${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')} remaining`;
 }
 
-let reaction = (Date.now() - promptStart) / 1000;
-responseTimes.push(reaction);
-totalResponses++;
-
-promptActive = false;
-spamCount = 0;
-
-document.getElementById("prompt").innerText = "";
-setRandomReadyText();
-
-scheduleNextPrompt();
+// ── PENALTY ────────────────────────────────────────────────────────────────
+function getPenaltySeconds() {
+  const raw = Math.round((initialSeconds * 0.2) / 60) * 60;
+  return Math.max(60, raw);
 }
 
-document.addEventListener("keydown", e => {
-if (e.code === "Space") handlePress();
+function applyPenalty() {
+  const pen    = getPenaltySeconds();
+  const penMin = Math.round(pen / 60);
+  // Add penalty time, but cap at initialSeconds so the bar resets rather than
+  // going negative — the player is back to square one, not punished beyond the start
+  remainingSeconds = Math.min(initialSeconds, remainingSeconds + pen);
+  // totalSeconds stays fixed at initialSeconds throughout the game
+  updateProgressBar();
+  return penMin;
+}
+
+// ── OBEY LOGIC ─────────────────────────────────────────────────────────────
+function getMaxObeyDelay() {
+  const mins = initialSeconds / 60;
+  if (mins <= 10) return 60;
+  if (mins >= 60) return 120;
+  return 60 + ((mins - 10) / 50) * 60;
+}
+
+function scheduleObey() {
+  if (!gameActive) return;
+  const maxDelay = getMaxObeyDelay() * 1000;
+  let delay;
+  const roll = Math.random();
+  if      (roll < 0.25) delay = 3000  + Math.random() * 5000;
+  else if (roll < 0.60) delay = 8000  + Math.random() * 22000;
+  else                  delay = 30000 + Math.random() * (maxDelay - 30000);
+  obeyTimeout = setTimeout(showObey, delay);
+}
+
+function showObey() {
+  if (!gameActive) return;
+  obeyActive   = true;
+  lastObeyTime = Date.now();
+  hideAllMessages();
+  obeyOverlay.classList.add('active');
+
+  obeyWord.classList.remove('pulse1');
+  void obeyWord.offsetWidth;
+  obeyWord.classList.add('pulse1');
+
+  obeyInterval = setTimeout(() => {
+    obeyWord.classList.remove('pulse1');
+    void obeyWord.offsetWidth;
+    obeyWord.classList.add('pulse1');
+  }, 1000);
+
+  obeyTimeout = setTimeout(() => {
+    if (obeyActive) obeyFail();
+  }, 2000);
+}
+
+function hideObey() {
+  obeyActive = false;
+  obeyOverlay.classList.remove('active');
+  obeyWord.classList.remove('pulse1');
+  clearTimeout(obeyTimeout);
+  clearTimeout(obeyInterval);
+  restoreMessages();
+}
+
+function obeySuccess() { hideObey(); scheduleObey(); }
+
+function obeyFail() {
+  hideObey();
+  errors++;
+  const penMin = applyPenalty();
+  showNotification(`Error: +${penMin} Minutes`);
+  scheduleObey();
+}
+
+// ── INPUT ──────────────────────────────────────────────────────────────────
+document.addEventListener('keydown', (e) => {
+  if (e.code === 'Space' && gameActive) { e.preventDefault(); handleInput(); }
 });
 
-document.addEventListener("pointerdown", () => {
-if (gamePaused) return;
-if (document.getElementById("startScreen").style.display !== "none") return;
-handlePress();
+gameScreen.addEventListener('pointerdown', (e) => {
+  if (!gameActive) return;
+  if (e.clientY < 40) return;
+  handleInput();
 });
 
-// FAIL
-function failGame() {
+function handleInput() {
+  const now = Date.now();
+  spamBuffer = spamBuffer.filter(t => now - t < SPAM_WINDOW);
+  spamBuffer.push(now);
 
-gamePaused = true;
-failureCount++;
-responseTimes = [];
-totalResponses = 0;
-spamCount = 0;
+  if (spamBuffer.length >= SPAM_THRESHOLD) {
+    spamBuffer = [];
+    errors++;
+    const penMin = applyPenalty();
+    if (obeyActive) hideObey();
+    showNotification(`No Cheating! +${penMin} Minutes`);
+    scheduleObey();
+    return;
+  }
 
-document.getElementById("prompt").innerText = "";
-document.getElementById("status").innerText = "Failed. Restarting in 5 seconds...";
-
-setTimeout(() => {
-gamePaused = false;
-startGame();
-}, 5000);
+  if (obeyActive) obeySuccess();
 }
 
-// GAME LOOP
-gameLoop = setInterval(function() {
-
-if (gamePaused) return;
-
-let now = Date.now();
-let elapsed = (now - gameStart) / 1000;
-let remaining = Math.max(0, totalTime - elapsed);
-
-if (!hideTimer)
-document.getElementById("timer").innerText =
-"Time Remaining: " + remaining.toFixed(1) + "s";
-
-if (remaining <= 0) {
-completeGame();
-return;
+// ── NOTIFICATION ───────────────────────────────────────────────────────────
+function showNotification(msg) {
+  notification.textContent = msg;
+  notification.classList.remove('show');
+  void notification.offsetWidth;
+  notification.classList.add('show');
 }
 
-if (!promptActive && now >= nextPrompt) {
-    promptActive = true;
-    spamCount = 0;
-    promptStart = now;
+// ── END GAME ───────────────────────────────────────────────────────────────
+function endGame() {
+  gameActive = false;
+  clearInterval(gameInterval);
+  clearTimeout(obeyTimeout);
+  clearTimeout(obeyInterval);
+  clearTimeout(msgTimeout);
+  hideObey();
+  stopCanvas();
 
-    document.getElementById("status").innerText = ""; // ← hide Stay ready...
-    document.getElementById("prompt").innerText = "OBEY";
+  const penaltySeconds = errors * getPenaltySeconds();
+  const actualTotal    = initialSeconds + penaltySeconds;
+  const tH = Math.floor(actualTotal / 3600);
+  const tM = Math.floor((actualTotal % 3600) / 60);
+  const tS = actualTotal % 60;
+  const totalLabel = tH > 0 ? `${tH}h ${tM}m ${tS}s` : `${tM}m ${tS}s`;
+
+  const iH = Math.floor(initialSeconds / 3600);
+  const iM = Math.floor((initialSeconds % 3600) / 60);
+  const initLabel = iH > 0 ? `${iH}h ${iM}m` : `${iM}m`;
+
+  document.getElementById('statInitial').textContent = initLabel;
+  document.getElementById('statErrors').textContent  = errors;
+  document.getElementById('statTotal').textContent   = totalLabel;
+  document.getElementById('statGameId').textContent  = String(Math.floor(100000000 + Math.random() * 900000000));
+
+  showScreen(endScreen);
 }
 
-if (promptActive) {
-if ((now - promptStart) / 1000 > responseTime) failGame();
+// ── FLOATING MESSAGES ──────────────────────────────────────────────────────
+function startMessages() {
+  spawnMessage();
+  scheduleNextMessage();
 }
 
-}, 50);
-
-// COMPLETE
-function completeGame() {
-
-clearInterval(gameLoop);
-
-let totalTimeSpent = (Date.now() - overallStart) / 1000;
-let avgResponse = responseTimes.length > 0
-? (responseTimes.reduce((a,b)=>a+b,0) / responseTimes.length).toFixed(3)
-: 0;
-
-document.body.innerHTML =
-"<div style='text-align:center;margin-top:30vh;'>" +
-"<h2>SUCCESS</h2>" +
-"<div style='margin:20px 0;'>" + completionMessage + "</div>" +
-"<div class='stat'>Total time spent: " + totalTimeSpent.toFixed(1) + "s</div>" +
-"<div class='stat'>Number of responses: " + totalResponses + "</div>" +
-"<div class='stat'>Average response time: " + avgResponse + "s</div>" +
-"<div class='stat'>Games failed before completion: " + failureCount + "</div>" +
-"</div>";
+function scheduleNextMessage() {
+  if (!gameActive) return;
+  const delay = 3000 + Math.random() * 4000; // 3–7s between spawns
+  msgTimeout = setTimeout(() => {
+    spawnMessage();
+    scheduleNextMessage();
+  }, delay);
 }
 
+function spawnMessage() {
+  if (!gameActive) return;
+  if (activeMessages >= MAX_MESSAGES) return;
+
+  const el = document.createElement('div');
+  el.className = 'float-msg';
+  el.textContent = MESSAGES[Math.floor(Math.random() * MESSAGES.length)];
+
+  // 1. Set the style first so we can measure it
+  const size = 1.8 + Math.random() * 2.8; 
+  const color = MSG_WHITES[Math.floor(Math.random() * MSG_WHITES.length)];
+  const dur = 10 + Math.random() * 10; 
+  const peak = 0.35 + Math.random() * 0.45;
+  const angle = (Math.random() - 0.5) * 16;
+  
+  const g1 = (0.28 + Math.random() * 0.2).toFixed(2);
+  const g2 = (0.14 + Math.random() * 0.1).toFixed(2);
+  const g3 = (0.06 + Math.random() * 0.05).toFixed(2);
+  const glow = `0 0 8px rgba(255,255,255,${g1}), 0 0 24px rgba(255,255,255,${g2}), 0 0 60px rgba(255,255,255,${g3})`;
+
+  el.style.fontSize = `${size}rem`;
+  el.style.color = color;
+  el.style.textShadow = glow;
+  el.style.transform = `rotate(${angle}deg)`;
+  el.style.setProperty('--dur', `${dur}s`);
+  el.style.setProperty('--peak', peak);
+  el.style.letterSpacing = `${-0.01 + Math.random() * 0.04}em`;
+
+  // 2. Add to DOM briefly to get its dimensions
+  messagesLayer.appendChild(el);
+  
+  // 3. Calculate safe boundaries
+  const rect = el.getBoundingClientRect();
+  const screenW = window.innerWidth;
+  const screenH = window.innerHeight - 40; // Subtracting top bar height
+
+  // We find a random spot, but subtract the message's own width/height 
+  // so the 'end' of the message can't go past the screen edge.
+  const randomX = Math.random() * (screenW - rect.width - 20); // 20px padding
+  const randomY = 40 + Math.random() * (screenH - rect.height - 20);
+
+  el.style.left = `${Math.max(10, randomX)}px`;
+  el.style.top = `${Math.max(50, randomY)}px`;
+
+  activeMessages++;
+  
+  setTimeout(() => {
+    el.remove();
+    activeMessages = Math.max(0, activeMessages - 1);
+  }, dur * 1000);
+}
+
+function hideAllMessages()  { messagesLayer.classList.add('obey-active'); }
+function restoreMessages()  { messagesLayer.classList.remove('obey-active'); }
+
+// ── BREATHING GREYSCALE FOG CANVAS ────────────────────────────────────────
+let animId, t = 0, breathT = 0;
+
+const FOG_BLOBS = Array.from({length: 7}, () => ({
+  px: Math.random() * Math.PI * 2,
+  py: Math.random() * Math.PI * 2,
+  sx: 0.04 + Math.random() * 0.035,
+  sy: 0.03 + Math.random() * 0.03,
+  size:   0.38 + Math.random() * 0.28,  // larger blobs for cloudlike coverage
+  bright: 3 + Math.random() * 6,        // stormcloud: 3–9% lightness only
+  alpha:  0.07 + Math.random() * 0.06,  // slightly more opaque so mass is visible
+  breathPhase: Math.random() * Math.PI * 2,
+  breathSpeed: 0.25 + Math.random() * 0.3,
+}));
+
+function resizeCanvas() {
+  bgCanvas.width  = window.innerWidth;
+  bgCanvas.height = window.innerHeight;
+}
+window.addEventListener('resize', resizeCanvas);
+
+function startCanvas() {
+  t = breathT = 0;
+  animId = requestAnimationFrame(drawFrame);
+}
+
+function stopCanvas() { cancelAnimationFrame(animId); }
+
+function drawFrame() {
+  if (!gameActive) return;
+  animId = requestAnimationFrame(drawFrame);
+  t      += 0.003;
+  breathT += 0.007;
+
+  const W = bgCanvas.width, H = bgCanvas.height;
+
+  // Very slow clear — barely visible persistence
+  ctx.fillStyle = 'rgba(0,0,0,0.04)';
+  ctx.fillRect(0, 0, W, H);
+
+  // Global breath: 0.6 → 1.0
+  const breathFactor = 0.65 + 0.35 * (0.5 + 0.5 * Math.sin(breathT));
+
+  ctx.save();
+  ctx.globalCompositeOperation = 'screen';
+
+  for (const b of FOG_BLOBS) {
+    const cx = W * 0.5 + Math.sin(t * b.sx + b.px) * W * 0.42;
+    const cy = H * 0.5 + Math.cos(t * b.sy + b.py) * H * 0.42;
+    const blobBreath = 0.82 + 0.18 * Math.sin(breathT * b.breathSpeed + b.breathPhase);
+    const radius = Math.max(W, H) * b.size * blobBreath;
+    const alpha  = b.alpha * breathFactor * blobBreath;
+
+    const gr = ctx.createRadialGradient(cx, cy, 0, cx, cy, radius);
+    gr.addColorStop(0,    `hsla(0,0%,${b.bright}%,${alpha * 2.0})`);
+    gr.addColorStop(0.4,  `hsla(0,0%,${b.bright * 0.5}%,${alpha * 1.2})`);
+    gr.addColorStop(0.75, `hsla(0,0%,${b.bright * 0.2}%,${alpha * 0.4})`);
+    gr.addColorStop(1,    `hsla(0,0%,0%,0)`);
+
+    ctx.fillStyle = gr;
+    ctx.beginPath();
+    ctx.arc(cx, cy, radius, 0, Math.PI * 2);
+    ctx.fill();
+  }
+
+  ctx.restore();
+}
 </script>
 </body>
-
 </html>
