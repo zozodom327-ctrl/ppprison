@@ -3,728 +3,1084 @@
 <head>
 <meta charset="UTF-8">
 <title>Perfection's Wheel</title>
-
 <style>
 
-body{
-font-family:Arial;
-text-align:center;
-background:#111;
-color:white;
+@import url('https://fonts.googleapis.com/css2?family=Boogaloo&family=Fredoka+One&display=swap');
+
+*{box-sizing:border-box;margin:0;padding:0;}
+
+:root{
+  --gold:#ffd700;
+  --gold2:#ffaa00;
+  --dark:#0a0a1a;
+  --card:#13132a;
 }
 
+body{
+  font-family:'Fredoka One',Arial,sans-serif;
+  text-align:center;
+  background:var(--dark);
+  color:white;
+  min-height:100vh;
+  overflow-x:hidden;
+}
+
+/* ── CARNIVAL BULBS ── */
+.bulb-bar{
+  display:flex;
+  justify-content:center;
+  gap:18px;
+  padding:10px 0 0;
+}
+.bulb{
+  width:16px;height:16px;
+  border-radius:50%;
+  background:#fff;
+  box-shadow:0 0 6px 2px currentColor;
+  animation:blinkBulb 1.2s infinite alternate;
+}
+.bulb:nth-child(odd){color:#ff3b3b;background:#ff3b3b;animation-delay:.6s;}
+.bulb:nth-child(3n){color:var(--gold);background:var(--gold);}
+.bulb:nth-child(4n){color:#00d4ff;background:#00d4ff;animation-delay:.3s;}
+@keyframes blinkBulb{0%{opacity:1;}100%{opacity:.35;}}
+
+/* ── SCREENS ── */
 .screen{display:none;}
 .active{display:block;}
 
-button{
-font-size:18px;
-padding:10px 20px;
-margin-top:20px;
-cursor:pointer;
+/* ── START SCREEN ── */
+#startScreen{padding:10px 20px 30px;}
+
+.carnival-title{
+  font-family:'Fredoka One',sans-serif;
+  font-size:72px;
+  line-height:1;
+  background:linear-gradient(180deg,#fff 0%,var(--gold) 50%,#ff9900 100%);
+  -webkit-background-clip:text;
+  -webkit-text-fill-color:transparent;
+  background-clip:text;
+  text-shadow:none;
+  filter:drop-shadow(0 0 18px rgba(255,180,0,.7));
+  margin:10px 0 4px;
+}
+.carnival-sub{
+  font-size:26px;
+  color:#ffcc55;
+  letter-spacing:2px;
+  text-transform:uppercase;
+  margin-bottom:30px;
+  text-shadow:0 0 12px #ff9900;
 }
 
-#wheelContainer{
-margin:auto;
-margin-top:-40px;
-width:700px;
-height:700px;
-position:relative;
+.start-card{
+  display:inline-block;
+  background:var(--card);
+  border:3px solid var(--gold2);
+  border-radius:20px;
+  padding:36px 52px;
+  box-shadow:0 0 30px rgba(255,180,0,.4),inset 0 0 20px rgba(255,180,0,.05);
+  margin-top:10px;
+}
+.start-card p{font-size:22px;color:#ccc;margin-bottom:18px;}
 
-border-radius:50%;
-box-shadow:
-0 0 40px gold,
-0 0 80px gold,
-0 0 120px rgba(255,215,0,0.7);
+#codeInput{
+  font-family:'Fredoka One',sans-serif;
+  font-size:26px;
+  padding:10px 20px;
+  border-radius:12px;
+  border:3px solid var(--gold2);
+  background:#1a1a35;
+  color:white;
+  text-align:center;
+  width:260px;
+  outline:none;
+}
+#codeInput:focus{border-color:var(--gold);box-shadow:0 0 12px var(--gold);}
+
+.btn{
+  font-family:'Fredoka One',sans-serif;
+  font-size:24px;
+  padding:12px 36px;
+  margin-top:20px;
+  cursor:pointer;
+  border:none;
+  border-radius:14px;
+  background:linear-gradient(135deg,var(--gold2),var(--gold));
+  color:#111;
+  box-shadow:0 4px 20px rgba(255,180,0,.5);
+  transition:transform .1s,box-shadow .1s;
+  display:block;
+  margin-left:auto;
+  margin-right:auto;
+}
+.btn:hover{transform:scale(1.05);box-shadow:0 4px 30px rgba(255,180,0,.8);}
+.btn:active{transform:scale(.97);}
+
+#wheelScreen .bulb-bar {
+  margin-bottom: auto; /* Pushes the lights to the top */
+  width: 100%;         /* Ensures they span the full width */
 }
 
-#wheel{
-width:100%;
-height:100%;
-border-radius:50%;
-border:8px solid white;
+/* ── WHEEL SCREEN ── */
+#wheelScreen {
+  padding: 20px;
+  min-height: 100vh;
+  display: none; /* Keep it hidden by default */
 }
 
-#pointer{
-width:0;
-height:0;
-border-left:20px solid transparent;
-border-right:20px solid transparent;
-border-top:40px solid red;
-margin:auto;
-position:relative;
-top:-30px;
-z-index:2;
+/* This only triggers when the wheel is actually the active screen */
+#wheelScreen.active {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
 }
 
-.pointerBounce{
-animation:pointerBounce 0.12s;
+#wheelTitle{
+  font-family:'Fredoka One',sans-serif;
+  font-size:52px;
+  background:linear-gradient(180deg,#fff,var(--gold));
+  -webkit-background-clip:text;
+  -webkit-text-fill-color:transparent;
+  background-clip:text;
+  filter:drop-shadow(0 0 10px rgba(255,180,0,.6));
+  margin:6px 0 0;
 }
 
-@keyframes pointerBounce{
-0%{transform:rotate(0deg)}
-50%{transform:rotate(-18deg)}
-100%{transform:rotate(0deg)}
+#wheelWrapper{
+  position:relative;
+  width:700px;
+  height:700px;
+  margin:0 auto;
+}
+
+/* Pegs around the rim */
+#pegsRing{
+  position:absolute;
+  top:0;left:0;
+  width:700px;height:700px;
+  pointer-events:none;
+  z-index:3;
+}
+
+#wheelCanvas{
+  width:700px;height:700px;
+  border-radius:50%;
+}
+
+/* Outer rim glow ring */
+#wheelRim{
+  position:absolute;
+  top:-10px;left:-10px;
+  width:720px;height:720px;
+  border-radius:50%;
+  border:10px solid var(--gold2);
+  box-shadow:
+    0 0 20px var(--gold),
+    0 0 50px rgba(255,180,0,.5),
+    inset 0 0 20px rgba(255,180,0,.2);
+  pointer-events:none;
+  z-index:2;
+}
+
+/* CHANGE 2: narrower pointer sitting on the wheel rim */
+#pointerAssembly{
+  position:absolute;
+  top:-44px;
+  left:50%;
+  transform:translateX(-50%);
+  z-index:10;
+  transform-origin:50% 0;
+  pointer-events:none;
+}
+.pointer-arrow{
+  width:0;height:0;
+  border-left:12px solid transparent;
+  border-right:12px solid transparent;
+  border-top:52px solid #cc0000;
+  margin:0 auto;
+  filter:drop-shadow(0 0 8px #ff0000);
+}
+.pointer-base{
+  width:28px;height:14px;
+  background:radial-gradient(circle,#ff4444,#990000);
+  border-radius:0 0 8px 8px;
+  margin:0 auto;
+  margin-top:-4px;
+}
+.pointer-bolt{
+  width:12px;height:12px;
+  border-radius:50%;
+  background:var(--gold);
+  margin:-6px auto 0;
+  box-shadow:0 0 6px var(--gold);
 }
 
 #winBanner{
-position:absolute;
-top:45%;
-left:50%;
-transform:translate(-50%,-50%);
+  position:absolute;
+  top:45%;left:50%;
+  transform:translate(-50%,-50%);
+  width:650px;
+  max-width:90%;
+  font-family:'Fredoka One',sans-serif;
+  font-size:52px;
+  line-height:1.2;
+  text-align:center;
+  color:#111;
+  background:linear-gradient(135deg,var(--gold),#ffee88,var(--gold2));
+  padding:28px 44px;
+  border-radius:20px;
+  display:none;
+  z-index:20;
+  box-shadow:0 0 40px var(--gold),0 0 80px rgba(255,180,0,.6);
+  animation:bannerPop .4s cubic-bezier(.175,.885,.32,1.275);
+}
+@keyframes bannerPop{from{transform:translate(-50%,-50%) scale(.3);}to{transform:translate(-50%,-50%) scale(1);}}
 
-width:650px;            /* makes banner wider */
-max-width:90%;          /* keeps it safe on smaller screens */
-
-font-size:64px;
-font-weight:bold;
-text-align:center;      /* keeps text centred */
-
-color:black;
-background:rgba(255,255,0,0.95);
-
-padding:30px 50px;     /* more breathing room */
-
-border-radius:20px;
-
-display:none;
-
-box-shadow:
-0 0 20px gold,
-0 0 40px gold,
-0 0 80px gold;
-
-text-shadow:0 0 10px yellow;
+/* CHANGE 1: bonus countdown overlay */
+#bonusOverlay{
+  position:absolute;
+  top:50%;left:50%;
+  transform:translate(-50%,-50%);
+  background:linear-gradient(135deg,#1a0044,#3d0080);
+  border:3px solid var(--gold);
+  border-radius:20px;
+  padding:28px 40px;
+  z-index:25;
+  display:none;
+  text-align:center;
+  box-shadow:0 0 40px rgba(180,0,255,.6),0 0 80px rgba(255,180,0,.3);
+  min-width:340px;
+}
+#bonusOverlay .bonus-title{
+  font-size:42px;
+  color:var(--gold);
+  text-shadow:0 0 14px var(--gold);
+  margin-bottom:8px;
+}
+#bonusOverlay .bonus-desc{
+  font-size:22px;
+  color:#ddd;
+  margin-bottom:16px;
+}
+#bonusOverlay .bonus-count{
+  font-size:72px;
+  color:#fff;
+  text-shadow:0 0 20px var(--gold);
+  line-height:1;
 }
 
-#resultBox{
-margin-top:20px;
-font-size:24px;
-line-height:1.7;
-font-weight:bold;
-}
+/* ── END SCREEN ── */
+#endScreen{padding:20px;}
 
-#confettiCanvas{
-position:fixed;
-top:0;
-left:0;
-pointer-events:none;
-z-index:0;
+.end-title{
+  font-family:'Fredoka One',sans-serif;
+  font-size:58px;
+  background:linear-gradient(180deg,#fff,var(--gold));
+  -webkit-background-clip:text;
+  -webkit-text-fill-color:transparent;
+  background-clip:text;
+  filter:drop-shadow(0 0 14px rgba(255,180,0,.7));
+  margin-bottom:10px;
 }
 
 #resultCard{
-width:500px;
-margin:60px auto;
-padding:35px;
-
-background:#1a1a1a;
-
-border-radius:20px;
-border:4px solid gold;
-
-box-shadow:
-0 0 20px gold,
-0 0 50px rgba(255,215,0,0.5);
-
-font-size:22px;
-line-height:1.6;
-position:relative;
-z-index:2;
+  width:520px;
+  margin:0 auto 30px;
+  padding:36px 44px;
+  background:var(--card);
+  border-radius:22px;
+  border:3px solid var(--gold2);
+  box-shadow:0 0 30px rgba(255,180,0,.35),inset 0 0 20px rgba(255,180,0,.04);
+  text-align:left;
+  position:relative;
+  z-index:2;
 }
 
-#resultCard h2{
-font-size:34px;
-margin-bottom:20px;
-color:#ffd700;
-text-shadow:0 0 10px gold;
+.result-row{
+  display:flex;
+  justify-content:space-between;
+  align-items:baseline;
+  padding:10px 0;
+  border-bottom:1px solid rgba(255,180,0,.15);
+  font-size:20px;
+}
+.result-row:last-of-type{border-bottom:none;}
+.result-label{color:#aaa;font-size:18px;}
+.result-value{color:white;font-weight:bold;}
+
+.strike{
+  text-decoration:line-through;
+  color:#888;
+  font-size:16px;
+  margin-right:8px;
+}
+.bonus-val{
+  color:var(--gold);
+  font-size:24px;
 }
 
-#resultCard b{
-color:#ffd700;
+.bonus-badge{
+  display:inline-block;
+  background:linear-gradient(135deg,var(--gold2),var(--gold));
+  color:#111;
+  font-size:15px;
+  padding:4px 14px;
+  border-radius:20px;
+  margin-left:8px;
+  vertical-align:middle;
 }
 
-#resultCard a{
-display:inline-block;
-margin-top:20px;
-padding:12px 24px;
-
-font-size:20px;
-font-weight:bold;
-
-background:gold;
-color:black;
-
-border-radius:10px;
-text-decoration:none;
-
-box-shadow:0 0 15px gold;
+.instructions-box{
+  margin-top:20px;
+  padding:16px 18px;
+  background:#0d0d20;
+  border-radius:12px;
+  border-left:4px solid var(--gold2);
+  font-size:17px;
+  line-height:1.6;
+  color:#ddd;
+}
+.instructions-box strong{
+  display:block;
+  color:var(--gold);
+  margin-bottom:6px;
+  font-size:19px;
 }
 
-#resultCard a:hover{
-background:#ffd700;
-box-shadow:0 0 25px gold;
+.claim-btn{
+  display:block;
+  margin:28px auto 0;
+  padding:14px 32px;
+  font-family:'Fredoka One',sans-serif;
+  font-size:22px;
+  background:linear-gradient(135deg,var(--gold2),var(--gold));
+  color:#111;
+  border-radius:14px;
+  text-decoration:none;
+  border:none;
+  cursor:pointer;
+  box-shadow:0 4px 20px rgba(255,180,0,.5);
+  transition:transform .1s,box-shadow .1s;
+  text-align:center;
+}
+.claim-btn:hover{transform:scale(1.04);box-shadow:0 4px 30px rgba(255,180,0,.8);}
+
+/* ── MINDBREAKER PULSE ── */
+@keyframes mindPulse{
+  0%,100%{opacity:1;}
+  50%{opacity:.55;}
+}
+
+/* ── CONFETTI ── */
+#confettiCanvas{
+  position:fixed;top:0;left:0;
+  pointer-events:none;
+  z-index:100;
+}
+
+/* ── POINTER BOUNCE ── */
+.pointerBounce{animation:pBounce .1s ease-out;}
+@keyframes pBounce{
+  0%{transform:translateX(-50%) rotate(0deg);}
+  40%{transform:translateX(-50%) rotate(-20deg);}
+  100%{transform:translateX(-50%) rotate(0deg);}
 }
 
 </style>
 </head>
-
 <body>
 
-<h1 style="
-font-size:64px;
-margin-top:20px;
-color:#ffd700;
-text-shadow:0 0 15px #ffcc00, 0 0 30px #ff9900;
-font-weight:bold;
-">
-Perfection's Wheel of Fun
-</h1>
-
+<!-- ═══════════════ START SCREEN ═══════════════ -->
 <div id="startScreen" class="screen active">
-<h1>Spin the wheel, win fun prizes!</h1>
-<p>Enter your codeword.</p>
-<input id="codeInput" type="text">
-<br>
-<button onclick="startGame()">Enter</button>
+  <div class="bulb-bar" id="bulbs1"></div>
+
+  <div class="carnival-title">Perfection's</div>
+  <div class="carnival-title" style="font-size:58px;">Wheel of Fun</div>
+  <div class="carnival-sub">★ Step right up! ★</div>
+
+  <div class="start-card">
+    <p>Enter your secret codeword to spin the wheel!</p>
+    <input id="codeInput" type="text" placeholder="codeword…" autocomplete="off">
+    <button class="btn" onclick="startGame()">Enter the Wheel!</button>
+  </div>
+
+  <div class="bulb-bar" id="bulbs2" style="margin-top:24px;"></div>
 </div>
 
+<!-- ═══════════════ WHEEL SCREEN ═══════════════ -->
 <div id="wheelScreen" class="screen">
-<div id="pointer"></div>
+  <div class="bulb-bar" id="bulbs3"></div>
+  
+  <div id="wheelWrapper">
+    <div id="pointerAssembly">
+      <div class="pointer-arrow"></div>
+      </div>
+    
+    <div id="wheelRim"></div>
+    <canvas id="wheelCanvas" width="700" height="700"></canvas>
+    <svg id="pegsRing" viewBox="0 0 700 700"></svg>
+    <div id="bonusOverlay">
+      <div class="bonus-title">🎉 BONUS!</div>
+      <div class="bonus-desc" id="bonusDesc">2x TASKS! Spinning again in</div>
+      <div class="bonus-count" id="bonusCount">3</div>
+    </div>
+    <div id="winBanner"></div>
+  </div>
 
-<div id="wheelContainer">
-<canvas id="wheel" width="700" height="700"></canvas>
-<div id="winBanner"></div>
+  <button class="btn" onclick="spinWheel()" style="margin-top:18px;">★ SPIN ★</button>
 </div>
 
-<button onclick="spinWheel()">SPIN</button>
-</div>
-
+<!-- ═══════════════ END SCREEN ═══════════════ -->
 <div id="endScreen" class="screen">
-
-<div id="resultCard">
-<h2>Congratulations! You won!</h2>
-<div id="resultBox"></div>
-</div>
-
+  <div class="bulb-bar" id="bulbs4"></div>
+  <div class="end-title">🎉 You Won! 🎉</div>
+  <div id="resultCard"></div>
+  <div class="bulb-bar" id="bulbs5" style="margin-top:10px;"></div>
 </div>
 
 <canvas id="confettiCanvas"></canvas>
 
 <script>
+/* ─────────────── GAME DATA ─────────────── */
 
-/* ---------- GAME DATA ---------- */
+/*
+  To add a new game, push a new object into the `games` array.
+  Fields:
+    name         – display name
+    url          – link to the game
+    values       – array of possible amounts/difficulties
+    scary        – (optional) true = Mindbreaker red pulsing style
+    winText      – banner message; use {v} for the value
+    instructions – (optional) shown at the bottom of the results card
+*/
 
-let games=[
+let games = [
 
-{name:"Matching Game",
-url:"https://zozodom327-ctrl.github.io/ppprison/matchinggame.html",
-values:[5,8,12],
-winText:"YOU WON {v} MATCHES, YAY!"},
+  {
+    name: "Matching Game",
+    url:  "https://zozodom327-ctrl.github.io/ppprison/matchinggame.html",
+    values: [5, 8, 12],
+    winText: "YOU WON {v} MATCHES, YAY!"
+    // instructions: "Match all the pairs before time runs out!"
+  },
 
-{name:"Colour Assignment",
-url:"https://zozodom327-ctrl.github.io/ppprison/colorassignment.html",
-values:[50,120,400],
-winText:"YOU GET TO NAME {v} COLORED THINGS! NICE ONE!"},
+  {
+    name: "Colour Assignment",
+    url:  "https://zozodom327-ctrl.github.io/ppprison/colorassignment.html",
+    values: [50, 120, 400],
+    winText: "YOU GET TO NAME {v} COLORED THINGS! NICE ONE!"
+    // instructions: "Name something that matches each colour shown."
+  },
 
-{name:"Mindbreaker",
-url:"https://zozodom327-ctrl.github.io/ppprison/Mindbreaker.html",
-values:[20,40,80],
-scary:true,
-winText:"{v} TASKS IN THE MINDBREAKER, LUCKY YOU!"},
+  {
+    name: "Mindbreaker",
+    url:  "https://zozodom327-ctrl.github.io/ppprison/Mindbreaker.html",
+    values: [20, 40, 80],
+    scary: true,
+    winText: "{v} TASKS IN THE MINDBREAKER, LUCKY YOU!"
+    // instructions: "Complete every task without making a mistake."
+  },
 
-{name:"Watch the Clock",
-url:"https://zozodom327-ctrl.github.io/ppprison/clock.html",
-values:[10,20,30],
-winText:"YOU GET TO WATCH THE CLOCK FOR {v} MINUTES, NICE!"},
+  {
+    name: "Watch the Clock",
+    url:  "https://zozodom327-ctrl.github.io/ppprison/clock.html",
+    values: [10, 20, 30],
+    winText: "YOU GET TO WATCH THE CLOCK FOR {v} MINUTES, NICE!"
+    // instructions: "Sit quietly and watch the clock. No skipping!"
+  },
 
-{name:"Guess The Number",
-url:"https://zozodom327-ctrl.github.io/ppprison/GuessTheNumber.html",
-values:[50,100,300],
-winText:"YOU GET TO GUESS {v} NUMBERS, AMAZING!"},
+  {
+    name: "Guess The Number",
+    url:  "https://zozodom327-ctrl.github.io/ppprison/GuessTheNumber.html",
+    values: [50, 100, 300],
+    winText: "YOU GET TO GUESS {v} NUMBERS, AMAZING!"
+    // instructions: "Keep guessing until you find the secret number."
+  },
 
-/* --- NEW GAMES --- */
+  {
+    name: "Write for Perfection",
+    url:  "https://zozodom327-ctrl.github.io/ppprison/write.html",
+    values: [10, 20, 40],
+    winText: "YOU GET TO WRITE {v} PARAGRAPHS FOR PERFECTION!"
+    // instructions: "Write neatly and check your spelling!"
+  },
 
-{
-name:"Write for Perfection",
-url:"https://zozodom327-ctrl.github.io/ppprison/write.html",
-values:[10,20,40],
-winText:"YOU GET TO WRITE {v} PARAGRAPHS FOR PERFECTION!"
-},
+  {
+    name: "Meditation",
+    url:  "https://zozodom327-ctrl.github.io/ppprison/flowers.html",
+    values: [10, 30, 50],
+    winText: "CALMLY IDENTIFY {v} PLANTS!"
+    // instructions: "Take your time – breathe and identify each plant."
+  },
 
-{
-name:"Meditation",
-url:"https://zozodom327-ctrl.github.io/ppprison/flowers.html",
-values:[10,30,50],
-winText:"CALMLY IDENTIFY {v} PLANTS!"
-},
+  {
+    name: "Maze",
+    url:  "https://zozodom327-ctrl.github.io/ppprison/Maze.html",
+    values: ["SMALL", "MEDIUM"],
+    winText: "YOU GET TO DO A {v} MAZE! NICE!"
+    // instructions: "Find your way to the exit without backtracking!"
+  },
 
-{
-name:"Maze",
-url:"https://zozodom327-ctrl.github.io/ppprison/Maze.html",
-values:["SMALL","MEDIUM"],
-winText:"YOU GET TO DO A {v} MAZE! NICE!"
-},
+  {
+    name: "Grid",
+    url:  "https://zozodom327-ctrl.github.io/ppprison/grid.html",
+    values: [1],
+    winText: "THE LUCKY GRID! LUCKY YOU!"
+    // instructions: "Fill in the grid according to the rules."
+  },
 
-{
-name:"Grid",
-url:"https://zozodom327-ctrl.github.io/ppprison/grid.html",
-values:[1],
-winText:"THE LUCKY GRID! LUCKY YOU!"
-},
-
-{
-name:"Obedience Machine",
-url:"https://zozodom327-ctrl.github.io/ppprison/Timeout.html",
-values:[10, 20, 30],
-winText:"{v} MINUTES IN THE OBEDIENCE MACHINE, YOU'LL LOVE THAT!"
-}
+  {
+    name: "Obedience Machine",
+    url:  "https://zozodom327-ctrl.github.io/ppprison/Timeout.html",
+    values: [10, 20, 30],
+    winText: "{v} MINUTES IN THE OBEDIENCE MACHINE, YOU'LL LOVE THAT!"
+    // instructions: "Follow every instruction the machine gives you."
+  }
 
 ]
 
-let bonuses=[
-"2x TASKS",
-"1/2 TASKS",
-"2x TASKS",
-"3x TASKS",
-"2x TASKS"
+let bonusLabels = [
+  "2x TASKS",
+  "2x TASKS",
+  "2x TASKS",
+  "3x TASKS",
+  "2x TASKS"
 ]
 
-let wheelOptions=[]
+/* ─────────────── BUILD WHEEL OPTIONS ─────────────── */
 
-games.forEach(g=>{
-g.values.forEach(v=>{
-wheelOptions.push({type:"game",game:g,value:v})
+let rawOptions = []
+games.forEach(g => {
+  g.values.forEach(v => {
+    rawOptions.push({ type:"game", game:g, value:v })
+  })
 })
-})
-
-bonuses.forEach(b=>{
-wheelOptions.push({type:"bonus",bonus:b})
-})
-
-// wheelOptions = wheelOptions.slice(0,20)
-
-/* ---------- SEEDED RNG ---------- */
-
-let seed=1
-
-function setSeed(str){
-seed=0
-for(let i=0;i<str.length;i++){
-seed=(seed*31 + str.charCodeAt(i)) % 1000000007
-}
-}
-
-function rand(){
-seed=(seed*9301+49297)%233280
-return seed/233280
-}
-
-/* ---------- PRE-DETERMINE RESULT ---------- */
-
-let plannedBonus=null
-let plannedResult=null
-
-function determineOutcome(){
-
-if(rand()<0.30){
-
-let bonusSlices=[]
-wheelOptions.forEach((o,i)=>{
-if(o.type=="bonus") bonusSlices.push(i)
+bonusLabels.forEach(b => {
+  rawOptions.push({ type:"bonus", bonus:b })
 })
 
-plannedBonus = bonusSlices[Math.floor(rand()*bonusSlices.length)]
-
+function scramble(arr, shuffleSeed) {
+  let s = shuffleSeed
+  function sr() { s = (s * 9301 + 49297) % 233280; return s / 233280 }
+  let a = arr.slice()
+  for (let i = a.length - 1; i > 0; i--) {
+    let j = Math.floor(sr() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]]
+  }
+  return a
 }
 
-let gameSlices=[]
-wheelOptions.forEach((o,i)=>{
-if(o.type=="game") gameSlices.push(i)
-})
+let wheelOptions = scramble(rawOptions, 42)
 
-plannedResult = gameSlices[Math.floor(rand()*gameSlices.length)]
+/* ─────────────── SEEDED RNG ─────────────── */
 
+let seed = 1
+
+function setSeed(str) {
+  seed = 0
+  for (let i = 0; i < str.length; i++) {
+    seed = (seed * 31 + str.charCodeAt(i)) % 1000000007
+  }
 }
 
-/* ---------- DRAW WHEEL ---------- */
+function rand() {
+  seed = (seed * 9301 + 49297) % 233280
+  return seed / 233280
+}
 
-let canvas=document.getElementById("wheel")
-let ctx=canvas.getContext("2d")
+/* ─────────────── PRE-DETERMINE OUTCOME ─────────────── */
 
-function drawWheel(){
+let plannedBonus  = null
+let plannedResult = null
 
-let slice=2*Math.PI/wheelOptions.length
-let center=350
-let radius=350
+function determineOutcome() {
+  if (rand() < 0.30) {
+    let bonusSlices = []
+    wheelOptions.forEach((o,i) => { if (o.type === "bonus") bonusSlices.push(i) })
+    plannedBonus = bonusSlices[Math.floor(rand() * bonusSlices.length)]
+  }
+  let gameSlices = []
+  wheelOptions.forEach((o,i) => { if (o.type === "game") gameSlices.push(i) })
+  plannedResult = gameSlices[Math.floor(rand() * gameSlices.length)]
+}
 
-for(let i=0;i<wheelOptions.length;i++){
+/* ─────────────── BONUS CALCULATION (shared helper) ─────────────── */
 
-let angle=i*slice - Math.PI/2
+function applyBonus(prize, bonusLabel) {
+  const value = prize.value
+  if (typeof value !== "number") {
+    const times = bonusLabel.startsWith("3x") ? "three" : "twice"
+    return { display: value + (bonusLabel.startsWith("3x") ? " (×3)" : " (×2)"), note: "Do the maze " + times + "." }
+  }
+  const multiplier = bonusLabel.startsWith("3x") ? 3 : 2
+  return { original: value, boosted: value * multiplier }
+}
 
-ctx.beginPath()
-ctx.moveTo(center,center)
-ctx.arc(center,center,radius,angle,angle+slice)
+/* ─────────────── DRAW WHEEL ─────────────── */
 
-let colors=[
-"#ff3b3b",
-"#ff7a00",
-"#ffd400",
-"#2bdc00",
-"#00c8ff",
-"#0066ff",
-"#9b00ff",
-"#ff1493"
+const canvas = document.getElementById("wheelCanvas")
+const ctx    = canvas.getContext("2d")
+
+const SLICE_COLORS = [
+  "#e63946","#e07800","#d4a017","#2a9d8f",
+  "#219ebc","#3a86ff","#7b2d8b","#e040fb",
+  "#c0392b","#f77f00","#4caf50","#0077b6",
+  "#9b2335","#ff6b6b","#006d77","#6a0572"
 ]
 
-let color = colors[i % colors.length]
-
-if(wheelOptions[i].game?.scary){
-
-color="#660000"
-
-ctx.shadowColor="red"
-ctx.shadowBlur=30
-
-}else{
-
-ctx.shadowBlur=0
-
+function shortLabel(name) {
+  const map = {
+    "Matching Game":       "MATCHING",
+    "Colour Assignment":   "COLOR",
+    "Watch the Clock":     "CLOCK",
+    "Guess The Number":    "NUMBER",
+    "Mindbreaker":         "MINDBREAKER",
+    "Meditation":          "MEDITATE",
+    "Maze":                "MAZE",
+    "Grid":                "GRID",
+    "Write for Perfection":"WRITE",
+    "Obedience Machine":   "OBEY"
+  }
+  return map[name] || name.toUpperCase()
 }
 
-ctx.fillStyle=color
-ctx.fill()
+let mindPulseT = 0
 
-ctx.strokeStyle="white"
-ctx.lineWidth=4
-ctx.stroke()
-if(wheelOptions[i].game?.scary){
+function drawWheel() {
+  const n     = wheelOptions.length
+  const slice = 2 * Math.PI / n
+  const cx    = 350, cy = 350, r = 340
 
-ctx.strokeStyle="orange"
-ctx.lineWidth=8
-ctx.stroke()
+  ctx.clearRect(0, 0, 700, 700)
 
+  mindPulseT += 0.04
+  const mPulse = 0.65 + 0.35 * Math.abs(Math.sin(mindPulseT))
+
+  for (let i = 0; i < n; i++) {
+    const angle = i * slice - Math.PI/2
+    const opt   = wheelOptions[i]
+    const scary = opt.game && opt.game.scary
+
+    ctx.beginPath()
+    ctx.moveTo(cx, cy)
+    ctx.arc(cx, cy, r, angle, angle + slice)
+    ctx.closePath()
+
+    if (scary) {
+      const ri = Math.floor(40 + 80 * mPulse)
+      ctx.fillStyle = `rgb(${ri + 100},0,0)`
+    } else if (opt.type === "bonus") {
+      ctx.fillStyle = "#1a1a3a"
+    } else {
+      ctx.fillStyle = SLICE_COLORS[i % SLICE_COLORS.length]
+    }
+    ctx.fill()
+
+    ctx.strokeStyle = scary ? `rgba(255,${Math.floor(60*mPulse)},0,0.9)` : "rgba(255,255,255,0.25)"
+    ctx.lineWidth   = scary ? 3 : 1.5
+    ctx.stroke()
+
+    ctx.save()
+    ctx.translate(cx, cy)
+    ctx.rotate(angle + slice / 2)
+
+    let label, valueStr
+    if (opt.type === "game") {
+      label    = shortLabel(opt.game.name)
+      valueStr = "(" + opt.value + ")"
+    } else {
+      label    = opt.bonus
+      valueStr = ""
+    }
+
+    if (scary) {
+      ctx.shadowColor = "#ff3300"
+      ctx.shadowBlur  = 12
+    }
+
+    ctx.textAlign    = "right"
+    ctx.textBaseline = "middle"
+
+    if (opt.type === "bonus") {
+      ctx.fillStyle = "#ffd700"
+      ctx.font = "bold 17px Arial"
+    } else if (scary) {
+      ctx.fillStyle = `rgba(255,${Math.floor(120*mPulse)},0,1)`
+      ctx.font = "bold 19px Arial"
+    } else {
+      ctx.fillStyle = "rgba(255,255,255,0.95)"
+      ctx.font = "bold 17px Arial"
+    }
+
+    const textR = r - 14
+    ctx.fillText(label, textR, valueStr ? -8 : 0)
+
+    if (valueStr) {
+      ctx.font = "14px Arial"
+      ctx.fillStyle = scary ? `rgba(255,${Math.floor(160*mPulse)},0,.9)` : "rgba(255,255,255,0.7)"
+      ctx.fillText(valueStr, textR, 10)
+    }
+
+    ctx.shadowBlur = 0
+    ctx.restore()
+  }
+
+  const hubGrad = ctx.createRadialGradient(cx, cy, 4, cx, cy, 36)
+  hubGrad.addColorStop(0, "#fff9c4")
+  hubGrad.addColorStop(0.5, "#ffd700")
+  hubGrad.addColorStop(1, "#b8860b")
+  ctx.beginPath()
+  ctx.arc(cx, cy, 36, 0, 2*Math.PI)
+  ctx.fillStyle = hubGrad
+  ctx.fill()
+  ctx.strokeStyle = "rgba(255,255,255,0.4)"
+  ctx.lineWidth = 2
+  ctx.stroke()
+
+  ctx.fillStyle = "#111"
+  ctx.font = "bold 28px Arial"
+  ctx.textAlign = "center"
+  ctx.textBaseline = "middle"
+  ctx.fillText("★", cx, cy + 1)
 }
 
-ctx.save()
+/* ─────────────── DRAW PEGS ─────────────── */
 
-ctx.translate(center,center)
-ctx.rotate(angle+slice/2)
-
-ctx.shadowBlur = 0
-
-ctx.textAlign = "right"
-ctx.textBaseline = "middle"
-
-let text=""
-
-if(wheelOptions[i].type=="game"){
-
-let name = wheelOptions[i].game.name
-
-if(name=="Matching Game") name="MATCHING"
-if(name=="Colour Assignment") name="COLOR"
-if(name=="Watch the Clock") name="CLOCK"
-if(name=="Guess The Number") name="NUMBER"
-if(name=="Mindbreaker") name="MINDBREAKER"
-if(name=="Meditation") name="MEDITATE"
-if(name=="Maze") name="MAZE"
-if(name=="Grid") name="GRID"
-if(name=="Write for Perfection") name="WRITE"
-if(name=="Obedience Machine") name="OBEY"
-
-text = name + " ("+wheelOptions[i].value+")"
-
-}else{
-
-text = wheelOptions[i].bonus.toUpperCase()
-
+function drawPegs() {
+  const svg = document.getElementById("pegsRing")
+  const n   = wheelOptions.length
+  const cx  = 350, cy = 350, pegR = 348
+  let html = ""
+  for (let i = 0; i < n; i++) {
+    const angle = (i / n) * 2 * Math.PI - Math.PI/2
+    const x = cx + pegR * Math.cos(angle)
+    const y = cy + pegR * Math.sin(angle)
+    html += `<circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="5.5"
+              fill="#ffd700" stroke="#b8860b" stroke-width="1.5"
+              style="filter:drop-shadow(0 0 3px #ffd700)"/>`
+  }
+  svg.innerHTML = html
 }
 
-if(wheelOptions[i].game?.scary){
-ctx.fillStyle="#ff4444"
-ctx.font="bold 22px Arial"
-}else{
-ctx.fillStyle="white"
-ctx.font="bold 20px Arial"
+drawPegs()
+
+/* ─────────────── BULB BARS ─────────────── */
+
+function makeBulbs(id, count=28) {
+  const el = document.getElementById(id)
+  if (!el) return
+  let h = ""
+  for (let i = 0; i < count; i++) h += `<div class="bulb"></div>`
+  el.innerHTML = h
+}
+makeBulbs("bulbs1"); makeBulbs("bulbs2"); makeBulbs("bulbs3");
+makeBulbs("bulbs4"); makeBulbs("bulbs5");
+
+/* ─────────────── AUDIO ─────────────── */
+
+const audioCtx = new (window.AudioContext || window.webkitAudioContext)()
+
+function playTick() {
+  const osc  = audioCtx.createOscillator()
+  const gain = audioCtx.createGain()
+  osc.connect(gain); gain.connect(audioCtx.destination)
+  osc.type            = "triangle"
+  osc.frequency.value = 1200 + Math.random() * 400
+  gain.gain.setValueAtTime(0.18, audioCtx.currentTime)
+  gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.04)
+  osc.start(); osc.stop(audioCtx.currentTime + 0.04)
 }
 
-ctx.fillText(text,radius-10,0)
-
-ctx.restore()
-
+function playYay() {
+  const notes = [400, 500, 640, 800, 1000]
+  notes.forEach((freq, i) => {
+    const osc  = audioCtx.createOscillator()
+    const gain = audioCtx.createGain()
+    osc.connect(gain); gain.connect(audioCtx.destination)
+    osc.type = "triangle"
+    const t = audioCtx.currentTime + i * 0.12
+    osc.frequency.setValueAtTime(freq, t)
+    gain.gain.setValueAtTime(0, t)
+    gain.gain.linearRampToValueAtTime(0.25, t + 0.04)
+    gain.gain.exponentialRampToValueAtTime(0.001, t + 0.22)
+    osc.start(t); osc.stop(t + 0.25)
+  })
 }
 
+function playBonusSound() {
+  [300, 450, 600, 750].forEach((freq, i) => {
+    const osc  = audioCtx.createOscillator()
+    const gain = audioCtx.createGain()
+    osc.connect(gain); gain.connect(audioCtx.destination)
+    osc.type = "sine"
+    const t = audioCtx.currentTime + i * 0.15
+    osc.frequency.setValueAtTime(freq, t)
+    osc.frequency.exponentialRampToValueAtTime(freq * 1.5, t + 0.2)
+    gain.gain.setValueAtTime(0.2, t)
+    gain.gain.exponentialRampToValueAtTime(0.001, t + 0.3)
+    osc.start(t); osc.stop(t + 0.35)
+  })
 }
 
-drawWheel()
+/* ─────────────── STATE ─────────────── */
 
-/* ---------- STATE ---------- */
+let spinning        = false
+let currentRotation = 0
+let codeword        = ""
+let isFirstSpin     = true
 
-let spinning=false
-let currentRotation=0
-let wheel=document.getElementById("wheel")
-
-let codeword=""
-
-let audioCtx = new (window.AudioContext || window.webkitAudioContext)()
-
-
-/* ---------- START ---------- */
-
-function startGame(){
-
-codeword=document.getElementById("codeInput").value
-
-if(!codeword){
-alert("Enter a codeword")
-return
+let idleRaf
+function idleLoop() {
+  drawWheel()
+  idleRaf = requestAnimationFrame(idleLoop)
 }
 
-setSeed(codeword)
-determineOutcome()
+/* ─────────────── START ─────────────── */
 
-document.getElementById("startScreen").classList.remove("active")
-document.getElementById("wheelScreen").classList.add("active")
-
+function startGame() {
+  codeword = document.getElementById("codeInput").value.trim()
+  if (!codeword) { alert("Enter a codeword!"); return }
+  setSeed(codeword)
+  determineOutcome()
+  document.getElementById("startScreen").classList.remove("active")
+  document.getElementById("wheelScreen").classList.add("active")
+  idleLoop()
 }
 
-/* ---------- AUDIO ---------- */
+/* ─────────────── POINTER ─────────────── */
 
-function playTick(){
-
-let osc = audioCtx.createOscillator()
-let gain = audioCtx.createGain()
-
-osc.connect(gain)
-gain.connect(audioCtx.destination)
-
-osc.frequency.value=1800
-osc.type="square"
-
-gain.gain.setValueAtTime(0.15,audioCtx.currentTime)
-gain.gain.exponentialRampToValueAtTime(0.001,audioCtx.currentTime+0.03)
-
-osc.start()
-osc.stop(audioCtx.currentTime+0.03)
-
+function bouncePointer() {
+  const p = document.getElementById("pointerAssembly")
+  p.classList.remove("pointerBounce")
+  void p.offsetWidth
+  p.classList.add("pointerBounce")
 }
 
-function playYay(){
+/* ─────────────── SPIN ─────────────── */
 
-let osc=audioCtx.createOscillator()
-let gain=audioCtx.createGain()
+function spinWheel() {
+  if (spinning) return
+  spinning = true
 
-osc.connect(gain)
-gain.connect(audioCtx.destination)
-
-osc.type="triangle"
-osc.frequency.setValueAtTime(400,audioCtx.currentTime)
-osc.frequency.exponentialRampToValueAtTime(900,audioCtx.currentTime+0.6)
-
-gain.gain.setValueAtTime(0.3,audioCtx.currentTime)
-gain.gain.exponentialRampToValueAtTime(0.001,audioCtx.currentTime+0.6)
-
-osc.start()
-osc.stop(audioCtx.currentTime+0.6)
-
+  if (plannedBonus !== null && isFirstSpin) {
+    isFirstSpin = false
+    spinTo(plannedBonus, true)
+  } else {
+    isFirstSpin = false
+    spinTo(plannedResult, false)
+  }
 }
 
-/* ---------- POINTER ---------- */
+function spinTo(index, isBonus) {
+  const sliceSize = 360 / wheelOptions.length
+  const target    = (index * sliceSize) + sliceSize / 2
+  const spins     = 10 + Math.floor(rand() * 5)
 
-function bouncePointer(){
+  const currentOffset = currentRotation % 360
+  const adjustment    = (360 - target - currentOffset + 360) % 360
+  const finalAngle    = currentRotation + (360 * spins) + adjustment
 
-let p=document.getElementById("pointer")
-p.classList.remove("pointerBounce")
-void p.offsetWidth
-p.classList.add("pointerBounce")
+  const start     = currentRotation
+  const change    = finalAngle - start
+  const duration  = 8500 + Math.random() * 1500
+  const startTime = performance.now()
 
+  cancelAnimationFrame(idleRaf)
+
+  function animate() {
+    const elapsed = performance.now() - startTime
+    const t       = Math.min(elapsed / duration, 1)
+    const ease    = t < 0.5
+      ? 4 * t * t * t
+      : 1 - Math.pow(-2 * t + 2, 3) / 2
+
+    const angle = start + change * ease
+
+    canvas.style.transform       = "rotate(" + (angle % 360) + "deg)"
+    canvas.style.transformOrigin = "350px 350px"
+
+    drawWheel()
+    handleTicks(angle)
+
+    if (t < 1) {
+      requestAnimationFrame(animate)
+    } else {
+      currentRotation = finalAngle % 360
+
+      if (isBonus) {
+        // CHANGE 1: countdown overlay instead of alert()
+        playBonusSound()
+        const bonusOpt   = wheelOptions[plannedBonus]
+        const bonusLabel = bonusOpt ? bonusOpt.bonus : "BONUS"
+        const overlay    = document.getElementById("bonusOverlay")
+        const countEl    = document.getElementById("bonusCount")
+        const descEl     = document.getElementById("bonusDesc")
+        descEl.textContent  = bonusLabel + "! Spinning again in"
+        countEl.textContent = "3"
+        overlay.style.display = "block"
+        let n = 3
+        const iv = setInterval(() => {
+          n--
+          if (n <= 0) {
+            clearInterval(iv)
+            overlay.style.display = "none"
+            spinning = false
+            spinWheel()
+          } else {
+            countEl.textContent = n
+          }
+        }, 1000)
+      } else {
+        showWin(index)
+      }
+    }
+  }
+
+  requestAnimationFrame(animate)
 }
 
-/* ---------- SPIN ---------- */
+let lastSlice = -1
 
-function spinWheel(){
-
-if(spinning) return
-spinning=true
-
-if(plannedBonus!==null){
-spinTo(plannedBonus,true)
-}else{
-spinTo(plannedResult,false)
+function handleTicks(angle) {
+  const sliceSize = 360 / wheelOptions.length
+  const slice     = Math.floor((angle % 360) / sliceSize)
+  if (slice !== lastSlice) {
+    playTick()
+    bouncePointer()
+    lastSlice = slice
+  }
 }
 
+/* ─────────────── WIN ─────────────── */
+
+function showWin(index) {
+  const prize  = wheelOptions[index]
+  const banner = document.getElementById("winBanner")
+
+  // CHANGE 3: use bonus-adjusted value in the win banner
+  let displayValue = prize.value
+  if (plannedBonus !== null) {
+    const bonusOpt = wheelOptions[plannedBonus]
+    const calc     = applyBonus(prize, bonusOpt.bonus)
+    displayValue   = calc.boosted !== undefined ? calc.boosted : calc.display
+  }
+
+  const msg = prize.game.winText.replace("{v}", displayValue)
+  banner.innerText     = msg
+  banner.style.display = "block"
+
+  playYay()
+  startConfetti()
+
+  setTimeout(() => { showResults(prize) }, 4000)
 }
 
-function spinTo(index,isBonus){
+/* ─────────────── RESULTS ─────────────── */
 
-let sliceSize=360/wheelOptions.length
-let target=(index*sliceSize)+sliceSize/2
+function showResults(prize) {
+  document.getElementById("wheelScreen").classList.remove("active")
+  document.getElementById("endScreen").classList.add("active")
 
-let spins=10
+  const hasBonus = plannedBonus !== null
+  const bonusOpt = hasBonus ? wheelOptions[plannedBonus] : null
 
-let currentOffset = currentRotation % 360
-let adjustment = (360 - target - currentOffset + 360) % 360
+  let html = ""
 
-let finalAngle = currentRotation + (360 * spins) + adjustment
+  html += `<div class="result-row">
+    <span class="result-label">Game</span>
+    <span class="result-value">${prize.game.name}</span>
+  </div>`
 
-let start=currentRotation
-let change=finalAngle-start
+  if (hasBonus) {
+    const calc = applyBonus(prize, bonusOpt.bonus)
+    if (calc.note) {
+      html += `<div class="result-row">
+        <span class="result-label">Requirement</span>
+        <span class="result-value">${calc.display}</span>
+      </div>`
+    } else {
+      html += `<div class="result-row">
+        <span class="result-label">Requirement</span>
+        <span class="result-value">
+          <span class="strike">${calc.original}</span>
+          <span class="bonus-val">${calc.boosted}</span>
+          <span class="bonus-badge">${bonusOpt.bonus}</span>
+        </span>
+      </div>`
+    }
+  } else {
+    html += `<div class="result-row">
+      <span class="result-label">Requirement</span>
+      <span class="result-value">${prize.value}</span>
+    </div>`
+  }
 
-let duration=9000
-let startTime=performance.now()
+  html += `<div class="result-row">
+    <span class="result-label">Codeword</span>
+    <span class="result-value" style="color:#aaa;font-size:16px;">${codeword}</span>
+  </div>`
 
-animate()
+  if (prize.game.instructions) {
+    html += `<div class="instructions-box">
+      <strong>📋 Instructions</strong>
+      ${prize.game.instructions}
+    </div>`
+  }
 
-function animate(){
+  html += `<a class="claim-btn" href="${prize.game.url}" target="_blank">🎮 Claim Your Prize!</a>`
 
-let elapsed=performance.now()-startTime
-let t=Math.min(elapsed/duration,1)
-let ease=1-Math.pow(1-t,3)
-
-let angle=start + change*ease
-
-wheel.style.transform="rotate("+angle+"deg)"
-
-handleTicks(angle)
-
-if(t<1){
-requestAnimationFrame(animate)
-}else{
-
-currentRotation=finalAngle%360
-
-if(isBonus){
-alert("BONUS! Spinning again!")
-spinTo(plannedResult,false)
-}else{
-showWin(index)
+  document.getElementById("resultCard").innerHTML = html
+  makeBulbs("bulbs4"); makeBulbs("bulbs5");
 }
 
+/* ─────────────── CONFETTI ─────────────── */
+
+const confettiCanvas = document.getElementById("confettiCanvas")
+const cctx           = confettiCanvas.getContext("2d")
+confettiCanvas.width = window.innerWidth
+confettiCanvas.height= window.innerHeight
+
+let confetti = []
+
+function startConfetti() {
+  confetti = []
+  for (let i = 0; i < 500; i++) {
+    confetti.push({
+      x:    Math.random() * window.innerWidth,
+      y:    -20 - Math.random() * 200,
+      w:    6 + Math.random() * 8,
+      h:    3 + Math.random() * 5,
+      speed:2 + Math.random() * 5,
+      drift:(Math.random() - 0.5) * 2,
+      rot:  Math.random() * 360,
+      rotV: (Math.random() - 0.5) * 4,
+      color:`hsl(${Math.random()*360},80%,60%)`
+    })
+  }
+  animateConfetti()
 }
 
-}
-
-}
-
-let lastSlice=-1
-
-function handleTicks(angle){
-
-let sliceSize=360/wheelOptions.length
-let slice=Math.floor((angle%360)/sliceSize)
-
-if(slice!=lastSlice){
-
-playTick()
-bouncePointer()
-
-lastSlice=slice
-
-}
-
-}
-
-/* ---------- WIN ---------- */
-
-function showWin(index){
-
-let prize=wheelOptions[index]
-
-let banner=document.getElementById("winBanner")
-
-let msg = prize.game.winText.replace("{v}", prize.value)
-banner.innerText = msg
-
-banner.style.display="block"
-
-playYay()
-startConfetti()
-
-setTimeout(()=>{
-showResults(prize)
-},4000)
-
-}
-
-/* ---------- RESULTS ---------- */
-
-function showResults(prize){
-
-document.getElementById("wheelScreen").classList.remove("active")
-document.getElementById("endScreen").classList.add("active")
-
-let html=""
-
-html+="<b>Game:</b> "+prize.game.name+"<br>"
-html+="<b>Requirement:</b> "+prize.value+"<br>"
-
-if(plannedBonus!==null){
-
-html+="<br><b>Bonus Modifier</b><br>"
-html+=wheelOptions[plannedBonus].bonus+"<br>"
-
-}
-
-html+="<br><b>Codeword:</b> "+codeword+"<br>"
-
-html+="<br><a href='"+prize.game.url+"' target='_blank'>Claim Your Prize!</a>"
-
-document.getElementById("resultBox").innerHTML=html
-
-}
-
-/* ---------- CONFETTI ---------- */
-
-let confettiCanvas=document.getElementById("confettiCanvas")
-let confettiCtx=confettiCanvas.getContext("2d")
-
-confettiCanvas.width=window.innerWidth
-confettiCanvas.height=window.innerHeight
-
-let confetti=[]
-
-function startConfetti(){
-
-for(let i=0;i<600;i++){
-
-confetti.push({
-x:Math.random()*window.innerWidth,
-y:-20,
-size:6+Math.random()*10,
-speed:2+Math.random()*5,
-drift:(Math.random()-0.5)*2,
-color:"hsl("+Math.random()*360+",80%,60%)"
-})
-
-}
-
-animateConfetti()
-
-}
-
-function animateConfetti(){
-
-confettiCtx.clearRect(0,0,confettiCanvas.width,confettiCanvas.height)
-
-confetti.forEach(c=>{
-
-confettiCtx.fillStyle=c.color
-confettiCtx.fillRect(c.x,c.y,c.size,c.size)
-
-c.y += c.speed
-c.x += c.drift
-
-if(c.y > window.innerHeight){
-c.y = -20
-c.x = Math.random()*window.innerWidth
-}
-
-})
-
-requestAnimationFrame(animateConfetti)
-
+function animateConfetti() {
+  cctx.clearRect(0, 0, confettiCanvas.width, confettiCanvas.height)
+  confetti.forEach(c => {
+    cctx.save()
+    cctx.translate(c.x, c.y)
+    cctx.rotate(c.rot * Math.PI / 180)
+    cctx.fillStyle = c.color
+    cctx.fillRect(-c.w/2, -c.h/2, c.w, c.h)
+    cctx.restore()
+    c.y   += c.speed
+    c.x   += c.drift
+    c.rot += c.rotV
+    if (c.y > window.innerHeight) {
+      c.y = -20
+      c.x = Math.random() * window.innerWidth
+    }
+  })
+  requestAnimationFrame(animateConfetti)
 }
 
 </script>
-
 </body>
 </html>
