@@ -2,67 +2,278 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@600;700&display=swap" rel="stylesheet">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Perfection's Fun Matching Game</title>
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&family=Pacifico&display=swap" rel="stylesheet">
 
 <style>
-body {
-    font-family: Arial, sans-serif;
-    background-color: #cfe9f9;
-    text-align: center;
-    margin: 0;
-    padding: 0;
+:root {
+    --pink: #ff85b3;
+    --pink-light: #ffd6e7;
+    --pink-pale: #fff0f7;
+    --lavender: #c9a7f5;
+    --lavender-light: #e8d8ff;
+    --mint: #a8e6cf;
+    --mint-dark: #5ecfaa;
+    --yellow: #ffe680;
+    --blue: #a3d8f4;
+    --peach: #ffcc99;
+    --text-dark: #5a3a6e;
+    --text-mid: #8b5ca8;
+    --shadow: 0 4px 20px rgba(180,100,200,0.15);
+    --shadow-card: 0 6px 24px rgba(180,100,200,0.2);
 }
 
-/* Centering wrapper */
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+    font-family: 'Nunito', sans-serif;
+    background: #fce4f7;
+    min-height: 100vh;
+    overflow-x: hidden;
+}
+
+/* ── animated background bubbles ── */
+.bg-bubbles {
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: 0;
+    overflow: hidden;
+}
+.bubble {
+    position: absolute;
+    border-radius: 50%;
+    opacity: 0.18;
+    animation: floatBubble linear infinite;
+}
+@keyframes floatBubble {
+    0%   { transform: translateY(110vh) scale(1); opacity: 0.18; }
+    100% { transform: translateY(-20vh) scale(1.1); opacity: 0; }
+}
+
+/* ── wrapper ── */
 #appWrapper {
+    position: relative;
+    z-index: 1;
     min-height: 100vh;
     display: flex;
     justify-content: center;
     align-items: center;
     flex-direction: column;
-    position: relative;
+    padding: 24px 24px 40px;
 }
 
-#startScreen, #gameContainer, #endScreen {
-    max-width: 700px;
+/* ── screens ── */
+#startScreen, #endScreen {
     width: 100%;
-    padding: 20px;
+    max-width: 760px;
+}
+#gameContainer {
+    width: 100%;
+    max-width: 1400px;
 }
 
-h2 {
-    color: #ff6fa5;
+/* ── START SCREEN ── */
+#startScreen {
+    background: white;
+    border-radius: 32px;
+    padding: 52px 52px;
+    box-shadow: var(--shadow-card), 0 0 0 4px var(--pink-light);
+    text-align: center;
+    animation: popIn 0.5s cubic-bezier(0.34,1.56,0.64,1);
 }
 
-button {
-    padding: 12px;
+@keyframes popIn {
+    from { transform: scale(0.85); opacity: 0; }
+    to   { transform: scale(1);    opacity: 1; }
+}
+
+.start-heart-row {
+    font-size: 40px;
+    margin-bottom: 10px;
+    animation: heartbeat 1.4s ease-in-out infinite;
+}
+@keyframes heartbeat {
+    0%,100% { transform: scale(1); }
+    50%      { transform: scale(1.12); }
+}
+
+.start-title {
+    font-family: 'Pacifico', cursive;
+    font-size: clamp(28px, 6vw, 42px);
+    color: var(--pink);
+    margin-bottom: 8px;
+    line-height: 1.2;
+    text-shadow: 2px 3px 0 var(--pink-light);
+}
+.start-subtitle {
+    font-family: 'Pacifico', cursive;
+    font-size: clamp(15px, 2.8vw, 20px);
+    color: var(--lavender);
+    margin-bottom: 32px;
+}
+
+.start-desc {
+    background: var(--pink-pale);
+    border-radius: 18px;
+    padding: 22px 24px;
+    margin-bottom: 28px;
+    color: var(--text-mid);
+    font-size: 17px;
+    line-height: 1.75;
+    border: 2px dashed var(--pink-light);
+}
+
+.start-config {
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+    margin-bottom: 28px;
+}
+
+.config-row {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 14px;
+    font-size: 18px;
+    color: var(--text-dark);
+    font-weight: 700;
+}
+
+.config-row input[type="number"] {
+    width: 70px;
+    padding: 8px 10px;
+    border: 2px solid var(--pink-light);
+    border-radius: 12px;
+    font-family: 'Nunito', sans-serif;
     font-size: 16px;
-    margin: 10px;
-    width: 80%;
-    background-color: #ffd1dc;
-    border: none;
-    border-radius: 10px;
+    font-weight: 800;
+    color: var(--text-dark);
+    background: white;
+    text-align: center;
+    outline: none;
+    transition: border-color 0.2s;
+}
+.config-row input[type="number"]:focus { border-color: var(--pink); }
+
+.toggle-label {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 15px;
+    color: var(--text-mid);
+    font-weight: 700;
     cursor: pointer;
+    user-select: none;
+}
+.toggle-label input[type="checkbox"] { display: none; }
+.toggle-pill {
+    width: 52px; height: 28px;
+    background: var(--pink-light);
+    border-radius: 14px;
+    position: relative;
+    transition: background 0.3s;
+    flex-shrink: 0;
+}
+.toggle-pill::after {
+    content: '';
+    position: absolute;
+    top: 4px; left: 4px;
+    width: 20px; height: 20px;
+    background: white;
+    border-radius: 50%;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+    transition: transform 0.3s;
+}
+.toggle-label input:checked + .toggle-pill {
+    background: var(--pink);
+}
+.toggle-label input:checked + .toggle-pill::after {
+    transform: translateX(24px);
 }
 
-button:hover {
-    background-color: #ffb6c1;
+
+.start-btn {
+    background: linear-gradient(135deg, var(--pink), var(--lavender));
+    color: white;
+    border: none;
+    border-radius: 50px;
+    padding: 16px 48px;
+    font-family: 'Nunito', sans-serif;
+    font-size: 19px;
+    font-weight: 900;
+    cursor: pointer;
+    box-shadow: 0 6px 20px rgba(255,133,179,0.4);
+    transition: transform 0.15s, box-shadow 0.15s;
+    letter-spacing: 0.5px;
 }
+.start-btn:hover {
+    transform: translateY(-3px) scale(1.03);
+    box-shadow: 0 10px 28px rgba(255,133,179,0.5);
+}
+.start-btn:active { transform: scale(0.97); }
+
+.credit {
+    margin-top: 20px;
+    font-size: 13px;
+    color: #cba8e0;
+}
+
+/* ── GAME SCREEN ── */
+#gameContainer {
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    gap: 16px;
+    background: white;
+    border-radius: 32px;
+    padding: 36px 36px 40px;
+    box-shadow: var(--shadow-card), 0 0 0 4px var(--lavender-light);
+    text-align: center;
+    width: 100%;
+}
+
+#stats {
+    background: var(--pink-pale);
+    border-radius: 20px;
+    padding: 12px 20px;
+    display: flex;
+    gap: 20px;
+    flex-wrap: wrap;
+    justify-content: center;
+    border: 2px solid var(--pink-light);
+    font-size: 14px;
+    font-weight: 800;
+    color: var(--text-mid);
+    width: 100%;
+}
+.stat-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+}
+.stat-label { font-size: 11px; font-weight: 700; color: var(--lavender); text-transform: uppercase; letter-spacing: 0.8px; }
+.stat-val   { font-size: 20px; font-weight: 900; color: var(--text-dark); }
 
 #grid {
     display: grid;
-    gap: 8px;
-    margin-top: 20px;
+    gap: 10px;
+    width: 100%;
 }
 
-/* 3D Flip Tile */
+/* ── TILES ── */
 .tile {
-    background-color: transparent;
-    height: 80px;
     perspective: 1000px;
     cursor: pointer;
     user-select: none;
+    height: 110px;
+}
+
+@media (max-width: 600px) {
+    .tile { height: 70px; }
 }
 
 .tile-inner {
@@ -72,338 +283,728 @@ button:hover {
     transition: transform 3.0s;
     transform-style: preserve-3d;
 }
-
-.tile.flipped .tile-inner {
-    transform: rotateY(180deg);
-}
+.tile.flipped .tile-inner { transform: rotateY(180deg); }
 
 .tile-front, .tile-back {
     position: absolute;
-    width: 100%;
-    height: 100%;
-    border-radius: 12px;
+    inset: 0;
+    border-radius: 16px;
     display: flex;
     justify-content: center;
     align-items: center;
-    font-size: 22px;
-    font-family: 'Fredoka', sans-serif;
-    font-weight: 700;
+    font-family: 'Nunito', sans-serif;
+    font-weight: 900;
+    font-size: clamp(14px, 2vw, 22px);
     backface-visibility: hidden;
+    letter-spacing: 0.5px;
 }
 
 .tile-front {
-    background-color: #ffd1dc;
+    background: linear-gradient(145deg, #ffd6e7, #f9c0e0);
+    box-shadow: 0 4px 12px rgba(255,133,179,0.25), inset 0 1px 0 rgba(255,255,255,0.7);
+    color: var(--pink);
+    font-size: 22px;
+}
+.tile-front::after {
+    content: '✦';
+    opacity: 0.35;
 }
 
 .tile-back {
-    background-color: #fff0f5;
+    background: white;
+    box-shadow: 0 4px 12px rgba(180,100,200,0.2);
     transform: rotateY(180deg);
+    border: 2px solid var(--pink-light);
 }
 
-.matched .tile-back {
-    background-color: #b5ead7;
-    color: #333 !important;
+.tile.matched .tile-back {
+    background: linear-gradient(135deg, #c5f0dc, #a8e6cf);
+    border-color: var(--mint-dark);
+    color: #2d7a5a !important;
+    box-shadow: 0 4px 16px rgba(94,207,170,0.35);
     pointer-events: none;
+    animation: matchPop 0.4s cubic-bezier(0.34,1.56,0.64,1);
+}
+@keyframes matchPop {
+    from { transform: rotateY(180deg) scale(0.9); }
+    to   { transform: rotateY(180deg) scale(1); }
 }
 
-#stats {
-    margin-top: 15px;
-    font-size: 18px;          /* slightly bigger */
-    font-weight: bold;        /* bold */
-    color: #c8a2ff;           /* soft lilac */
+.tile:not(.matched):not(.flipped):hover .tile-front {
+    background: linear-gradient(145deg, #ffc1d9, #f0a8cc);
+    transform: scale(1.03);
+    transition: background 0.2s, transform 0.15s;
 }
+.tile:not(.matched):not(.flipped) .tile-inner { transition: transform 3.0s; }
 
+/* ── POPUP OVERLAY ── */
 #punishPopup {
     position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: rgba(255, 182, 193, 0.95);
-    color: #6a5acd;
+    inset: 0;
     display: none;
     justify-content: center;
     align-items: center;
-    font-size: 48px;
-    font-weight: bold;
     z-index: 999;
     text-align: center;
-    padding: 20px;
+    padding: 24px;
+    /* background via JS so it can vary */
+    background: rgba(255, 182, 220, 0.96);
 }
 
-/* Sparkles */
-.sparkle {
-    position: absolute;
-    width: 8px;
-    height: 8px;
-    background: gold;
+/* Floating emoji background inside popup */
+.popup-inner {
+    position: relative;
+    z-index: 2;
+    max-width: 540px;
+    width: 100%;
+}
+
+.popup-card {
+    background: white;
+    border-radius: 32px;
+    padding: 64px 56px;
+    box-shadow: 0 12px 48px rgba(200,100,180,0.3), 0 0 0 4px var(--pink-light);
+    animation: popIn 0.35s cubic-bezier(0.34,1.56,0.64,1);
+    position: relative;
+}
+
+.popup-message {
+    font-family: 'Pacifico', cursive;
+    font-size: clamp(48px, 9vw, 88px);
+    color: var(--text-dark);
+    line-height: 1.3;
+    margin-bottom: 36px;
+    position: relative;
+    z-index: 10;
+}
+
+.popup-countdown {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 120px;
+    height: 120px;
     border-radius: 50%;
-    pointer-events: none;
-    animation: sparkleAnim 0.8s ease-out forwards;
+    background: linear-gradient(135deg, var(--pink), var(--lavender));
+    color: white;
+    font-size: 60px;
+    font-weight: 900;
+    box-shadow: 0 4px 16px rgba(255,133,179,0.4);
+    animation: pulse 1s ease-in-out infinite;
+    position: relative;
+    z-index: 10;
+}
+@keyframes pulse {
+    0%,100% { transform: scale(1); }
+    50%      { transform: scale(1.08); }
 }
 
-@keyframes sparkleAnim {
-    0% { opacity: 1; transform: scale(1) translateY(0); }
-    100% { opacity: 0; transform: scale(2) translateY(-40px); }
+/* floating emoji in popup bg — kept fully behind text */
+.popup-emoji-bg {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    overflow: hidden;
+    border-radius: 32px;
+    z-index: 1;
 }
+.popup-emoji {
+    position: absolute;
+    animation: floatEmoji 4s ease-in-out infinite;
+    opacity: 0.25;
+}
+@keyframes floatEmoji {
+    0%,100% { transform: translateY(0) rotate(0deg); opacity: 0.25; }
+    50%      { transform: translateY(-12px) rotate(8deg); opacity: 0.35; }
+}
+
+/* slow-down specific */
+.slow-popup .popup-card { box-shadow: 0 12px 48px rgba(200,100,180,0.3), 0 0 0 4px var(--lavender-light); }
+
+/* ── END SCREEN ── */
+#endScreen {
+    background: white;
+    border-radius: 32px;
+    padding: 40px 36px;
+    box-shadow: var(--shadow-card), 0 0 0 4px var(--mint);
+    text-align: center;
+    animation: popIn 0.5s cubic-bezier(0.34,1.56,0.64,1);
+}
+
+.end-title {
+    font-family: 'Pacifico', cursive;
+    font-size: clamp(28px, 6vw, 44px);
+    color: var(--mint-dark);
+    text-shadow: 2px 3px 0 #c5f0dc;
+    margin-bottom: 6px;
+}
+.end-emoji-row { font-size: 36px; margin-bottom: 20px; }
+
+.end-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    margin-bottom: 28px;
+}
+.end-stat {
+    background: var(--pink-pale);
+    border-radius: 18px;
+    padding: 16px 12px;
+    border: 2px solid var(--pink-light);
+}
+.end-stat-label {
+    font-size: 11px;
+    font-weight: 800;
+    color: var(--lavender);
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    margin-bottom: 4px;
+}
+.end-stat-value {
+    font-size: 22px;
+    font-weight: 900;
+    color: var(--text-dark);
+    font-family: 'Pacifico', cursive;
+}
+.end-stat.full-width { grid-column: 1 / -1; }
+
+.end-gameid {
+    font-size: 13px;
+    color: #cba8e0;
+    margin-bottom: 24px;
+    font-weight: 700;
+}
+
+.restart-btn {
+    background: linear-gradient(135deg, var(--mint-dark), var(--blue));
+    color: white;
+    border: none;
+    border-radius: 50px;
+    padding: 16px 48px;
+    font-family: 'Nunito', sans-serif;
+    font-size: 19px;
+    font-weight: 900;
+    cursor: pointer;
+    box-shadow: 0 6px 20px rgba(94,207,170,0.4);
+    transition: transform 0.15s, box-shadow 0.15s;
+}
+.restart-btn:hover {
+    transform: translateY(-3px) scale(1.03);
+    box-shadow: 0 10px 28px rgba(94,207,170,0.5);
+}
+
+/* ── SPARKLE PARTICLES ── */
+.sparkle {
+    position: fixed;
+    pointer-events: none;
+    border-radius: 50%;
+    z-index: 9999;
+    animation: sparkleAnim 0.9s ease-out forwards;
+}
+@keyframes sparkleAnim {
+    0%   { opacity: 1; transform: scale(1) translate(0,0); }
+    100% { opacity: 0; transform: scale(0) translate(var(--dx), var(--dy)); }
+}
+
+.star-particle {
+    position: fixed;
+    pointer-events: none;
+    font-size: 20px;
+    z-index: 9999;
+    animation: starFloat 1s ease-out forwards;
+}
+@keyframes starFloat {
+    0%   { opacity: 1; transform: translate(0,0) scale(1) rotate(0deg); }
+    100% { opacity: 0; transform: translate(var(--dx), var(--dy)) scale(0.5) rotate(180deg); }
+}
+
+/* ── confetti ── */
+.confetti-piece {
+    position: fixed;
+    pointer-events: none;
+    z-index: 9998;
+    border-radius: 2px;
+    animation: confettiDrop linear forwards;
+}
+@keyframes confettiDrop {
+    0%   { opacity: 1; transform: translateY(0) rotate(0deg); }
+    100% { opacity: 0; transform: translateY(200px) rotate(720deg); }
+}
+
+/* ── shared screen title ── */
+.screen-title {
+    font-family: 'Pacifico', cursive;
+    font-size: clamp(18px, 4vw, 28px);
+    color: var(--pink);
+    text-shadow: 2px 3px 0 var(--pink-light);
+    text-align: center;
+    margin-bottom: 4px;
+}
+
+/* ── petal canvas behind game grid ── */
+#sparkleCanvas {
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: 0;
+    opacity: 0;
+    transition: opacity 1s;
+}
+#sparkleCanvas.active { opacity: 1; }
 </style>
 </head>
 
 <body>
+<div class="bg-bubbles" id="bgBubbles"></div>
+<canvas id="sparkleCanvas"></canvas>
 
 <div id="appWrapper">
 
-<div id="startScreen">
-    <h2><3 Perfection's Fun Little Matching Game <3</h2>
-    <p>I have been assigned to complete <input type="number" id="matchInput" min="2" max="25" value="6"> matches. Lucky me!</p>
-    <br>
-    <button onclick="startGame()">Begin</button>
-	<br><br>
-<label style="font-size:16px;">
-    <input type="checkbox" id="extraFunToggle">
-    Extra Fun Mode
-</label>
-<br><br>
-    <p>Welcome to my fun little matching game!</p>
-    <p>A great activity to keep restless subs occupied and happy :)</p>
-    <p>You know how it works! Flip the tiles and match them up!</p>
-    <p>Remember: relax and have fun!</p>
-    <br>
-    <br>
-    <p>Thanks to Puppy for help with the game idea!</p>
-</div>
+  <!-- START SCREEN -->
+  <div id="startScreen">
+    <div class="start-heart-row">🩷✨🌸</div>
+    <h1 class="start-title">Perfection's Fun<br>Matching Game</h1>
+    <p class="start-subtitle">a teeny tiny little memory challenge ˘ᵕ˘</p>
 
-<div id="gameContainer" style="display:none;">
+    <div class="start-desc">
+      Welcome! Flip the tiles and match them up.<br>
+      Sounds simple... right? 🌸 Relax and have fun!
+    </div>
+
+    <div class="start-config">
+      <div class="config-row">
+        <span>I must complete</span>
+        <input type="number" id="matchInput" min="2" max="25" value="6">
+        <span>matches. Lucky me!</span>
+      </div>
+      <div class="config-row">
+        <label class="toggle-label">
+          <input type="checkbox" id="extraFunToggle">
+          <span class="toggle-pill"></span>
+          Extra Fun Mode
+        </label>
+      </div>
+    </div>
+
+    <button class="start-btn" onclick="startGame()">✨ Begin ✨</button>
+
+    <p class="credit">Thanks to Puppy for the game idea! 🐾</p>
+  </div>
+
+  <!-- GAME SCREEN -->
+  <div id="gameContainer">
+    <div class="screen-title">🩷 Perfection's Matching Game 🩷</div>
     <div id="stats">
-        Tiles Flipped: <span id="flips">0</span> |
-        Matches Made: <span id="matches">0</span> |
-        Time Elapsed: <span id="time">0</span>s
+      <div class="stat-item">
+        <span class="stat-label">Flips</span>
+        <span class="stat-val" id="flips">0</span>
+      </div>
+      <div class="stat-item">
+        <span class="stat-label">Matches</span>
+        <span class="stat-val" id="matches">0</span>
+      </div>
+      <div class="stat-item">
+        <span class="stat-label">Time</span>
+        <span class="stat-val" id="time">00:00:00</span>
+      </div>
     </div>
     <div id="grid"></div>
+  </div>
+
+  <!-- END SCREEN -->
+  <div id="endScreen" style="display:none;">
+    <div class="screen-title" style="color: var(--mint-dark); text-shadow: 2px 3px 0 #c5f0dc;">🩷 Perfection's Matching Game 🩷</div>
+    <div class="end-emoji-row">🎉🌸✨💖🌈</div>
+    <h2 class="end-title">All Done!</h2>
+    <p class="end-gameid">Game ID: <span id="finalGameId"></span></p>
+
+    <div class="end-grid">
+      <div class="end-stat">
+        <div class="end-stat-label">Total Flips</div>
+        <div class="end-stat-value" id="finalFlips">—</div>
+      </div>
+      <div class="end-stat">
+        <div class="end-stat-label">Matches Made</div>
+        <div class="end-stat-value" id="finalMatches">—</div>
+      </div>
+      <div class="end-stat">
+        <div class="end-stat-label">Slow Down Screens</div>
+        <div class="end-stat-value" id="finalSlowDowns">—</div>
+      </div>
+      <div class="end-stat">
+        <div class="end-stat-label">Total Time</div>
+        <div class="end-stat-value" id="finalTime">—</div>
+      </div>
+      <div class="end-stat full-width" id="extraFunWinsRow">
+        <div class="end-stat-label">Extra Fun Mode</div>
+        <div class="end-stat-value"><span id="extraFunResult">—</span> · <span id="finalExtraFunWins">—</span> wins</div>
+      </div>
+    </div>
+
+    <button class="restart-btn" onclick="location.reload()">🔄 Play Again</button>
+  </div>
+
 </div>
 
-<div id="endScreen" style="display:none;">
-    <h2>COMPLETED</h2>
-    <p>Game ID: <span id="finalGameId"></span></p>
-    <p>Total Flips: <span id="finalFlips"></span></p>
-    <p>Total Matches: <span id="finalMatches"></span></p>
-    <p>Slow Down Screens: <span id="finalSlowDowns"></span></p>
-	<p>Extra Fun Mode Enabled: <span id="extraFunResult"></span></p>
-	<p id="extraFunWinsRow">
-    Extra Fun Wins: <span id="finalExtraFunWins"></span>
-    </p>
-    <p>Total Time: <span id="finalTime"></span>s</p>
-    <button onclick="location.reload()">Restart</button>
+<!-- POPUP -->
+<div id="punishPopup">
+  <div class="popup-inner">
+    <div class="popup-card" id="popupCard">
+      <div class="popup-emoji-bg" id="popupEmojiBackground"></div>
+      <div class="popup-message" id="popupMessage"></div>
+      <div class="popup-countdown" id="popupCountdown"></div>
+    </div>
+  </div>
 </div>
 
-</div>
-
-<div id="punishPopup"></div>
 <script>
-
+/* ─── WORD POOL (unique pairs guaranteed) ─── */
 const wordPool = [
 "JOY","FUN","HAPPY","FLOWER","SMILE","RAINBOW","PUPPY","KITTEN",
-"CANDY","SWEET","PRETTY","LOVE","FRIEND","ICECREAM","SPARKLE","SHINE",
-"DELIGHT","CUTE","HEART","SUNSHINE","HUGS","CUDDLES","SPRINKLES","FAIRY",
-"PRINCESS","PERFECTION","SUMMER","BLUSH","PRECIOUS","SNUGGLE","PLUSHY",
-"CARING","ADORABLE","GIGGLE","LAUGHTER","BUBBLES","BLOSSOM","COZY","WARM",
-"SAFE","TWINKLE","SPARKLE","HONEY","SWEET","FLUFFY","SOFT","AWWWWE",
-"DELIGHT","LOVELY","WONDERFUL"
+"CANDY","PRETTY","LOVE","FRIEND","SPARKLE","SHINE","DELIGHT","CUTE",
+"HEART","SUNSHINE","HUGS","CUDDLES","SPRINKLES","FAIRY","PRINCESS",
+"PERFECTION","SUMMER","BLUSH","PRECIOUS","SNUGGLE","PLUSHY","CARING",
+"ADORABLE","GIGGLE","LAUGHTER","BUBBLES","BLOSSOM","COZY","WARM",
+"SAFE","TWINKLE","HONEY","FLUFFY","SOFT","LOVELY","WONDERFUL","DREAMY",
+"PEACHY","STARLIGHT","VELVET","CHERISH","DAZZLE"
 ];
 
 const punishmentPool = [
 "Not quite!","Almost, keep it up!","Try again!","You can do it!","Nice try!",
-"You're doing great!","I believe in you!","Keep trying!","I believe in you!",
-"Poor thing!","One more try!","You're great at this!","You're a champion!","There there...!",
-"Keep going! You got this!","<3 <3 <3","You're a star!","You'll do it!","Relax, everything's okay!",
-"Superstar!","Not much longer now!","It will be over soon!","It will be over soon!","Stay strong!",
-"You're great at matching!","You love this!","Mwah <3","You're doing awesome!","Keep trying! Almost there!",
-"You're special!","It's okay!","Don't worry, everything's fine!","Next time, for sure!","It's going to be okay!",
-"Don't panic!","Keep it up!","You're really great!","Match for me <3","You are cherished!",
-"Im really proud of you!","This pleases me, great job!","You're unstoppable!","It will be over soon!","I'm really impressed!",
-"Just a few more!","Good little puppet!","Good little toy!","Do you need a hug?","Hugs and kisses, you got this!",
-"Gold star!","Not much longer now!","I'm going to be so pleased!","You're valued!","Your time is valued!",
-"Stay calm, you got his!","Breathe...","Not much longer now!","Awwwe, you're doing really well","You're a great little matcher!",
-"Perfection appreciates you!","Perfection will be happy!","Perfection loves this!","Do it for Perfection!","Keep going, please Perfection!",
-"Your time for Perfection <3","Perfection's lil matcher!","Do it for Perfection!","Keep going for Perfection!","One more for Perfection!",
-"Do you like Perfection's little game?","Keep Perfection Happy!","Perfection wants more!","Perfection <3 Matchers!","Perfection Values your Time!",
-"<3 <3 <3 From Perfection!","Your time for Perfection!","For Perfection","Perfection is pleased!","Perfection wants one more!",
-"Don't give up!","Do your best!","You're doing great!","You're so good!","Awww, poor thing!"
+"You're doing great!","I believe in you!","Keep trying!","Poor thing!","One more try!",
+"You're great at this!","You're a champion!","There there...!","Keep going! You got this!",
+"♡ ♡ ♡","You're a star!","You'll do it!","Relax, everything's okay!","Superstar!",
+"Not much longer now!","It will be over soon!","Stay strong!","You're great at matching!",
+"You love this!","Mwah ♡","You're doing awesome!","Keep trying! Almost there!","You're special!",
+"It's okay!","Don't worry, everything's fine!","Next time, for sure!","It's going to be okay!",
+"Don't panic!","Keep it up!","You're really great!","Match for me ♡","You are cherished!",
+"I'm really proud of you!","This pleases me, great job!","You're unstoppable!","Good little puppet!",
+"Good little toy!","Do you need a hug?","Hugs and kisses, you got this!","Gold star!",
+"Not much longer now!","I'm going to be so pleased!","You're valued!","Stay calm, you got this!",
+"Breathe...","Awwwe, you're doing really well","You're a great little matcher!",
+"Perfection appreciates you!","Perfection will be happy!","Perfection loves this!",
+"Do it for Perfection!","Keep going for Perfection!","Your time for Perfection ♡",
+"Perfection's lil matcher!","Keep Perfection Happy!","Perfection wants more!",
+"Perfection ♡ Matchers!","Perfection Values your Time!","♡ From Perfection!",
+"For Perfection","Perfection is pleased!","Perfection wants one more!",
+"Don't give up!","Do your best!","You're so good!","Awww, poor thing!"
 ];
 
-let tiles = [];
-let flippedTiles = [];
-let totalMatches = 0;
-let matchesMade = 0;
-let flips = 0;
-let startTime = null;
-let timerInterval = null;
-let locked = false;
-let wordColors = {};
-let slowDownCount = 0;
-let extraFunMode = false;
-let extraFunTriggered = false;
-let extraFunWins = 0;
-let firstExtraFunGuaranteed = false;
+const popupEmojis = ["🌸","✨","💖","🌈","🎀","⭐","🦋","🍬","💕","🌷","🎉","💫","🧁","🌟"];
 
-/* 🔥 NEW: rapid click detection */
+/* ─── STATE ─── */
+let tiles = [], flippedTiles = [], wordColors = {};
+let totalMatches = 0, matchesMade = 0, flips = 0;
+let startTime = null, timerInterval = null;
+let locked = false, slowDownCount = 0;
+let extraFunMode = false, extraFunTriggered = false, extraFunWins = 0;
+let firstExtraFunGuaranteed = false;
 let lastClickTime = 0;
 const rapidClickThreshold = 400;
 let rapidPunishing = false;
 
-/* Soft pastel generator */
-function randomPastelColor() {
-    const hue = Math.floor(Math.random() * 360);
-    return `hsl(${hue}, 60%, 75%)`;
+/* ─── FALLING PETALS CANVAS ─── */
+const canvas = document.getElementById("sparkleCanvas");
+const ctx2 = canvas.getContext("2d");
+let petals = [];
+let sparkleRAF = null;
+
+function resizeCanvas() {
+    canvas.width  = window.innerWidth;
+    canvas.height = window.innerHeight;
+}
+window.addEventListener("resize", resizeCanvas);
+resizeCanvas();
+
+const petalColors = ["#ffd6e7","#ffb3d1","#e8d8ff","#d4b8ff","#ffc8e8","#ffe0f0","#f9c0e0","#ffccee"];
+
+function spawnPetal() {
+    const size = 10 + Math.random() * 18;
+    petals.push({
+        x: Math.random() * canvas.width,
+        y: -size * 2,
+        size,
+        color: petalColors[Math.floor(Math.random() * petalColors.length)],
+        speedY: 0.6 + Math.random() * 1.0,
+        speedX: (Math.random() - 0.5) * 0.6,
+        rot: Math.random() * Math.PI * 2,
+        rotSpeed: (Math.random() - 0.5) * 0.04,
+        wobble: Math.random() * Math.PI * 2,
+        wobbleSpeed: 0.02 + Math.random() * 0.02,
+        alpha: 0.55 + Math.random() * 0.35,
+    });
 }
 
-/* RAPID CLICK PUNISHMENT */
+function drawPetal(p) {
+    ctx2.save();
+    ctx2.translate(p.x, p.y);
+    ctx2.rotate(p.rot);
+    ctx2.globalAlpha = p.alpha;
+    ctx2.fillStyle = p.color;
+    ctx2.beginPath();
+    // simple oval petal shape
+    ctx2.ellipse(0, 0, p.size * 0.45, p.size * 0.7, 0, 0, Math.PI * 2);
+    ctx2.fill();
+    // soft highlight
+    ctx2.fillStyle = "rgba(255,255,255,0.35)";
+    ctx2.beginPath();
+    ctx2.ellipse(-p.size * 0.1, -p.size * 0.15, p.size * 0.18, p.size * 0.28, -0.4, 0, Math.PI * 2);
+    ctx2.fill();
+    ctx2.restore();
+}
 
+function drawPetalCanvas() {
+    ctx2.clearRect(0, 0, canvas.width, canvas.height);
+
+    if (petals.length < 55) spawnPetal();
+
+    petals.forEach(p => {
+        p.wobble += p.wobbleSpeed;
+        p.x += p.speedX + Math.sin(p.wobble) * 0.5;
+        p.y += p.speedY;
+        p.rot += p.rotSpeed;
+        drawPetal(p);
+    });
+
+    // remove petals that have fallen off screen
+    petals = petals.filter(p => p.y < canvas.height + 40);
+
+    sparkleRAF = requestAnimationFrame(drawPetalCanvas);
+}
+
+function startSparkleCanvas() {
+    canvas.classList.add("active");
+    if (!sparkleRAF) sparkleRAF = requestAnimationFrame(drawPetalCanvas);
+}
+
+function stopSparkleCanvas() {
+    canvas.classList.remove("active");
+    if (sparkleRAF) { cancelAnimationFrame(sparkleRAF); sparkleRAF = null; }
+    ctx2.clearRect(0, 0, canvas.width, canvas.height);
+    petals = [];
+}
+function initBubbles() {
+    const container = document.getElementById("bgBubbles");
+    const colors = ["#ffd6e7","#e8d8ff","#a8e6cf","#a3d8f4","#ffe680","#ffcc99"];
+    for (let i = 0; i < 18; i++) {
+        const b = document.createElement("div");
+        b.classList.add("bubble");
+        const size = 40 + Math.random() * 120;
+        b.style.cssText = `
+            width:${size}px; height:${size}px;
+            background:${colors[Math.floor(Math.random()*colors.length)]};
+            left:${Math.random()*100}%;
+            bottom:-${size}px;
+            animation-duration:${8+Math.random()*14}s;
+            animation-delay:${Math.random()*10}s;
+        `;
+        container.appendChild(b);
+    }
+}
+initBubbles();
+
+/* ─── PASTEL COLOR ─── */
+function randomPastelColor() {
+    const hue = Math.floor(Math.random() * 360);
+    return `hsl(${hue}, 65%, 55%)`;
+}
+
+/* ─── SPARKLES ─── */
+function triggerSparkles(tileA, tileB) {
+    const emojis = ["✨","⭐","💫","🌟","★","✦"];
+    [tileA, tileB].forEach(tile => {
+        const rect = tile.getBoundingClientRect();
+        const cx = rect.left + rect.width / 2;
+        const cy = rect.top  + rect.height / 2;
+
+        // dot sparkles
+        for (let i = 0; i < 14; i++) {
+            const s = document.createElement("div");
+            s.classList.add("sparkle");
+            const angle = (i / 14) * Math.PI * 2;
+            const dist  = 30 + Math.random() * 40;
+            const dx = Math.cos(angle) * dist;
+            const dy = Math.sin(angle) * dist;
+            const size = 6 + Math.random() * 8;
+            const colors = ["#ffe680","#ff85b3","#c9a7f5","#a8e6cf","#a3d8f4","#ffcc99","white"];
+            s.style.cssText = `
+                left:${cx}px; top:${cy}px;
+                width:${size}px; height:${size}px;
+                background:${colors[Math.floor(Math.random()*colors.length)]};
+                --dx:${dx}px; --dy:${dy}px;
+                animation-duration:${0.7+Math.random()*0.4}s;
+            `;
+            document.body.appendChild(s);
+            setTimeout(() => s.remove(), 1000);
+        }
+
+        // star emojis
+        for (let i = 0; i < 5; i++) {
+            const e = document.createElement("div");
+            e.classList.add("star-particle");
+            e.textContent = emojis[Math.floor(Math.random()*emojis.length)];
+            const dx = (Math.random()-0.5)*120;
+            const dy = -40 - Math.random()*60;
+            e.style.cssText = `left:${cx}px; top:${cy}px; --dx:${dx}px; --dy:${dy}px; animation-duration:${0.8+Math.random()*0.4}s;`;
+            document.body.appendChild(e);
+            setTimeout(() => e.remove(), 1200);
+        }
+    });
+}
+
+function triggerConfetti() {
+    const colors = ["#ffd6e7","#e8d8ff","#a8e6cf","#ffe680","#a3d8f4","#ff85b3","#c9a7f5"];
+    for (let i = 0; i < 60; i++) {
+        const c = document.createElement("div");
+        c.classList.add("confetti-piece");
+        const size = 8 + Math.random() * 10;
+        c.style.cssText = `
+            left:${Math.random()*100}vw;
+            top:${-20 - Math.random()*30}px;
+            width:${size}px; height:${size*0.5}px;
+            background:${colors[Math.floor(Math.random()*colors.length)]};
+            animation-duration:${1.2+Math.random()*1}s;
+            animation-delay:${Math.random()*0.5}s;
+        `;
+        document.body.appendChild(c);
+        setTimeout(() => c.remove(), 2500);
+    }
+}
+
+/* ─── POPUP HELPERS ─── */
+function buildPopupEmojiBackground() {
+    const bg = document.getElementById("popupEmojiBackground");
+    bg.innerHTML = "";
+    const emojiSet = ["🌸","✨","💖","🌈","🎀","⭐","🦋","💕","🌷","💫","🧁","🌟","🍬","🎉"];
+    for (let i = 0; i < 14; i++) {
+        const span = document.createElement("span");
+        span.classList.add("popup-emoji");
+        span.textContent = emojiSet[i % emojiSet.length];
+        span.style.cssText = `
+            left:${Math.random()*90}%;
+            top:${Math.random()*90}%;
+            animation-delay:${Math.random()*2}s;
+            animation-duration:${3+Math.random()*2}s;
+            font-size:${20+Math.random()*16}px;
+        `;
+        bg.appendChild(span);
+    }
+}
+
+/* ─── SLOW DOWN PUNISHMENT ─── */
 function triggerSlowPunishment() {
-
     if (rapidPunishing) return;
-
     rapidPunishing = true;
     locked = true;
-
-    slowDownCount++; // ✅ count this occurrence
+    slowDownCount++;
 
     const popup = document.getElementById("punishPopup");
     popup.style.display = "flex";
+    buildPopupEmojiBackground();
 
-    let countdown = 10;
-    const message = "Slow down, relax!";
+    document.getElementById("popupMessage").innerHTML = "Slow down,<br>relax! 🌸";
 
-    popup.innerHTML = `
-        <div>
-            <div style="font-size:48px; margin-bottom:20px;">${message}</div>
-            <div style="font-size:36px;">${countdown}</div>
-        </div>
-    `;
-
-    /* STEP 1:
-       Immediately flip all UNSOLVED face-up tiles down
-    */
     tiles.forEach(tile => {
-        if (!tile.classList.contains("matched") &&
-            tile.classList.contains("flipped")) {
+        if (!tile.classList.contains("matched") && tile.classList.contains("flipped"))
             tile.classList.remove("flipped");
-        }
     });
-
     flippedTiles = [];
 
-    /* STEP 2:
-       After flip animation completes (1.5s),
-       scramble all UNSOLVED tiles
-    */
-    setTimeout(() => {
-        reshuffleAll();
-    }, 3000); // matches CSS flip duration
+    setTimeout(() => reshuffleAll(), 600);
 
-    /* STEP 3:
-       Run stretched countdown independently
-    */
+    let countdown = 10;
+    document.getElementById("popupCountdown").textContent = countdown;
+
     const timer = setInterval(() => {
-
         countdown--;
-
-        if (countdown >= 0) {
-            popup.innerHTML = `
-                <div>
-                    <div style="font-size:48px; margin-bottom:20px;">${message}</div>
-                    <div style="font-size:36px;">${countdown}</div>
-                </div>
-            `;
-        }
-
+        document.getElementById("popupCountdown").textContent = Math.max(countdown, 0);
         if (countdown < 0) {
             clearInterval(timer);
             popup.style.display = "none";
-
             locked = false;
             rapidPunishing = false;
         }
-
-    }, 1500); // stretched seconds
+    }, 1500);
 }
 
-/* Success Sound */
+/* ─── SUCCESS SOUND ─── */
 function playSuccessSound() {
-    const ctx = new (window.AudioContext || window.webkitAudioContext)();
-    const osc = ctx.createOscillator();
-    const gain = ctx.createGain();
-
-    osc.type = "triangle";
-    osc.frequency.setValueAtTime(523, ctx.currentTime);
-    osc.frequency.exponentialRampToValueAtTime(784, ctx.currentTime + 0.2);
-
-    gain.gain.setValueAtTime(0.3, ctx.currentTime);
-    gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.3);
-
-    osc.connect(gain);
-    gain.connect(ctx.destination);
-
-    osc.start();
-    osc.stop(ctx.currentTime + 0.3);
+    try {
+        const ctx = new (window.AudioContext || window.webkitAudioContext)();
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.type = "triangle";
+        osc.frequency.setValueAtTime(523, ctx.currentTime);
+        osc.frequency.exponentialRampToValueAtTime(784, ctx.currentTime + 0.2);
+        gain.gain.setValueAtTime(0.3, ctx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.3);
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        osc.start();
+        osc.stop(ctx.currentTime + 0.3);
+    } catch(e) {}
 }
 
-function triggerSparkles(tileA, tileB) {
-    const rects = [tileA.getBoundingClientRect(), tileB.getBoundingClientRect()];
-    rects.forEach(rect => {
-        for (let i = 0; i < 10; i++) {
-            const sparkle = document.createElement("div");
-            sparkle.classList.add("sparkle");
-            sparkle.style.left = (rect.left + rect.width/2 + (Math.random()*40-20)) + "px";
-            sparkle.style.top = (rect.top + rect.height/2 + (Math.random()*40-20)) + "px";
-            document.body.appendChild(sparkle);
-            setTimeout(() => sparkle.remove(), 800);
-        }
-    });
+function playBuzz() {
+    try {
+        const ctx = new (window.AudioContext || window.webkitAudioContext)();
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.type = "sine";
+        osc.frequency.setValueAtTime(220, ctx.currentTime);
+        osc.frequency.exponentialRampToValueAtTime(150, ctx.currentTime + 0.25);
+        gain.gain.setValueAtTime(0.18, ctx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.35);
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        osc.start();
+        osc.stop(ctx.currentTime + 0.35);
+    } catch(e) {}
 }
 
+/* ─── TIMER ─── */
+function updateTime() {
+    const total = Math.floor((Date.now() - startTime) / 1000);
+    const h = Math.floor(total / 3600);
+    const m = Math.floor((total % 3600) / 60);
+    const s = total % 60;
+    document.getElementById("time").textContent =
+        `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
+}
+
+/* ─── SHUFFLE ─── */
+function shuffle(arr) {
+    for (let i = arr.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [arr[i], arr[j]] = [arr[j], arr[i]];
+    }
+}
+
+/* ─── START GAME ─── */
 function startGame() {
     extraFunMode = document.getElementById("extraFunToggle").checked;
     extraFunTriggered = false;
-    totalMatches = parseInt(document.getElementById("matchInput").value);
-    if (totalMatches < 2) return;
+    extraFunWins = 0;
+    firstExtraFunGuaranteed = false;
 
-    matchesMade = 0;
-    flips = 0;
-    locked = false;
-    rapidPunishing = false;
-    lastClickTime = 0;
-	extraFunWins = 0;
-	firstExtraFunGuaranteed = false;
+    totalMatches = Math.min(25, Math.max(2, parseInt(document.getElementById("matchInput").value) || 6));
+    matchesMade = 0; flips = 0; locked = false;
+    rapidPunishing = false; lastClickTime = 0; slowDownCount = 0;
 
-    document.getElementById("flips").innerText = 0;
-    document.getElementById("matches").innerText = 0;
-    document.getElementById("time").innerText = "00:00:00";
+    document.getElementById("flips").textContent = "0";
+    document.getElementById("matches").textContent = "0";
+    document.getElementById("time").textContent = "00:00:00";
 
     document.getElementById("startScreen").style.display = "none";
-    document.getElementById("gameContainer").style.display = "block";
+    document.getElementById("gameContainer").style.display = "flex";
 
     startTime = Date.now();
     timerInterval = setInterval(updateTime, 1000);
-
+    startSparkleCanvas();
     createBoard();
 }
 
-function updateTime() {
-    const totalSeconds = Math.floor((Date.now() - startTime) / 1000);
-
-    const hours = Math.floor(totalSeconds / 3600);
-    const minutes = Math.floor((totalSeconds % 3600) / 60);
-    const seconds = totalSeconds % 60;
-
-    const formattedTime =
-        String(hours).padStart(2, '0') + ":" +
-        String(minutes).padStart(2, '0') + ":" +
-        String(seconds).padStart(2, '0');
-
-    document.getElementById("time").innerText = formattedTime;
-}
-
+/* ─── CREATE BOARD ─── */
 function createBoard() {
     const grid = document.getElementById("grid");
     grid.innerHTML = "";
@@ -411,113 +1012,81 @@ function createBoard() {
     flippedTiles = [];
     wordColors = {};
 
-    let shuffledWords = [...wordPool];
-    shuffle(shuffledWords);
-    let selected = shuffledWords.slice(0, totalMatches);
+    // Deduplicate: shuffle and take exactly `totalMatches` unique words
+    const shuffled = [...wordPool];
+    shuffle(shuffled);
+    const selected = shuffled.slice(0, totalMatches);
 
-    selected.forEach(word => {
-        wordColors[word] = randomPastelColor();
-    });
+    selected.forEach(word => { wordColors[word] = randomPastelColor(); });
 
-    let values = [];
-    selected.forEach(word => {
-        values.push(word);
-        values.push(word);
-    });
-
+    const values = [];
+    selected.forEach(word => { values.push(word); values.push(word); });
     shuffle(values);
 
-    const cols = Math.ceil(Math.sqrt(values.length));
+    const cols = Math.min(6, Math.ceil(Math.sqrt(values.length)));
     grid.style.gridTemplateColumns = `repeat(${cols}, 1fr)`;
 
     values.forEach(val => {
         const tile = document.createElement("div");
         tile.classList.add("tile");
         tile.dataset.value = val;
-
         tile.innerHTML = `
             <div class="tile-inner">
                 <div class="tile-front"></div>
                 <div class="tile-back">${val}</div>
-            </div>
-        `;
-
+            </div>`;
         tile.onclick = () => flipTile(tile);
         grid.appendChild(tile);
         tiles.push(tile);
     });
 }
 
+/* ─── FLIP TILE ─── */
 function flipTile(tile) {
+    if (rapidPunishing) return;
 
-if (rapidPunishing) return;
+    const now = Date.now();
+    if (locked) { triggerSlowPunishment(); return; }
+    if (now - lastClickTime < rapidClickThreshold) { triggerSlowPunishment(); return; }
+    lastClickTime = now;
 
-// If board is locked (animation still running), punish immediately
-if (locked) {
-    triggerSlowPunishment();
-    return;
-}
-
-// Optional: keep or remove rapid-click logic
-const now = Date.now();
-if (now - lastClickTime < rapidClickThreshold) {
-    triggerSlowPunishment();
-    return;
-}
-lastClickTime = now;
     if (tile.classList.contains("flipped") ||
         tile.classList.contains("matched") ||
         flippedTiles.length === 2) return;
 
     locked = true;
-
     tile.classList.add("flipped");
-
-    const back = tile.querySelector(".tile-back");
-    back.style.color = wordColors[tile.dataset.value];
-
+    tile.querySelector(".tile-back").style.color = wordColors[tile.dataset.value];
     flippedTiles.push(tile);
     flips++;
-    document.getElementById("flips").innerText = flips;
+    document.getElementById("flips").textContent = flips;
 
     setTimeout(() => {
-        if (flippedTiles.length === 2) {
-            checkMatch();
-        } else {
-            locked = false;
-        }
+        if (flippedTiles.length === 2) checkMatch();
+        else locked = false;
     }, 3000);
 }
 
+/* ─── CHECK MATCH ─── */
 function checkMatch() {
     const [a, b] = flippedTiles;
 
     if (a.dataset.value === b.dataset.value) {
         a.classList.add("matched");
         b.classList.add("matched");
-
         playSuccessSound();
         triggerSparkles(a, b);
-
         matchesMade++;
-        document.getElementById("matches").innerText = matchesMade;
+        document.getElementById("matches").textContent = matchesMade;
         flippedTiles = [];
         locked = false;
 
-        // If only one pair remains, trigger Extra Fun BEFORE finishing
-if (
-    matchesMade === totalMatches - 1 &&
-    extraFunMode &&
-    !extraFunTriggered
-) {
-    extraFunTriggered = true;
-    triggerExtraFun();
-    return;
-}
-
-if (matchesMade === totalMatches) {
-    endGame();
-}
+        if (matchesMade === totalMatches - 1 && extraFunMode && !extraFunTriggered) {
+            extraFunTriggered = true;
+            triggerExtraFun();
+            return;
+        }
+        if (matchesMade === totalMatches) endGame();
     } else {
         playBuzz();
         setTimeout(() => {
@@ -530,126 +1099,11 @@ if (matchesMade === totalMatches) {
     }
 }
 
-function triggerExtraFun() {
-
-    locked = true;
-
-    const popup = document.getElementById("punishPopup");
-    popup.style.display = "flex";
-
-    popup.innerHTML = `
-        <div>
-            <div style="font-size:48px; margin-bottom:20px;">
-                Extra Fun Mode Enabled!<br>
-				50% chance of extra fun!<br>
-				Calculating....
-            </div>
-        </div>
-    `;
-
-    setTimeout(() => {
-
-        let win;
-
-if (!firstExtraFunGuaranteed) {
-    win = true;                     // force first win
-    firstExtraFunGuaranteed = true; // mark it as used
-} else {
-    win = Math.random() < 0.5;      // normal fair odds
-}
-
-        if (win) {
-		
-		    extraFunWins++;  // ✅ track win
-
-            popup.innerHTML = `
-                <div>
-                    <div style="font-size:48px; margin-bottom:20px;">
-                        YOU WON!<br>EXTRA FUN ACTIVATED!<br>Game restarting...
-                    </div>
-                </div>
-            `;
-
-            setTimeout(() => {
-                popup.style.display = "none";
-                restartGameFromBeginning();
-            }, 5000);
-
-        } else {
-
-            popup.innerHTML = `
-                <div>
-                    <div style="font-size:48px; margin-bottom:20px;">
-                        Too bad...<br>No Extra Fun This Time...<br>Game resuming...
-                    </div>
-                </div>
-            `;
-
-            setTimeout(() => {
-                popup.style.display = "none";
-                locked = false; // allow final pair to be clicked
-            }, 5000);
-        }
-
-    }, 5000);
-}
-
-function restartGameFromBeginning() {
-
-    flippedTiles = [];
-    locked = false;
-	matchesMade = 0;               // ✅ reset
-    document.getElementById("matches").innerText = 0;
-	
-	extraFunTriggered = false; // ✅ allow it to trigger again
-
-    createBoard(); // just rebuild board
-	
-}
-
-function endGame() {
-    clearInterval(timerInterval);
-    const totalTime = Math.floor((Date.now() - startTime) / 1000);
-
-    document.getElementById("gameContainer").style.display = "none";
-    document.getElementById("endScreen").style.display = "block";
-
-    document.getElementById("finalFlips").innerText = flips;
-    document.getElementById("finalMatches").innerText = matchesMade;
-	document.getElementById("extraFunResult").innerText = extraFunMode ? "Yes" : "No";
-    // Convert seconds to HH:MM:SS
-const hours = Math.floor(totalTime / 3600);
-const minutes = Math.floor((totalTime % 3600) / 60);
-const seconds = totalTime % 60;
-
-    document.getElementById("finalExtraFunWins").innerText = extraFunWins;
-	
-	const winsRow = document.getElementById("extraFunWinsRow");
-
-if (extraFunMode) {
-    winsRow.style.display = "block";
-} else {
-    winsRow.style.display = "none";
-}	
-	
-// Pad with leading zeros
-const formattedTime =
-    String(hours).padStart(2, '0') + ":" +
-    String(minutes).padStart(2, '0') + ":" +
-    String(seconds).padStart(2, '0');
-
-document.getElementById("finalTime").innerText = formattedTime;
-    document.getElementById("finalSlowDowns").innerText = slowDownCount;
-// Generate 9-digit Game ID
-    const gameId = Math.floor(100000000 + Math.random() * 900000000);
-    document.getElementById("finalGameId").innerText = gameId;
-}
-
+/* ─── RESHUFFLE ─── */
 function reshuffleAll() {
     const unmatched = tiles.filter(t => !t.classList.contains("matched"));
     const values = unmatched.map(t => t.dataset.value);
     shuffle(values);
-
     unmatched.forEach((tile, i) => {
         tile.dataset.value = values[i];
         const back = tile.querySelector(".tile-back");
@@ -658,70 +1112,96 @@ function reshuffleAll() {
     });
 }
 
+/* ─── PUNISH POPUP ─── */
 function showPunishPopup() {
     if (rapidPunishing) return;
     const popup = document.getElementById("punishPopup");
     popup.style.display = "flex";
+    buildPopupEmojiBackground();
+
+    const message = punishmentPool[Math.floor(Math.random() * punishmentPool.length)];
+    document.getElementById("popupMessage").textContent = message;
 
     let countdown = 5;
-    const message = punishmentPool[Math.floor(Math.random() * punishmentPool.length)];
-
-    popup.innerHTML = `
-        <div>
-            <div style="font-size:48px; margin-bottom:20px;">${message}</div>
-            <div style="font-size:32px;">${countdown}</div>
-        </div>
-    `;
+    document.getElementById("popupCountdown").textContent = countdown;
 
     const timer = setInterval(() => {
         countdown--;
-
-        if (countdown >= 0) {
-            popup.innerHTML = `
-                <div>
-                    <div style="font-size:48px; margin-bottom:20px;">${message}</div>
-                    <div style="font-size:32px;">${countdown}</div>
-                </div>
-            `;
-        }
-
+        document.getElementById("popupCountdown").textContent = Math.max(countdown, 0);
         if (countdown < 0) {
             clearInterval(timer);
             popup.style.display = "none";
             locked = false;
         }
-
     }, 1500);
 }
 
-function shuffle(array) {
-    for (let i = array.length - 1; i > 0; i--) {
-        const j = Math.floor(Math.random() * (i + 1));
-        [array[i], array[j]] = [array[j], array[i]];
-    }
-}
+/* ─── EXTRA FUN ─── */
+function triggerExtraFun() {
+    locked = true;
+    const popup = document.getElementById("punishPopup");
+    popup.style.display = "flex";
+    buildPopupEmojiBackground();
 
-function playBuzz() {
-    const ctx = new (window.AudioContext || window.webkitAudioContext)();
-    const oscillator = ctx.createOscillator();
-    const gain = ctx.createGain();
+    document.getElementById("popupMessage").innerHTML = "✨ Extra Fun Mode! ✨<br><small style='font-size:0.55em;color:#c9a7f5;font-family:Nunito,sans-serif;font-weight:800;'>50% chance of extra fun...</small>";
+    document.getElementById("popupCountdown").textContent = "🎲";
 
-    oscillator.type = "square";
-    oscillator.frequency.setValueAtTime(120, ctx.currentTime);
-    gain.gain.setValueAtTime(0.5, ctx.currentTime);
-
-    oscillator.connect(gain);
-    gain.connect(ctx.destination);
-
-    oscillator.start();
     setTimeout(() => {
-        oscillator.stop();
-        ctx.close();
-    }, 400);
+        const win = !firstExtraFunGuaranteed ? (firstExtraFunGuaranteed = true, true) : Math.random() < 0.5;
+
+        if (win) {
+            extraFunWins++;
+            triggerConfetti();
+            document.getElementById("popupMessage").innerHTML = "🎉 YOU WON! 🎉<br><small style='font-size:0.55em;color:#5ecfaa;font-family:Nunito,sans-serif;font-weight:800;'>Extra Fun Activated! Restarting...</small>";
+            document.getElementById("popupCountdown").textContent = "🌟";
+            setTimeout(() => {
+                popup.style.display = "none";
+                restartGameFromBeginning();
+            }, 5000);
+        } else {
+            document.getElementById("popupMessage").innerHTML = "😔 Too Bad...<br><small style='font-size:0.55em;color:#c9a7f5;font-family:Nunito,sans-serif;font-weight:800;'>No Extra Fun This Time. Resuming...</small>";
+            document.getElementById("popupCountdown").textContent = "💔";
+            setTimeout(() => {
+                popup.style.display = "none";
+                locked = false;
+            }, 5000);
+        }
+    }, 5000);
 }
 
+function restartGameFromBeginning() {
+    flippedTiles = [];
+    locked = false;
+    matchesMade = 0;
+    document.getElementById("matches").textContent = "0";
+    extraFunTriggered = false;
+    createBoard();
+}
+
+/* ─── END GAME ─── */
+function endGame() {
+    clearInterval(timerInterval);
+    stopSparkleCanvas();
+    triggerConfetti();
+
+    const totalTime = Math.floor((Date.now() - startTime) / 1000);
+    const h = Math.floor(totalTime / 3600);
+    const m = Math.floor((totalTime % 3600) / 60);
+    const s = totalTime % 60;
+    const formatted = `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
+
+    document.getElementById("gameContainer").style.display = "none";
+    document.getElementById("endScreen").style.display = "block";
+
+    document.getElementById("finalFlips").textContent = flips;
+    document.getElementById("finalMatches").textContent = matchesMade;
+    document.getElementById("finalSlowDowns").textContent = slowDownCount;
+    document.getElementById("finalTime").textContent = formatted;
+    document.getElementById("extraFunResult").textContent = extraFunMode ? "Yes" : "No";
+    document.getElementById("finalExtraFunWins").textContent = extraFunWins;
+    document.getElementById("extraFunWinsRow").style.display = extraFunMode ? "block" : "none";
+    document.getElementById("finalGameId").textContent = Math.floor(100000000 + Math.random() * 900000000);
+}
 </script>
 </body>
-
 </html>
-
