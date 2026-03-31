@@ -348,27 +348,6 @@ body::before {
 }
 .next-btn.ready:hover { opacity: 0.85; }
 
-/* Task result inline */
-.task-result {
-  width: 100%;
-  max-width: 800px;
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: 10px;
-  padding: 10px 16px;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  font-size: 0.82rem;
-}
-.task-result .tr-label { color: var(--muted); font-family: 'DM Mono', monospace; font-size: 0.7rem; letter-spacing: 0.1em; text-transform: uppercase; }
-.task-result .tr-stats { display: flex; gap: 16px; }
-.task-result .tr-stat { text-align: right; }
-.task-result .tr-stat span { display: block; }
-.task-result .tr-stat .tv { font-family: 'DM Mono', monospace; font-weight: 500; color: var(--text); }
-.task-result .tr-stat .tl { font-size: 0.65rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.1em; }
-.task-result .tr-stat .tv.pink { color: var(--pink); }
-.task-result .tr-stat .tv.red { color: var(--incorrect); }
 
 /* ── END SCREEN ── */
 #end {
@@ -526,7 +505,6 @@ body::before {
 
   <button class="next-btn" id="nextBtn" onclick="nextText()">Continue →</button>
 
-  <div id="taskResultsArea" style="width:100%;max-width:800px;display:flex;flex-direction:column;gap:8px;"></div>
 
 </div>
 
@@ -572,6 +550,7 @@ body::before {
 window.addEventListener('paste', e => e.preventDefault());
 window.addEventListener('copy', e => e.preventDefault());
 window.addEventListener('cut', e => e.preventDefault());
+window.addEventListener('drop', e => e.preventDefault());
 
 // Block common keyboard shortcuts that could be used to paste
 window.addEventListener('keydown', e => {
@@ -864,31 +843,11 @@ function checkTyping() {
 
 function nextText() {
   if (!document.getElementById('nextBtn').classList.contains('ready')) return;
-  // record task stats
   const taskElapsed = (Date.now() - taskStartTime) / 1000 / 60;
   const wordCount = selected[current].content.split(' ').length;
   const taskWpm = taskElapsed > 0 ? Math.round(wordCount / taskElapsed) : 0;
   taskWpms.push(taskWpm);
   totalErrors += taskErrors;
-
-  // show result row
-  const area = document.getElementById('taskResultsArea');
-  const row = document.createElement('div');
-  row.className = 'task-result';
-  row.innerHTML = `
-    <div class="tr-label">${selected[current].label}</div>
-    <div class="tr-stats">
-      <div class="tr-stat">
-        <span class="tv pink">${taskWpm}</span>
-        <span class="tl">WPM</span>
-      </div>
-      <div class="tr-stat">
-        <span class="tv red">${taskErrors}</span>
-        <span class="tl">Errors</span>
-      </div>
-    </div>
-  `;
-  area.prepend(row);
 
   current++;
   updateProgress();
@@ -935,7 +894,6 @@ function endGame() {
 }
 
 function restartGame() {
-  document.getElementById('taskResultsArea').innerHTML = '';
   document.getElementById('timer').innerText = '00:00:00';
   updateProgress();
   switchScreen('start');
