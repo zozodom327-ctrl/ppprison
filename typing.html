@@ -1,776 +1,945 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Perfection's Educational Typing</title>
-
+<title>WriteForPerfection</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=DM+Mono:wght@400;500&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
 <style>
-body{
-font-family:Arial, sans-serif;
-background:#000;
-color:#fff;
-text-align:center;
-margin:0;
+:root {
+  --pink: #ff4da6;
+  --pink-dim: #c4387c;
+  --pink-glow: rgba(255,77,166,0.18);
+  --pink-glow-lg: rgba(255,77,166,0.08);
+  --bg: #080808;
+  --surface: #111014;
+  --surface2: #1a1820;
+  --border: rgba(255,77,166,0.18);
+  --border-strong: rgba(255,77,166,0.4);
+  --text: #f0e8f0;
+  --muted: #7a6e7a;
+  --correct: #ff4da6;
+  --incorrect: #ff3355;
+  --untyped: #7a6e82;
+  --cursor: #ff4da6;
 }
 
-.screen{display:none; padding:20px;}
-.active{display:block;}
+* { box-sizing: border-box; margin: 0; padding: 0; }
 
-input, textarea{
-width:80%;
-padding:10px;
-font-size:18px;
-margin-top:15px;
-background:#111;
-color:#fff;
-border:2px solid #ff4da6;
-border-radius:10px;
+body {
+  font-family: 'DM Sans', sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+  overflow-x: hidden;
 }
 
-button{
-padding:10px 20px;
-font-size:18px;
-margin-top:20px;
-cursor:pointer;
-background:#ff4da6;
-color:#000;
-border:none;
-border-radius:8px;
-box-shadow:0 0 10px #ff4da6;
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background: radial-gradient(ellipse 80% 50% at 50% -10%, rgba(255,77,166,0.07) 0%, transparent 70%);
+  pointer-events: none;
+  z-index: 0;
 }
 
-#textDisplay{
-width:80%;
-margin:20px auto;
-padding:20px;
-background:#111;
-border:2px solid #222;
-text-align:left;
-line-height:1.6;
-border-radius:10px;
+.screen { display: none; position: relative; z-index: 1; }
+.screen.active { display: flex; flex-direction: column; align-items: center; }
+
+/* ── TITLE ── */
+.brand {
+  font-family: 'Playfair Display', serif;
+  font-size: clamp(3rem, 8vw, 5.5rem);
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: var(--text);
+  line-height: 1;
 }
 
-.word.correct{
-color:#ff4da6;
-text-shadow:0 0 5px #ff4da6;
+.brand em {
+  font-style: italic;
+  color: var(--pink);
 }
 
-.word.incorrect{
-color:#ff3333;
+.brand-sub {
+  font-family: 'DM Mono', monospace;
+  font-size: 0.75rem;
+  letter-spacing: 0.25em;
+  color: var(--muted);
+  text-transform: uppercase;
+  margin-top: 6px;
 }
 
-#progressBar{
-width:80%;
-height:20px;
-background:#222;
-margin:20px auto;
-border-radius:10px;
-overflow:hidden;
+/* ── START SCREEN ── */
+#start {
+  min-height: 100vh;
+  justify-content: center;
+  padding: 2rem;
+  gap: 0;
 }
 
-#progressFill{
-height:100%;
-width:0%;
-background:#ff4da6;
-box-shadow:0 0 10px #ff4da6, 0 0 20px #ff1a8c;
+.start-inner {
+  width: 100%;
+  max-width: 480px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2rem;
 }
 
-#textLabel{
-font-size:20px;
-margin-top:10px;
-color:#ff4da6;
-font-weight:bold;
-text-shadow:0 0 8px #ff4da6;
+.brand-block { text-align: center; }
+
+.divider {
+  width: 60px;
+  height: 1px;
+  background: var(--border-strong);
 }
 
-.small{
-font-size:12px;
-color:#aaa;
+.start-card {
+  width: 100%;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 2rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
 }
+
+.start-card label {
+  font-size: 0.8rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.start-card p {
+  font-size: 1rem;
+  color: var(--text);
+  opacity: 0.8;
+  line-height: 1.5;
+}
+
+.num-input-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.num-btn {
+  width: 36px; height: 36px;
+  border-radius: 8px;
+  border: 1px solid var(--border-strong);
+  background: transparent;
+  color: var(--pink);
+  font-size: 1.2rem;
+  cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  transition: background 0.15s;
+  flex-shrink: 0;
+}
+.num-btn:hover { background: var(--pink-glow); }
+
+#taskCount {
+  width: 80px;
+  background: var(--surface2);
+  border: 1px solid var(--border-strong);
+  border-radius: 8px;
+  color: var(--text);
+  font-family: 'DM Mono', monospace;
+  font-size: 1.2rem;
+  text-align: center;
+  padding: 6px;
+  -moz-appearance: textfield;
+}
+#taskCount::-webkit-outer-spin-button,
+#taskCount::-webkit-inner-spin-button { -webkit-appearance: none; }
+
+.btn-primary {
+  width: 100%;
+  padding: 13px 24px;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 0.95rem;
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  cursor: pointer;
+  background: var(--pink);
+  color: #000;
+  border: none;
+  border-radius: 10px;
+  transition: opacity 0.15s, transform 0.1s;
+}
+.btn-primary:hover { opacity: 0.88; }
+.btn-primary:active { transform: scale(0.98); }
+
+/* ── PLAY SCREEN ── */
+#play {
+  min-height: 100vh;
+  padding: 1.5rem 1rem;
+  justify-content: flex-start;
+  gap: 1.25rem;
+}
+
+.play-header {
+  width: 100%;
+  max-width: 800px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding-top: 0.5rem;
+}
+
+/* Progress + Timer bar */
+.progress-wrap {
+  width: 100%;
+  max-width: 800px;
+}
+
+.progress-track {
+  position: relative;
+  width: 100%;
+  height: 36px;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.progress-fill {
+  position: absolute;
+  left: 0; top: 0; bottom: 0;
+  width: 0%;
+  background: linear-gradient(90deg, #c4387c, var(--pink));
+  transition: width 0.5s cubic-bezier(0.4,0,0.2,1);
+  border-radius: 10px;
+}
+
+.progress-label {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: 'DM Mono', monospace;
+  font-size: 0.75rem;
+  letter-spacing: 0.1em;
+  color: var(--text);
+  z-index: 2;
+  pointer-events: none;
+  gap: 10px;
+  mix-blend-mode: normal;
+}
+
+.progress-counter { color: var(--muted); }
+
+/* Live stats bar */
+.live-stats {
+  width: 100%;
+  max-width: 800px;
+  display: flex;
+  gap: 10px;
+}
+
+.stat-pill {
+  flex: 1;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 8px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.stat-pill .slabel {
+  font-size: 0.65rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.stat-pill .sval {
+  font-family: 'DM Mono', monospace;
+  font-size: 1rem;
+  font-weight: 500;
+  color: var(--text);
+}
+
+.stat-pill .sval.pink { color: var(--pink); }
+.stat-pill .sval.red { color: var(--incorrect); }
+
+/* Text label */
+.text-label {
+  width: 100%;
+  max-width: 800px;
+  font-family: 'DM Mono', monospace;
+  font-size: 0.7rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--muted);
+  padding-left: 2px;
+}
+
+/* Typing display */
+.typing-area {
+  width: 100%;
+  max-width: 800px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 1.75rem 2rem;
+}
+
+#textDisplay {
+  font-family: 'DM Mono', monospace;
+  font-size: 1.05rem;
+  line-height: 1.85;
+  letter-spacing: 0.01em;
+  word-break: break-word;
+}
+
+.word { color: var(--untyped); transition: color 0.08s; }
+.word.correct { color: var(--correct); }
+.word.incorrect { color: var(--incorrect); }
+.word.cursor-on { border-bottom: 2px solid var(--cursor); }
+
+/* Input */
+.input-wrap {
+  width: 100%;
+  max-width: 800px;
+  position: relative;
+}
+
+#inputBox {
+  width: 100%;
+  padding: 14px 18px;
+  font-family: 'DM Mono', monospace;
+  font-size: 1rem;
+  background: var(--surface2);
+  color: var(--text);
+  border: 1px solid var(--border-strong);
+  border-radius: 10px;
+  resize: none;
+  outline: none;
+  transition: border-color 0.15s;
+  line-height: 1.5;
+}
+#inputBox:focus { border-color: var(--pink); }
+
+.next-btn {
+  width: 100%;
+  max-width: 800px;
+  padding: 13px;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 0.9rem;
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  cursor: not-allowed;
+  background: var(--surface2);
+  color: var(--muted);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  transition: background 0.2s, color 0.2s, border-color 0.2s, cursor 0.2s;
+}
+.next-btn.ready {
+  cursor: pointer;
+  background: var(--pink);
+  color: #000;
+  border-color: var(--pink);
+}
+.next-btn.ready:hover { opacity: 0.85; }
+
+/* Task result inline */
+.task-result {
+  width: 100%;
+  max-width: 800px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 10px 16px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.82rem;
+}
+.task-result .tr-label { color: var(--muted); font-family: 'DM Mono', monospace; font-size: 0.7rem; letter-spacing: 0.1em; text-transform: uppercase; }
+.task-result .tr-stats { display: flex; gap: 16px; }
+.task-result .tr-stat { text-align: right; }
+.task-result .tr-stat span { display: block; }
+.task-result .tr-stat .tv { font-family: 'DM Mono', monospace; font-weight: 500; color: var(--text); }
+.task-result .tr-stat .tl { font-size: 0.65rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.1em; }
+.task-result .tr-stat .tv.pink { color: var(--pink); }
+.task-result .tr-stat .tv.red { color: var(--incorrect); }
+
+/* ── END SCREEN ── */
+#end {
+  min-height: 100vh;
+  justify-content: center;
+  padding: 2rem;
+}
+
+.end-inner {
+  width: 100%;
+  max-width: 520px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2rem;
+}
+
+.end-title {
+  text-align: center;
+}
+
+.end-title h1 {
+  font-family: 'Playfair Display', serif;
+  font-size: clamp(2.5rem, 7vw, 4rem);
+  font-weight: 700;
+  line-height: 1.05;
+}
+.end-title h1 em { font-style: italic; color: var(--pink); }
+
+.end-title p {
+  margin-top: 8px;
+  font-size: 0.85rem;
+  color: var(--muted);
+  font-family: 'DM Mono', monospace;
+  letter-spacing: 0.08em;
+}
+
+.end-stats {
+  width: 100%;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.end-stat {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 1.25rem;
+}
+.end-stat.wide { grid-column: 1 / -1; }
+
+.end-stat .el { font-size: 0.65rem; letter-spacing: 0.18em; text-transform: uppercase; color: var(--muted); margin-bottom: 6px; }
+.end-stat .ev { font-family: 'DM Mono', monospace; font-size: 1.6rem; font-weight: 500; color: var(--text); }
+.end-stat .ev.pink { color: var(--pink); }
+.end-stat .ev.red { color: var(--incorrect); }
+.end-stat .es { font-size: 0.75rem; color: var(--muted); margin-top: 3px; }
+
+.end-id {
+  font-family: 'DM Mono', monospace;
+  font-size: 0.7rem;
+  color: var(--muted);
+  letter-spacing: 0.12em;
+}
+
+.btn-restart {
+  width: 100%;
+  padding: 13px;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 0.95rem;
+  font-weight: 500;
+  cursor: pointer;
+  background: transparent;
+  color: var(--pink);
+  border: 1px solid var(--border-strong);
+  border-radius: 10px;
+  transition: background 0.15s;
+}
+.btn-restart:hover { background: var(--pink-glow); }
 
 </style>
 </head>
 
 <body oncontextmenu="return false">
 
-<h1 style="
-font-size:56px;
-color:#ff4da6;
-text-shadow:0 0 10px #ff4da6, 0 0 20px #ff1a8c;
-margin-top:20px;
-font-weight:bold;
-">
-WriteForPerfection
-</h1>
-
+<!-- ── START ── -->
 <div id="start" class="screen active">
-<h1>Looks like someone needs to do a little study!</h1>
-<p>How many texts has Perfection assigned you?</p>
-<input type="number" id="taskCount" min="1" max="100" value="5">
-<br>
-<button onclick="startGame()">Begin</button>
+  <div class="start-inner">
+    <div class="brand-block">
+      <div class="brand">Write<em>For</em><br>Perfection</div>
+      <div class="brand-sub">Feminist Typing Trainer</div>
+    </div>
+    <div class="divider"></div>
+    <div class="start-card">
+      <p>How many texts has Perfection assigned you?</p>
+      <div style="display:flex;flex-direction:column;align-items:center;gap:8px;">
+        <label>Number of tasks</label>
+        <div class="num-input-row">
+          <button class="num-btn" onclick="adjustCount(-1)">−</button>
+          <input type="number" id="taskCount" min="1" max="999" value="5">
+          <button class="num-btn" onclick="adjustCount(1)">+</button>
+        </div>
+      </div>
+      <button class="btn-primary" onclick="startGame()">Begin Session</button>
+    </div>
+  </div>
 </div>
 
+<!-- ── PLAY ── -->
 <div id="play" class="screen">
-<h2 id="timer">00:00:00</h2>
-<div id="progressBar"><div id="progressFill"></div></div>
-<div id="textLabel"></div>
-<div id="textDisplay"></div>
-<textarea id="inputBox" rows="6" oninput="checkTyping()"></textarea>
-<br>
-<button id="nextBtn" onclick="nextText()" style="display:none">Next</button>
+
+  <div class="play-header">
+    <div class="brand" style="text-align:center;">Write<em>For</em><br>Perfection</div>
+    <div class="brand-sub" style="text-align:center;margin-top:6px;">Feminist Typing Trainer</div>
+  </div>
+
+  <div class="progress-wrap">
+    <div class="progress-track">
+      <div class="progress-fill" id="progressFill"></div>
+      <div class="progress-label">
+        <span id="timer">00:00:00</span>
+        <span class="progress-counter" id="progressText">0 / 5</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="live-stats">
+    <div class="stat-pill">
+      <div class="slabel">WPM</div>
+      <div class="sval pink" id="liveWpm">—</div>
+    </div>
+    <div class="stat-pill">
+      <div class="slabel">Errors</div>
+      <div class="sval red" id="liveErrors">0</div>
+    </div>
+    <div class="stat-pill">
+      <div class="slabel">Characters</div>
+      <div class="sval" id="liveChars">0</div>
+    </div>
+    <div class="stat-pill">
+      <div class="slabel">Accuracy</div>
+      <div class="sval" id="liveAccuracy">—</div>
+    </div>
+  </div>
+
+  <div class="text-label" id="textLabel">—</div>
+
+  <div class="typing-area">
+    <div id="textDisplay"></div>
+  </div>
+
+  <div class="input-wrap">
+    <textarea id="inputBox" rows="3" placeholder="Start typing…" oninput="checkTyping()" onkeydown="handleKey(event)"></textarea>
+  </div>
+
+  <button class="next-btn" id="nextBtn" onclick="nextText()">Continue →</button>
+
+  <div id="taskResultsArea" style="width:100%;max-width:800px;display:flex;flex-direction:column;gap:8px;"></div>
+
 </div>
 
+<!-- ── END ── -->
 <div id="end" class="screen">
-<h1>Complete.</h1>
-<div id="results"></div>
+  <div class="end-inner">
+    <div class="end-title">
+      <h1>Session<br><em>Complete.</em></h1>
+      <p id="endSubtitle">—</p>
+      <p id="endId" style="margin-top:6px;font-family:'DM Mono',monospace;font-size:0.7rem;color:var(--muted);letter-spacing:0.12em;">—</p>
+    </div>
+
+    <div class="end-stats">
+      <div class="end-stat">
+        <div class="el">Avg WPM</div>
+        <div class="ev pink" id="endWpm">—</div>
+        <div class="es">words per minute</div>
+      </div>
+      <div class="end-stat">
+        <div class="el">Total Errors</div>
+        <div class="ev red" id="endErrors">—</div>
+        <div class="es">across all tasks</div>
+      </div>
+      <div class="end-stat">
+        <div class="el">Total Time</div>
+        <div class="ev" id="endTime">—</div>
+        <div class="es">elapsed</div>
+      </div>
+      <div class="end-stat">
+        <div class="el">Tasks Typed</div>
+        <div class="ev" id="endTasks">—</div>
+        <div class="es">texts completed</div>
+      </div>
+    </div>
+
+    <div class="end-id" id="endTextList" style="text-align:center;line-height:1.8;">—</div>
+
+    <button class="btn-restart" onclick="restartGame()">Start New Session</button>
+  </div>
 </div>
 
 <script>
-
-// PREVENT PASTE
-window.addEventListener('paste', e=>e.preventDefault());
-window.addEventListener('copy', e=>e.preventDefault());
-window.addEventListener('cut', e=>e.preventDefault());
-
-let texts = [
-
-{
-label:"Wollstonecraft",
-content:`I do not wish women to have power over men, but over themselves. The mind has no gender, and the improvement of reason is the true foundation of virtue. When women are educated only to please others, their abilities are limited and their independence weakened. A society that values reason must also value the intellectual development of all its members. To deny women education is to deny them the tools needed for moral and personal growth. True equality cannot exist where one group is deliberately kept ignorant. The cultivation of the mind should be the goal of every individual, regardless of gender, and only through this can genuine virtue and independence be achieved.`
-},
-
-{
-label:"Sojourner Truth",
-content:`That man over there says that women need to be helped into carriages and lifted over ditches, and to have the best place everywhere. Nobody ever helps me into carriages or over mud puddles, or gives me any best place. And ain't I a woman. Look at me. Look at my arm. I have ploughed and planted and gathered into barns, and no man could head me. And ain't I a woman. I could work as much and eat as much as a man when I could get it, and bear the lash as well. And ain't I a woman. I have borne children and seen most of them sold off to slavery, and when I cried out with a mother's grief, none but Jesus heard me. And ain't I a woman.`
-},
-
-{
-label:"Mill",
-content:`The principle which regulates the existing social relations between the two sexes is wrong in itself, and now one of the chief hindrances to human improvement. It ought to be replaced by a principle of perfect equality, admitting no power or privilege on the one side, nor disability on the other. The subordination of women is not the result of natural differences, but of social arrangements that have been accepted without question. If society is to progress, it must allow all individuals the freedom to develop their abilities. Equality is not only a matter of justice, but also of utility, as it allows the talents of all people to contribute to the common good.`
-},
-
-{
-label:"Feminism",
-content:`Feminism is a range of social movements, political movements, and ideologies that aim to define and establish the political, economic, personal, and social equality of the sexes. It incorporates the position that societies prioritize the male point of view, and that women are treated unjustly within those societies. Efforts to change this include fighting against gender stereotypes and establishing educational, professional, and interpersonal opportunities and outcomes for women that are equal to those for men. Feminist movements have campaigned and continue to campaign for women's rights, including the right to vote, to hold public office, to work, to earn fair wages, and to have bodily autonomy.`
-},
-
-{
-label:"De Beauvoir",
-content:`Simone de Beauvoir was a French existentialist philosopher, writer, and social theorist. She is best known for her work examining the treatment of women in society and is often regarded as a foundational figure in modern feminist philosophy. Her writing explores how women have historically been defined in relation to men rather than as independent individuals. She argued that this condition is not an inherent reality, but one shaped by cultural and social forces. By examining these structures, Beauvoir challenged readers to reconsider assumptions about gender and identity. Her work continues to influence debates about equality, freedom, and the construction of social roles.`
-},
-
-{
-label:"Hooks",
-content:`bell hooks was an American author, professor, and social activist whose work examined the intersections of race, capitalism, and gender. She argued that feminism is for everybody and should be accessible rather than exclusive. Her writing emphasizes that systems of oppression are interconnected and must be understood together rather than in isolation. hooks focused on the importance of education as a practice of freedom, encouraging individuals to think critically about the world around them. She also highlighted the role of love, community, and care in creating social change. Her work remains influential in discussions about equality and justice.`
-},
-
-{
-label:"Intersectionality",
-content:`Intersectionality is a framework for understanding how aspects of a person's social and political identities combine to create different modes of discrimination and privilege. These identities can include gender, race, class, sexuality, and others. The concept highlights that experiences of inequality are not the result of a single factor, but the interaction of multiple factors. For example, a woman may face discrimination, but that experience can differ greatly depending on her race or economic status. By examining these overlapping systems, intersectionality provides a more complete understanding of social inequality and helps guide more effective approaches to justice and inclusion.`
-},
-
-{
-label:"Suffrage",
-content:`Women's suffrage is the right of women to vote in elections. The movement for women's suffrage was a significant part of broader struggles for gender equality. Activists organized campaigns, protests, and political efforts to secure voting rights. These efforts often faced strong resistance, including legal barriers and social opposition. Over time, suffrage movements achieved success in many countries, leading to expanded democratic participation. The achievement of voting rights marked an important step toward equality, but it did not end broader struggles for women's rights. Suffrage remains a key example of how collective action can bring about social and political change.`
-},
-
-{
-label:"Patriarchy",
-content:`Patriarchy is a social system in which men hold primary power and dominate roles of political leadership, moral authority, and social privilege. In such systems, women and other marginalized groups often have limited access to power and resources. Feminist theory examines how patriarchal structures are maintained and how they shape everyday life. These structures can be reinforced through cultural norms, laws, and institutions. Challenging patriarchy involves questioning these norms and working toward more equitable systems. Understanding patriarchy is a key step in addressing broader patterns of inequality in society.`
-},
-
-{
-label:"Gender Roles",
-content:`Gender roles are the social and behavioral norms that are considered appropriate for individuals based on their perceived gender. These roles can vary widely across cultures and historical periods, but they often reinforce expectations about how men and women should behave. Feminist scholars argue that many gender roles are socially constructed rather than biologically determined. This means they can be changed or challenged. Limiting individuals to strict roles can restrict personal freedom and opportunity. By questioning traditional expectations, individuals and societies can create more flexible and inclusive understandings of identity.`
-},
-
-{
-label:"Angela Davis",
-content:`Angela Davis is an American political activist, scholar, and author known for her work on issues related to race, gender, and the prison system. She has been a prominent figure in movements for social justice and has written extensively about the connections between different forms of oppression. Davis emphasizes the importance of understanding how systems such as racism, sexism, and economic inequality are interconnected. Her work encourages collective action and critical thinking as tools for social change. Through both her writing and activism, she has contributed significantly to discussions about equality and human rights.`
-},
-
-{
-label:"Education",
-content:`Education has long been a central focus of feminist movements. Access to education is seen as a key factor in achieving equality, as it provides individuals with the knowledge and skills needed to participate fully in society. Historically, women were often denied educational opportunities, limiting their independence and influence. Feminist advocates have worked to expand access and challenge biases within educational systems. This includes addressing disparities in resources, representation, and curriculum. By promoting inclusive education, societies can work toward greater fairness and empowerment for all individuals.`
-},
-
-{
-label:"Workplace Equality",
-content:`Workplace equality refers to the fair treatment of individuals in employment regardless of gender or other characteristics. Feminist movements have highlighted issues such as unequal pay, limited advancement opportunities, and discrimination. Efforts to address these challenges include advocating for equal pay laws, parental leave policies, and inclusive workplace practices. Achieving equality in the workplace benefits not only individuals but also organizations and societies as a whole. It allows for a broader range of talents and perspectives to be recognized and utilized.`
-},
-
-{
-label:"Representation",
-content:`Representation refers to the presence and portrayal of different groups within media, politics, and other areas of public life. Feminist perspectives emphasize the importance of accurate and diverse representation of women and marginalized groups. When representation is limited or stereotypical, it can reinforce harmful assumptions and restrict opportunities. Increasing representation helps to challenge these patterns and provides a wider range of role models and perspectives. This can influence how individuals see themselves and others, contributing to broader social change.`
-},
-
-{
-label:"Autonomy",
-content:`Autonomy is the ability of individuals to make their own choices and govern their own lives. Feminist theory places strong emphasis on autonomy, particularly in relation to bodily rights and personal decision making. Restrictions on autonomy can take many forms, including legal, social, and economic barriers. Expanding autonomy involves removing these barriers and ensuring that individuals have the freedom and resources to make informed choices. This is considered a fundamental aspect of equality and human rights.`
-},
-
-,
-{
-label:"Gender Equality",
-content:`Gender equality is the state in which individuals of all genders have equal rights, responsibilities, and opportunities. It is a central goal of many social movements and international organizations. Achieving gender equality requires addressing historical and structural inequalities that have limited access to education, employment, and political participation for women and other marginalized groups. Efforts include legal reforms, policy changes, and shifts in cultural attitudes. Gender equality is not only a matter of fairness, but also contributes to economic growth, social stability, and improved outcomes for communities as a whole.`
-},
-
-{
-label:"Mary Astell",
-content:`Mary Astell was an English philosopher and writer who advocated for women's education in the late seventeenth and early eighteenth centuries. She argued that women were capable of reason and deserved the same intellectual opportunities as men. Astell criticized the limited roles available to women and proposed the creation of institutions where women could pursue learning. Her work challenged prevailing assumptions about gender and laid important groundwork for later feminist thought. By emphasizing education and rationality, she contributed to early debates about equality and the role of women in society.`
-},
-
-{
-label:"Olympe de Gouges",
-content:`Olympe de Gouges was a French playwright and political activist during the French Revolution. She is best known for writing the Declaration of the Rights of Woman and of the Female Citizen, which argued that women should have the same rights as men. Her work challenged the exclusion of women from political life and called for equality in areas such as education, property rights, and participation in government. De Gouges was executed during the Reign of Terror, but her ideas have had a lasting impact on feminist movements and discussions of human rights.`
-},
-
-{
-label:"Second Wave",
-content:`Second-wave feminism refers to a period of feminist activity that began in the early 1960s and continued into the 1980s. This wave focused on a wide range of issues, including workplace discrimination, reproductive rights, and legal inequalities. Activists worked to challenge traditional gender roles and to expand opportunities for women in education and employment. The movement also raised awareness about issues such as domestic violence and sexual harassment. Second-wave feminism built on earlier efforts while introducing new ideas about identity, culture, and social change.`
-},
-
-{
-label:"Third Wave",
-content:`Third-wave feminism emerged in the 1990s as a response to perceived limitations of earlier feminist movements. It emphasized diversity, individuality, and the importance of understanding different experiences of gender. Third-wave feminists often focused on issues such as identity, representation, and the intersection of gender with race, class, and sexuality. The movement sought to challenge universal definitions of womanhood and to create a more inclusive understanding of feminism. It also made use of media and popular culture as tools for expression and activism.`
-},
-
-{
-label:"Betty Friedan",
-content:`Betty Friedan was an American writer and activist best known for her book The Feminine Mystique. In her work, she explored the dissatisfaction experienced by many women who were confined to domestic roles in the mid twentieth century. Friedan argued that these limitations prevented women from realizing their full potential. She was a co founder of the National Organization for Women and played a key role in advocating for workplace equality and legal rights. Her contributions helped to shape the direction of second wave feminism in the United States.`
-},
-
-{
-label:"Gloria Steinem",
-content:`Gloria Steinem is an American feminist journalist and social political activist who became a leading figure during the second wave of feminism. She co founded Ms magazine, which provided a platform for discussing issues affecting women. Steinem has been involved in campaigns for reproductive rights, equal pay, and political representation. Her work has emphasized the importance of media in shaping public understanding and has encouraged women to participate actively in social and political life. She remains an influential voice in discussions about equality and justice.`
-},
-
-{
-label:"Reproductive Rights",
-content:`Reproductive rights refer to the legal rights and freedoms relating to reproduction and reproductive health. These include access to contraception, safe and legal abortion, and comprehensive health care. Feminist movements have emphasized the importance of reproductive autonomy as a fundamental aspect of equality. Without control over reproductive decisions, individuals may face limitations in education, employment, and personal development. Debates about reproductive rights often involve ethical, legal, and political considerations, and they continue to be a central issue in discussions of gender equality.`
-},
-
-{
-label:"Wage Gap",
-content:`The gender wage gap refers to the average difference in earnings between men and women. It is influenced by a range of factors, including occupational segregation, differences in work experience, and discrimination. Feminist economists study these factors to better understand how inequality is produced and maintained. Efforts to address the wage gap include legislation promoting equal pay, workplace transparency, and policies supporting work life balance. Reducing the wage gap is seen as an important step toward achieving economic equality.`
-},
-
-{
-label:"Domestic Labor",
-content:`Domestic labor includes tasks such as cooking, cleaning, and caregiving that are often performed within the home. Historically, this work has been undervalued and disproportionately carried out by women. Feminist scholars have highlighted the importance of recognizing domestic labor as a form of work that contributes to the functioning of society. Discussions about domestic labor also involve questions of fairness, division of responsibilities, and economic recognition. Addressing inequalities in domestic labor is an important part of broader efforts toward gender equality.`
-},
-
-{
-label:"Political Representation",
-content:`Political representation refers to the participation of individuals in political decision making processes. Feminist movements have advocated for increased representation of women in government and leadership roles. Greater representation is seen as important for ensuring that diverse perspectives are included in policy decisions. Efforts to improve representation include electoral reforms, quotas, and initiatives to support women candidates. Increasing participation in political life is considered a key aspect of democratic equality.`
-},
-
-{
-label:"Media Representation",
-content:`Media representation involves how different groups are portrayed in television, film, news, and other forms of media. Feminist analysis examines how women are often depicted in limited or stereotypical ways. These portrayals can influence public attitudes and reinforce social norms. Expanding representation to include a wider range of experiences and identities can help challenge stereotypes and promote understanding. Media plays a significant role in shaping perceptions, making it an important area for advocacy and change.`
-},
-
-{
-label:"Legal Rights",
-content:`Legal rights for women have expanded significantly over time, but disparities still exist in many parts of the world. Feminist movements have worked to secure rights related to voting, property ownership, employment, and personal autonomy. Legal reforms are often the result of sustained activism and advocacy. While laws can provide important protections, their effectiveness depends on implementation and enforcement. Continued efforts are needed to ensure that legal rights translate into real equality in everyday life.`
-},
-
-{
-label:"Education Access",
-content:`Access to education is a key factor in promoting equality and social mobility. Historically, girls and women have faced barriers to education in many societies. Feminist advocacy has focused on removing these barriers and ensuring equal opportunities for learning. Education can empower individuals, improve economic outcomes, and contribute to broader social development. Efforts to expand access include policy changes, investment in schools, and initiatives to address cultural and economic obstacles.`
-},
-
-{
-label:"Social Norms",
-content:`Social norms are the shared expectations and rules that guide behavior within a society. These norms often influence perceptions of gender and appropriate roles for individuals. Feminist theory examines how social norms can reinforce inequality and limit opportunities. Changing these norms requires both individual and collective action, including education, advocacy, and representation. By challenging restrictive expectations, societies can move toward more inclusive and equitable systems.`
-},
-
-,
-{
-label:"Judith Butler",
-content:`Judith Butler is an American philosopher and gender theorist known for their work on gender identity and performativity. Butler argues that gender is not something one is, but something one does through repeated actions and behaviors shaped by social expectations. This idea challenges the assumption that gender is fixed or purely biological. By examining how norms are created and reinforced, Butler's work encourages critical thinking about identity and power. Their theories have influenced feminist thought, queer theory, and discussions about how language and culture shape human experience.`
-},
-
-{
-label:"Audre Lorde",
-content:`Audre Lorde was an American writer, poet, and activist whose work addressed issues of race, gender, sexuality, and identity. She emphasized that the experiences of women are not all the same and that differences should be recognized rather than ignored. Lorde argued that silence about injustice allows inequality to continue, and she encouraged people to speak openly about their experiences. Her writing highlights the importance of self expression, community, and resistance. Lorde's work remains influential in discussions about intersectionality and social justice.`
-},
-
-{
-label:"Queer Theory",
-content:`Queer theory is an academic field that examines and challenges traditional ideas about gender and sexuality. It questions fixed categories and explores how identities are shaped by culture, language, and power structures. Queer theory often focuses on how norms are created and maintained, and how they can be disrupted. By analyzing these systems, it seeks to create more inclusive ways of understanding identity. The field draws on ideas from feminism, philosophy, and cultural studies, and has contributed to broader discussions about diversity and equality.`
-},
-
-{
-label:"Liberal Feminism",
-content:`Liberal feminism is a branch of feminist thought that focuses on achieving equality through legal and political reform. It emphasizes individual rights, equal opportunities, and access to education and employment. Liberal feminists work within existing systems to promote change, advocating for laws and policies that support equality. This approach has been influential in campaigns for voting rights, workplace equality, and anti discrimination legislation. While it has achieved significant progress, critics argue that it may not fully address deeper structural inequalities.`
-},
-
-{
-label:"Radical Feminism",
-content:`Radical feminism is a perspective that examines the root causes of gender inequality and seeks to transform the structures that maintain it. Radical feminists argue that patriarchy is deeply embedded in social, political, and economic systems. They focus on issues such as power, control, and the ways in which inequality is reproduced. This approach often calls for fundamental changes to society rather than gradual reform. Radical feminism has contributed to important discussions about violence, representation, and the nature of social institutions.`
-},
-
-{
-label:"Cultural Feminism",
-content:`Cultural feminism emphasizes the value of traits and perspectives traditionally associated with women. It seeks to highlight the importance of care, cooperation, and community, and to challenge the idea that these qualities are less valuable than those associated with men. Cultural feminists often focus on creating spaces that support women's experiences and perspectives. While this approach has been influential in promoting alternative values, it has also been debated for potentially reinforcing certain stereotypes.`
-},
-
-{
-label:"Ecofeminism",
-content:`Ecofeminism is a movement and theoretical perspective that connects environmental issues with feminist concerns. It argues that the exploitation of the environment and the oppression of women are linked through similar systems of domination. Ecofeminists examine how social structures contribute to both environmental degradation and inequality. They advocate for approaches that emphasize sustainability, care, and respect for all forms of life. This perspective brings together ideas from environmentalism, feminism, and social justice.`
-},
-
-{
-label:"Body Autonomy",
-content:`Body autonomy refers to the right of individuals to make decisions about their own bodies without external control or coercion. This concept is central to many feminist discussions, particularly in relation to health care, reproduction, and personal identity. Restrictions on body autonomy can limit individuals' ability to make choices about their lives. Feminist advocacy emphasizes the importance of informed consent, access to resources, and the removal of barriers that prevent individuals from exercising control over their bodies.`
-},
-
-{
-label:"Sexual Harassment",
-content:`Sexual harassment is a form of discrimination that involves unwanted behavior of a sexual nature. It can occur in workplaces, educational settings, and public spaces. Feminist movements have played a key role in raising awareness about sexual harassment and advocating for policies to prevent it. Addressing harassment involves creating safe environments, establishing clear guidelines, and supporting those who experience it. Efforts to combat harassment are part of broader attempts to promote respect and equality.`
-},
-
-{
-label:"Violence Against Women",
-content:`Violence against women includes physical, emotional, and psychological harm directed at women because of their gender. This issue exists in many forms, including domestic violence, harassment, and exploitation. Feminist organizations work to raise awareness, support survivors, and promote legal and social changes to prevent violence. Addressing this issue requires cooperation across communities, institutions, and governments. It is widely recognized as a significant barrier to achieving equality and human rights.`
-},
-
-{
-label:"Women in STEM",
-content:`Women in science, technology, engineering, and mathematics have historically been underrepresented. Efforts to increase participation focus on addressing barriers such as stereotypes, lack of role models, and unequal opportunities. Encouraging diversity in these fields can lead to more innovation and better problem solving. Initiatives include educational programs, mentorship, and policy changes aimed at creating inclusive environments. Increasing representation in STEM is seen as an important step toward broader gender equality.`
-},
-
-{
-label:"Global Feminism",
-content:`Global feminism examines feminist issues from an international perspective, recognizing that experiences of inequality vary across cultures and regions. It emphasizes the importance of understanding local contexts while also addressing global patterns of inequality. Global feminist approaches often involve collaboration across borders and highlight issues such as economic inequality, access to education, and human rights. By considering diverse perspectives, this approach seeks to create more inclusive and effective strategies for change.`
-},
-
-{
-label:"Social Justice",
-content:`Social justice refers to the fair distribution of resources, opportunities, and privileges within a society. Feminist movements are closely connected to broader social justice efforts, as they address inequalities related to gender and other factors. Achieving social justice involves challenging systems that create disadvantage and working toward more equitable outcomes. This can include legal reform, education, and community action. Feminist perspectives contribute to these efforts by highlighting the importance of inclusion and equality.`
-},
-
-{
-label:"Activism",
-content:`Activism involves taking action to bring about social or political change. Feminist activism has taken many forms, including protests, writing, education, and community organizing. Activists work to raise awareness, influence policy, and challenge inequality. Throughout history, feminist activism has led to significant achievements, such as expanded rights and increased representation. It continues to play a vital role in addressing ongoing challenges and promoting equality.`
-},
-
-{
-label:"Equality vs Equity",
-content:`Equality and equity are related but distinct concepts. Equality refers to treating everyone the same, while equity involves recognizing differences and providing resources based on individual needs. Feminist discussions often emphasize equity as a way to address existing inequalities. By considering the specific challenges faced by different groups, equity aims to create fairer outcomes. Understanding this distinction helps inform policies and practices that promote inclusion and justice.`
-},
-
-,
-{
-label:"Simone Weil",
-content:`Simone Weil was a French philosopher, political activist, and writer whose work addressed issues of justice, labor, and human suffering. She believed that attention to others was a fundamental moral responsibility and emphasized the importance of compassion and understanding. Weil's writing explored the conditions of workers and the effects of oppression, arguing that social systems often fail to recognize human dignity. Her ideas have influenced discussions about ethics, equality, and the responsibilities individuals have toward one another in society.`
-},
-
-{
-label:"Malala Yousafzai",
-content:`Malala Yousafzai is a Pakistani education activist known for her advocacy of girls' education. She gained international attention after speaking out against restrictions on education in her region. Malala has emphasized that access to education is a fundamental right and a powerful tool for change. Through her activism, she has worked to promote educational opportunities for girls around the world. Her efforts highlight the importance of education in achieving equality and empowering individuals to shape their own futures.`
-},
-
-{
-label:"UN Women",
-content:`UN Women is an organization dedicated to gender equality and the empowerment of women. It works globally to support policies, programs, and standards that promote equal rights and opportunities. The organization focuses on areas such as economic empowerment, leadership, and the elimination of violence against women. By collaborating with governments and communities, UN Women aims to create lasting change. Its work reflects the growing recognition of gender equality as a key factor in sustainable development.`
-},
-
-{
-label:"CEDAW",
-content:`The Convention on the Elimination of All Forms of Discrimination Against Women is an international treaty adopted by the United Nations. It sets out a framework for eliminating discrimination and promoting equality in areas such as education, employment, and health. Countries that adopt the convention commit to taking steps to ensure equal rights for women. CEDAW is often described as an international bill of rights for women and has played an important role in shaping policies and laws worldwide.`
-},
-
-{
-label:"Gender Pay Equity",
-content:`Gender pay equity refers to the principle that individuals should receive equal pay for work of equal value, regardless of gender. While progress has been made, disparities in earnings persist in many parts of the world. These differences can result from a combination of factors, including discrimination and structural inequalities. Efforts to promote pay equity include legislation, transparency initiatives, and organizational policies. Addressing pay disparities is seen as an important step toward economic fairness.`
-},
-
-{
-label:"Care Work",
-content:`Care work includes activities that involve caring for others, such as raising children, supporting family members, and providing health assistance. Much of this work is unpaid and often performed by women. Feminist scholars have highlighted the importance of recognizing care work as essential to the functioning of society. Discussions about care work also address the need for support systems, fair compensation, and shared responsibility. Valuing care work is an important part of promoting equality.`
-},
-
-{
-label:"Glass Ceiling",
-content:`The glass ceiling is a metaphor used to describe invisible barriers that prevent individuals, particularly women, from advancing to higher positions in organizations. These barriers are not always explicit but can result from biases, limited opportunities, and structural inequalities. The concept highlights the challenges faced by individuals seeking leadership roles. Efforts to break the glass ceiling include mentorship, policy changes, and increased awareness of bias. Addressing these barriers is essential for creating more inclusive workplaces.`
-},
-
-{
-label:"Gender Stereotypes",
-content:`Gender stereotypes are widely held beliefs about the characteristics and roles of individuals based on their gender. These stereotypes can influence behavior, expectations, and opportunities. Feminist perspectives emphasize that many stereotypes are socially constructed and can limit individual potential. Challenging stereotypes involves questioning assumptions and promoting more flexible understandings of identity. Reducing reliance on stereotypes can help create environments where individuals are free to pursue their interests and abilities.`
-},
-
-{
-label:"Women's Health",
-content:`Women's health refers to the physical and mental well being of women across different stages of life. Feminist advocacy has highlighted the importance of addressing disparities in health care access, research, and treatment. Historically, women's health issues have sometimes been underrepresented in medical research. Efforts to improve women's health include expanding access to services, increasing awareness, and promoting inclusive research practices. Addressing health inequalities is an important part of achieving broader social equality.`
-},
-
-{
-label:"Human Rights",
-content:`Human rights are the basic rights and freedoms to which all individuals are entitled. Feminist movements have emphasized that women's rights are an essential part of human rights. This includes the right to safety, education, health care, and participation in public life. Efforts to promote human rights often involve legal frameworks, advocacy, and international cooperation. Recognizing the universality of human rights helps support efforts toward equality and justice.`
-},
-
-{
-label:"Empowerment",
-content:`Empowerment refers to the process of gaining the ability and confidence to make decisions and take control of one's life. Feminist approaches to empowerment focus on removing barriers that limit opportunities and supporting individuals in developing their skills and voices. This can include access to education, economic resources, and social support. Empowerment is seen as both an individual and collective process, contributing to broader social change.`
-},
-
-{
-label:"Leadership",
-content:`Leadership involves guiding and influencing others toward shared goals. Increasing the representation of women in leadership positions has been a focus of feminist advocacy. Diverse leadership can lead to more inclusive decision making and better outcomes. Efforts to support women leaders include mentorship programs, policy changes, and initiatives to address bias. Expanding leadership opportunities is an important aspect of achieving equality.`
-},
-
-{
-label:"Community",
-content:`Community plays a significant role in feminist movements, providing support, shared knowledge, and collective action. Building strong communities allows individuals to connect, organize, and advocate for change. Feminist communities often emphasize inclusivity, collaboration, and mutual support. These networks can help individuals navigate challenges and work together toward common goals. Community based approaches are essential for sustaining social movements and creating lasting impact.`
-},
-
-{
-label:"Resistance",
-content:`Resistance refers to actions taken to challenge and oppose systems of inequality and injustice. Feminist resistance has taken many forms, including protests, writing, and advocacy. These efforts aim to raise awareness and promote change by questioning existing power structures. Resistance is often a collective effort, bringing together individuals and groups to work toward shared goals. It plays a key role in advancing social progress and challenging discrimination.`
-},
-
-{
-label:"Policy Change",
-content:`Policy change involves modifying laws, regulations, or institutional practices to address social issues. Feminist advocacy often focuses on influencing policy to promote equality and protect rights. This can include efforts to pass new legislation, reform existing systems, and ensure effective implementation. Policy change is an important tool for achieving long term improvements in areas such as education, health care, and employment. By shaping policies, societies can work toward more equitable outcomes.`
-},
-
-,
-{
-label:"Malala Fund",
-content:`The Malala Fund is an organization focused on advocating for girls' education around the world. It works to ensure that girls have access to free, safe, and quality education. The organization supports local activists and invests in programs that remove barriers to schooling. These barriers can include poverty, conflict, and cultural restrictions. By promoting education, the Malala Fund aims to empower girls to make decisions about their own lives and contribute to their communities. Education is seen as a key factor in achieving equality and long term social progress.`
-},
-
-{
-label:"Rosa Luxemburg",
-content:`Rosa Luxemburg was a political theorist, economist, and revolutionary socialist who wrote extensively about social justice and equality. She argued that economic systems play a major role in shaping inequality and that meaningful change requires collective action. Luxemburg emphasized the importance of democracy, participation, and critical thought. Her work has influenced discussions about labor, power, and social organization. Although she is often associated with political movements, her ideas continue to be studied in broader discussions of equality and justice.`
-},
-
-{
-label:"Harriet Tubman",
-content:`Harriet Tubman was an American abolitionist and activist who escaped slavery and later helped others gain freedom through the Underground Railroad. She is remembered for her courage, leadership, and commitment to justice. Tubman also supported women's suffrage and worked as a nurse and spy during the American Civil War. Her life demonstrates the importance of resistance and collective action in challenging systems of oppression. Tubman's legacy continues to inspire movements for freedom and equality.`
-},
-
-{
-label:"Women in Politics",
-content:`Women in politics refers to the participation of women in political institutions and decision making processes. Increasing representation has been a key goal of feminist movements, as it helps ensure that diverse perspectives are included in governance. While progress has been made, women are still underrepresented in many political systems. Efforts to address this include policy reforms, support for candidates, and initiatives to reduce barriers. Greater participation is seen as essential for achieving more inclusive and representative democracies.`
-},
-
-{
-label:"Economic Equality",
-content:`Economic equality involves fair access to financial resources, opportunities, and outcomes. Feminist perspectives highlight how gender inequality can affect income, employment, and access to resources. Addressing economic inequality requires examining both structural factors and individual experiences. Efforts include promoting equal pay, supporting access to education, and creating policies that address disparities. Economic equality is closely linked to overall well being and the ability of individuals to participate fully in society.`
-},
-
-{
-label:"Gender Identity",
-content:`Gender identity refers to an individual's personal sense of their own gender. It may or may not correspond with the sex assigned at birth. Understanding gender identity is an important part of discussions about equality and inclusion. Feminist and related theories emphasize the importance of respecting diverse identities and experiences. Recognizing gender identity helps create environments where individuals can express themselves freely and participate fully in society.`
-},
-
-{
-label:"Sex and Gender",
-content:`Sex and gender are related but distinct concepts. Sex typically refers to biological characteristics, while gender involves social and cultural roles, behaviors, and identities. Feminist scholarship has emphasized the importance of understanding this distinction in order to challenge assumptions about what is considered natural or fixed. By examining how gender is constructed, it becomes possible to question and change limiting expectations. This distinction is central to many discussions about identity and equality.`
-},
-
-{
-label:"Power Structures",
-content:`Power structures refer to the ways in which power is distributed and exercised within a society. Feminist theory examines how these structures can create and maintain inequality. This includes analyzing institutions, cultural norms, and social practices. Understanding power structures helps identify the mechanisms that shape opportunities and outcomes. Challenging unequal power structures is an important step toward achieving fairness and inclusion.`
-},
-
-{
-label:"Marginalization",
-content:`Marginalization occurs when individuals or groups are pushed to the edges of society and denied full participation. This can happen due to factors such as gender, race, class, or other characteristics. Feminist perspectives highlight how marginalization affects access to resources, representation, and opportunities. Addressing marginalization involves recognizing these barriers and working to remove them. Creating inclusive systems requires attention to the experiences of those who have been historically excluded.`
-},
-
-{
-label:"Inclusion",
-content:`Inclusion involves creating environments where all individuals feel valued and able to participate fully. Feminist approaches to inclusion emphasize the importance of recognizing diversity and addressing barriers that limit participation. This can involve changes in policies, practices, and cultural attitudes. Inclusive environments benefit not only individuals but also communities by encouraging a wider range of perspectives and ideas. Inclusion is a key component of equality and social progress.`
-},
-
-{
-label:"Allyship",
-content:`Allyship refers to the practice of supporting and advocating for groups that one does not belong to. In feminist contexts, allyship involves listening, learning, and taking action to challenge inequality. Effective allyship requires ongoing effort and a willingness to reflect on one's own position and privilege. By working together, individuals and groups can contribute to broader movements for equality and justice.`
-},
-
-{
-label:"Advocacy",
-content:`Advocacy involves actively supporting a cause or policy. Feminist advocacy can take many forms, including raising awareness, influencing policy, and providing support to affected communities. Advocacy efforts aim to create change by addressing inequalities and promoting fairness. This work often involves collaboration between individuals, organizations, and institutions. Through sustained advocacy, significant progress can be made toward achieving equality.`
-},
-
-{
-label:"Equality Law",
-content:`Equality law refers to legislation designed to prevent discrimination and promote fairness. These laws often address issues such as employment, education, and access to services. Feminist movements have played a significant role in advocating for such legislation. While laws can establish important protections, their effectiveness depends on enforcement and public awareness. Continued efforts are needed to ensure that legal frameworks support real equality.`
-},
-
-{
-label:"Civic Participation",
-content:`Civic participation involves engaging in activities that influence public life and decision making. This can include voting, community organizing, and public discussion. Feminist perspectives emphasize the importance of ensuring that all individuals have the opportunity to participate. Barriers to participation can limit representation and affect outcomes. Encouraging civic engagement is an important part of strengthening democratic systems and promoting equality.`
-},
-
-{
-label:"Collective Action",
-content:`Collective action occurs when individuals come together to achieve a common goal. Feminist movements have relied on collective action to challenge inequality and advocate for change. This can include protests, campaigns, and community initiatives. Working together allows individuals to amplify their voices and increase their impact. Collective action has been a key factor in many social and political advancements.`
-},
-
-,
-{
-label:"Chimamanda Ngozi Adichie",
-content:`Chimamanda Ngozi Adichie is a Nigerian writer known for her work on identity, culture, and gender. She has spoken widely about feminism and the importance of challenging limiting expectations placed on women. Her work emphasizes that social norms can shape how individuals see themselves and others. By encouraging critical reflection, Adichie highlights the importance of creating more inclusive societies. Her writing and public speaking have contributed to global conversations about equality and representation.`
-},
-
-{
-label:"Mary Wollstonecraft Legacy",
-content:`Mary Wollstonecraft's work has had a lasting influence on discussions of women's rights and education. Her arguments for equality and rational education challenged the assumptions of her time. Later thinkers and activists have drawn on her ideas when advocating for expanded opportunities for women. Wollstonecraft's emphasis on independence and intellectual development continues to resonate in modern debates about equality. Her legacy demonstrates how early ideas can shape long term social change.`
-},
-
-{
-label:"Women's Movements",
-content:`Women's movements refer to organized efforts aimed at achieving greater equality and rights for women. These movements have taken place across different historical periods and cultural contexts. They have addressed issues such as voting rights, education, employment, and legal protections. While strategies and priorities may differ, these movements share a common goal of reducing inequality. Collective action within women's movements has led to significant social and political change over time.`
-},
-
-{
-label:"Cultural Change",
-content:`Cultural change involves shifts in beliefs, values, and practices within a society. Feminist movements often seek cultural change by challenging norms that limit opportunities for individuals. This can include addressing stereotypes, promoting representation, and encouraging new ways of thinking. Cultural change is often gradual and requires sustained effort. By influencing attitudes and behaviors, it can support broader social transformation.`
-},
-
-{
-label:"Barriers to Equality",
-content:`Barriers to equality can take many forms, including legal restrictions, economic challenges, and social attitudes. These barriers can limit access to opportunities and resources. Feminist perspectives focus on identifying and addressing these obstacles. Removing barriers requires coordinated efforts across different areas, including policy, education, and cultural change. Understanding the nature of these barriers is an important step toward achieving fairness.`
-},
-
-{
-label:"Women's Rights History",
-content:`The history of women's rights includes a wide range of movements and achievements aimed at improving equality. From early advocacy for education to campaigns for voting rights, these efforts have shaped modern societies. Progress has often been achieved through collective action and persistence. While many gains have been made, challenges remain. Studying this history helps provide context for current discussions about equality and justice.`
-},
-
-{
-label:"Public Participation",
-content:`Public participation involves individuals taking part in decisions that affect their communities. Feminist approaches emphasize the importance of inclusive participation, ensuring that diverse voices are heard. Barriers to participation can limit representation and influence outcomes. Encouraging broader involvement can strengthen democratic processes and promote fairness. Public participation is a key component of effective governance.`
-},
-
-{
-label:"Equal Opportunity",
-content:`Equal opportunity refers to the idea that individuals should have the same chances to succeed, regardless of their background. Feminist movements have emphasized the importance of removing obstacles that prevent fair access to education, employment, and other areas. Achieving equal opportunity requires addressing both visible and hidden forms of inequality. It is considered a fundamental aspect of a fair society.`
-},
-
-{
-label:"Bias",
-content:`Bias refers to a tendency to favor or disadvantage certain individuals or groups. Bias can be conscious or unconscious and can affect decisions in areas such as hiring, education, and social interactions. Feminist analysis examines how bias contributes to inequality and limits opportunities. Addressing bias involves increasing awareness, promoting fairness, and implementing practices that reduce its impact.`
-},
-
-{
-label:"Institutional Change",
-content:`Institutional change involves altering the structures and practices of organizations to promote fairness and equality. Feminist advocacy often focuses on transforming institutions such as schools, workplaces, and governments. This can include revising policies, improving representation, and addressing systemic barriers. Institutional change is essential for achieving lasting improvements in equality.`
-},
-
-{
-label:"Freedom",
-content:`Freedom is the ability of individuals to make choices and act without undue restriction. Feminist perspectives emphasize that freedom must be available to all individuals, regardless of gender. This includes freedom in personal, social, and economic aspects of life. Ensuring freedom often requires addressing barriers that limit opportunities and access. It is closely connected to broader discussions of human rights and equality.`
-},
-
-{
-label:"Equity in Education",
-content:`Equity in education involves providing resources and support based on individual needs to ensure fair outcomes. Feminist approaches to education emphasize the importance of addressing disparities that affect access and success. This can include targeted programs, inclusive curricula, and supportive environments. Promoting equity helps create opportunities for all students to succeed.`
-},
-
-{
-label:"Intersection of Identities",
-content:`The intersection of identities refers to how different aspects of a person's identity combine to shape their experiences. These aspects can include gender, race, class, and others. Feminist theory emphasizes that understanding these intersections is important for addressing inequality. Different individuals may face unique challenges based on how these identities interact. Recognizing this complexity helps create more effective approaches to inclusion.`
-},
-
-{
-label:"Participation in Work",
-content:`Participation in work refers to involvement in economic activities and employment. Feminist perspectives examine how barriers can limit participation for certain groups. This includes issues such as discrimination, unequal pay, and lack of access to opportunities. Increasing participation requires addressing these challenges and creating inclusive environments. Work is an important part of economic independence and social inclusion.`
-},
-
-{
-label:"Representation in Leadership",
-content:`Representation in leadership involves the presence of diverse individuals in positions of authority. Feminist advocacy has emphasized the importance of increasing representation to ensure that different perspectives are included in decision making. Greater diversity in leadership can lead to more inclusive policies and better outcomes. Efforts to improve representation include mentorship, policy changes, and awareness initiatives.`
-},
-
-{
-label:"Social Change",
-content:`Social change refers to significant shifts in societal structures, behaviors, and attitudes. Feminist movements have been a driving force behind many forms of social change. These efforts aim to address inequality and promote fairness. Social change often requires collaboration, persistence, and adaptation. By working toward shared goals, individuals and groups can contribute to lasting improvements.`
-},
-
-{
-label:"Advancing Equality",
-content:`Advancing equality involves taking steps to reduce disparities and promote fairness across different areas of life. Feminist approaches emphasize the importance of both individual and collective action. This can include education, advocacy, and policy reform. Progress toward equality often requires sustained effort and commitment. By addressing both immediate and long term challenges, societies can move closer to achieving fairness.`
-},
-
-{
-label:"Voice and Agency",
-content:`Voice and agency refer to the ability of individuals to express themselves and make decisions about their lives. Feminist perspectives emphasize the importance of ensuring that all individuals have opportunities to participate and be heard. Barriers to voice and agency can limit personal and social development. Supporting these capacities is an important part of promoting equality and empowerment.`
-},
-
-{
-label:"Access to Resources",
-content:`Access to resources includes the availability of education, health care, financial support, and other essential services. Feminist analysis examines how unequal access can contribute to disparities. Addressing these inequalities involves creating systems that provide fair distribution of resources. Ensuring access is a key step toward improving quality of life and promoting equality.`
-},
-
-{
-label:"Sustainable Equality",
-content:`Sustainable equality refers to long term approaches to achieving fairness that can be maintained over time. This involves addressing underlying causes of inequality and creating systems that support inclusion. Feminist perspectives emphasize the importance of combining policy, education, and cultural change. Sustainable approaches aim to ensure that progress is not temporary but continues across generations.`
-},
-
-{
-label:"Future Perspectives",
-content:`Future perspectives on equality involve considering how current actions will shape the experiences of future generations. Feminist thought encourages ongoing reflection and adaptation to address emerging challenges. By learning from past efforts and continuing to promote inclusion, societies can work toward more equitable outcomes. Future perspectives highlight the importance of long term thinking and collaboration.`
-},
-
-{
-label:"Shared Responsibility",
-content:`Shared responsibility refers to the idea that achieving equality requires the involvement of individuals, communities, and institutions. Feminist approaches emphasize collaboration and collective effort. Addressing inequality is not the task of one group alone, but a shared goal. By working together, societies can create more inclusive and supportive environments.`
-},
-
-{
-label:"Ethical Responsibility",
-content:`Ethical responsibility involves considering the impact of actions on others and striving to promote fairness and justice. Feminist perspectives often emphasize the importance of care, empathy, and accountability. Ethical responsibility extends beyond individual behavior to include institutions and systems. By prioritizing fairness, individuals and societies can contribute to positive change.`
-},
-
-{
-label:"Global Cooperation",
-content:`Global cooperation involves working across countries and cultures to address shared challenges. Feminist movements often emphasize the importance of international collaboration in promoting equality. Issues such as education, health care, and human rights require coordinated efforts. By sharing knowledge and resources, global cooperation can support progress toward common goals.`
-}
-
-];
-
-let selected=[];
-let current=0;
-let total=1;
-let startTime;
-let timerInterval;
-
-function startGame(){
-
-total = parseInt(document.getElementById("taskCount").value);
-
-selected = [];
-
-// keep adding shuffled batches until we reach total
-while(selected.length < total){
-
-// fresh copy of texts
-let pool = [...texts];
-
-// shuffle (Fisher-Yates)
-for(let i = pool.length - 1; i > 0; i--){
-let j = Math.floor(Math.random() * (i + 1));
-[pool[i], pool[j]] = [pool[j], pool[i]];
-}
-
-// add only what we still need
-let remaining = total - selected.length;
-selected = selected.concat(pool.slice(0, remaining));
-
-}
-
-// start game
-startTime = Date.now();
-startTimer();
-
-switchScreen("play");
-loadText();
-
-}
-
-function switchScreen(id){
-document.querySelectorAll(".screen").forEach(s=>s.classList.remove("active"));
-document.getElementById(id).classList.add("active");
-}
-
-function loadText(){
-let text=selected[current].content;
-document.getElementById("textLabel").innerText = "TEXT: " + selected[current].label;
-let words=text.split(" ");
-
-let html=words.map(w=>`<span class='word'>${w}</span>`).join(" ");
-
-document.getElementById("textDisplay").innerHTML=html;
-document.getElementById("inputBox").value="";
-document.getElementById("nextBtn").style.display="none";
-}
-
-function checkTyping(){
-let input=document.getElementById("inputBox").value.trim();
-let words=input.split(" ");
-
-let spans=document.querySelectorAll(".word");
-let correct=true;
-
-spans.forEach((span,i)=>{
-span.classList.remove("correct","incorrect");
-
-if(words[i]==null){correct=false; return}
-
-if(words[i]===span.innerText){
-span.classList.add("correct");
-}else{
-span.classList.add("incorrect");
-correct=false;
-}
+window.addEventListener('paste', e => e.preventDefault());
+window.addEventListener('copy', e => e.preventDefault());
+window.addEventListener('cut', e => e.preventDefault());
+
+// Block common keyboard shortcuts that could be used to paste
+window.addEventListener('keydown', e => {
+  const forbidden = (e.ctrlKey || e.metaKey) && ['v','c','x','a','z','y'].includes(e.key.toLowerCase());
+  if (forbidden) e.preventDefault();
 });
 
-if(words.length!==spans.length) correct=false;
+// ── TEXTS (100 placeholders — replace with real content) ──
+const ALL_TEXTS = [
+  { label:"Wollstonecraft", content:`I do not wish women to have power over men, but over themselves. The mind has no gender, and the improvement of reason is the true foundation of virtue. When women are educated only to please others, their abilities are limited and their independence weakened. A society that values reason must also value the intellectual development of all its members. To deny women education is to deny them the tools needed for moral and personal growth. True equality cannot exist where one group is deliberately kept ignorant. The cultivation of the mind should be the goal of every individual, regardless of gender, and only through this can genuine virtue and independence be achieved.` },
+  { label:"Global Cooperation", content:`Global cooperation involves working across countries and cultures to address shared challenges. Feminist movements often emphasize the importance of international collaboration in promoting equality. Issues such as education, health care, and human rights require coordinated efforts. By sharing knowledge and resources, global cooperation can support progress toward common goals.` },
+  { label:"Placeholder 03", content:`The history of women's rights is a long and complex story spanning many centuries and cultures. Progress has been made through the tireless efforts of advocates who refused to accept inequality as inevitable. Each generation builds on the work of those who came before, expanding the boundaries of what is possible.` },
+  { label:"Placeholder 04", content:`Education is among the most powerful tools for achieving equality. When individuals have access to quality learning, they are better equipped to participate in society and pursue their goals. Barriers to education disproportionately affect women and girls in many parts of the world.` },
+  { label:"Placeholder 05", content:`The concept of intersectionality recognises that experiences of inequality are shaped by multiple overlapping identities. Race, class, gender, sexuality, and disability do not operate in isolation. Understanding how these factors combine is essential for building a more just and inclusive society.` },
+  { label:"Placeholder 06", content:`Reproductive rights are central to bodily autonomy and personal freedom. The ability to make decisions about one's own body is fundamental to human dignity. Policies that restrict reproductive choice have wide-ranging consequences for health, economic security, and equality.` },
+  { label:"Placeholder 07", content:`The wage gap between men and women persists across many industries and countries. Multiple factors contribute to this disparity, including occupational segregation, discrimination, and unpaid care work. Closing this gap requires both policy change and shifts in workplace culture.` },
+  { label:"Placeholder 08", content:`Domestic violence affects individuals across all demographics, though women bear a disproportionate burden. Support services, legal protections, and public education are all necessary components of an effective response. Changing cultural attitudes is as important as changing laws.` },
+  { label:"Placeholder 09", content:`Political representation matters because it shapes whose voices are heard in decision-making. When women and marginalised groups are underrepresented in government, their concerns may be overlooked. Increasing diversity in political institutions leads to more equitable outcomes.` },
+  { label:"Placeholder 10", content:`Care work, including childcare and eldercare, is often undervalued and unpaid. It falls disproportionately on women, limiting their economic opportunities. Recognising and fairly compensating care work is an important step toward genuine equality.` },
+  { label:"Placeholder 11", content:`Media representation influences how people see themselves and others. When certain groups are consistently absent or stereotyped in popular culture, it reinforces harmful norms. Diverse storytelling can challenge assumptions and expand understanding.` },
+  { label:"Placeholder 12", content:`Access to healthcare is a fundamental right that is unevenly distributed around the world. Women face particular challenges in accessing reproductive and maternal health services. Addressing these gaps requires both funding and the dismantling of systemic barriers.` },
+  { label:"Placeholder 13", content:`The suffragette movement fought for the right of women to vote and participate in democratic processes. Their struggles remind us that rights are not given freely but must be won through collective action. The legacy of these activists continues to inspire advocates today.` },
+  { label:"Placeholder 14", content:`Technology has created new opportunities for connection and advocacy, but also new forms of harassment and discrimination. Online spaces can amplify marginalised voices while also exposing them to coordinated abuse. Building safer digital environments is an ongoing challenge.` },
+  { label:"Placeholder 15", content:`Economic independence is closely linked to personal freedom and safety. When individuals depend entirely on others for financial support, their options become limited. Programs that support financial literacy, employment, and entrepreneurship can make a significant difference.` },
+  { label:"Placeholder 16", content:`Land rights are a critical issue in many parts of the world, particularly for women in rural communities. Without secure access to land, it is difficult to build economic stability or resist exploitation. Legal reforms and community education are both necessary to address this problem.` },
+  { label:"Placeholder 17", content:`Gender-based violence is a global crisis that demands urgent attention. It affects people in every country and community, crossing lines of class, culture, and religion. Prevention requires challenging the beliefs and power structures that enable abuse.` },
+  { label:"Placeholder 18", content:`The environmental movement and feminist theory share important common ground. Both challenge systems of domination and exploitation. Ecofeminism argues that the same structures that oppress women also drive environmental destruction.` },
+  { label:"Placeholder 19", content:`Access to safe and nutritious food is a basic human need that is not equally met. Women and children are disproportionately affected by food insecurity in many regions. Addressing hunger requires both immediate relief and structural change.` },
+  { label:"Placeholder 20", content:`Language shapes how we think about the world and our place in it. The words we use to describe gender, identity, and relationships evolve over time. Expanding our vocabulary can help us better understand and respect human diversity.` },
+  { label:"Placeholder 21", content:`Child marriage is a practice that denies young people their rights and limits their futures. It is particularly harmful to girls, who are often removed from education and forced into adult responsibilities before they are ready. Legal reform and community engagement are both essential responses.` },
+  { label:"Placeholder 22", content:`The right to education has been recognised internationally as fundamental to human dignity. Despite this, millions of children still lack access to quality schooling. Girls are often at a particular disadvantage due to cultural norms and economic barriers.` },
+  { label:"Placeholder 23", content:`Trade unions have historically played a role in advancing workers' rights and pay equity. The decline of union membership in many countries has coincided with rising inequality. Collective action remains one of the most effective tools for improving working conditions.` },
+  { label:"Placeholder 24", content:`Mental health is increasingly recognised as a public health priority. Women are more likely to seek help for mental health conditions, though they also face barriers to accessing quality care. Reducing stigma and expanding services are essential steps.` },
+  { label:"Placeholder 25", content:`The experience of migration and displacement is shaped by gender in important ways. Women refugees face particular risks, including gender-based violence and limited access to services. Humanitarian responses must be sensitive to these specific needs.` },
+  { label:"Placeholder 26", content:`Sport has been a site of both discrimination and empowerment for women. From exclusion from major competitions to the fight for equal prize money, the history of women in sport reflects broader social struggles. Progress has been made, but significant gaps remain.` },
+  { label:"Placeholder 27", content:`Indigenous women often experience compounded forms of discrimination rooted in both gender and colonial history. Their rights and knowledge have been systematically dismissed and suppressed. Genuine reconciliation requires centring indigenous women's voices and leadership.` },
+  { label:"Placeholder 28", content:`The criminal justice system interacts with gender in complex ways. Women are the fastest-growing incarcerated population in many countries. Reform efforts must address the specific pathways that lead women into contact with the justice system.` },
+  { label:"Placeholder 29", content:`Philosophy has long grappled with questions of justice, rights, and the good life. Feminist philosophers have challenged many foundational assumptions in these traditions. Their work has expanded and enriched philosophical discourse in important ways.` },
+  { label:"Placeholder 30", content:`Social media has become an important platform for activist organising and awareness-raising. Movements like MeToo and TimesUp gained momentum through online networks. These platforms also carry risks of surveillance, manipulation, and burnout.` },
+  { label:"Placeholder 31", content:`The relationship between religion and gender equality is complex and contested. Some religious traditions have been used to justify inequality, while others have inspired progressive reform. Many believers work within their traditions to advocate for justice.` },
+  { label:"Placeholder 32", content:`Housing security is foundational to wellbeing and dignity. Women fleeing violence often face immediate homelessness, which creates dangerous situations. Investment in safe and affordable housing is an essential component of any strategy to address inequality.` },
+  { label:"Placeholder 33", content:`The history of colonialism is deeply intertwined with gender oppression. Colonial powers imposed particular ideas about gender and family structure on colonised peoples. Decolonial feminist thinking challenges these legacies and centres the experiences of colonised women.` },
+  { label:"Placeholder 34", content:`Scientific research has historically excluded women as both subjects and contributors. This has led to gaps in knowledge that affect medical treatment and policy. Increasing diversity in research teams and including more women in studies are important correctives.` },
+  { label:"Placeholder 35", content:`The concept of consent is central to healthy relationships and legal frameworks alike. Clear and ongoing consent is the foundation of ethical interaction. Education about consent should begin early and continue throughout people's lives.` },
+  { label:"Placeholder 36", content:`Art and creative expression have always been important tools for social critique. Feminist artists have challenged conventional representations and created new visual languages. Their work invites us to see the world differently and question what we take for granted.` },
+  { label:"Placeholder 37", content:`Access to legal systems is unequal, and this inequality is shaped by gender. Women may face barriers including cost, language, social stigma, and distrust of authorities. Legal aid services and community advocates play a vital role in bridging these gaps.` },
+  { label:"Placeholder 38", content:`Motherhood is valued in rhetoric but often penalised in practice. Mothers face discrimination in employment and frequently shoulder disproportionate domestic labour. Policy changes like paid parental leave and subsidised childcare can begin to address this imbalance.` },
+  { label:"Placeholder 39", content:`Supply chains in global industries often depend on the underpaid labour of women in the Global South. Consumer choices, corporate accountability, and trade policy all shape conditions for these workers. Building fairer supply chains requires pressure at every level of the system.` },
+  { label:"Placeholder 40", content:`Gender nonconforming and transgender individuals face heightened risks of discrimination and violence. Legal protections and social acceptance are both essential for their safety and dignity. Inclusive policies benefit entire communities, not just those they specifically protect.` },
+  { label:"Placeholder 41", content:`The history of feminist theory includes many different traditions and debates. From liberal feminism to radical and socialist approaches, thinkers have disagreed about the causes of inequality and the best responses. These debates remain alive and generative today.` },
+  { label:"Placeholder 42", content:`Financial systems can either reinforce or challenge existing inequalities. Access to credit, banking, and investment is unevenly distributed across gender and racial lines. Microfinance and community lending initiatives have shown promise in reaching underserved populations.` },
+  { label:"Placeholder 43", content:`Youth activism has driven significant change throughout history. Young people bring energy, creativity, and a sense of urgency to social movements. Supporting and listening to young activists is essential for building the next generation of leadership.` },
+  { label:"Placeholder 44", content:`The relationship between feminism and disability justice is an important area of scholarship and activism. Disabled women face compounded forms of discrimination and are often left out of mainstream feminist discourse. Truly inclusive movements must attend to the full range of human experience.` },
+  { label:"Placeholder 45", content:`Menstrual health is a public health issue that is frequently ignored or stigmatised. Lack of access to menstrual products and facilities affects education, work, and dignity for many people around the world. Period poverty demands practical solutions and destigmatisation.` },
+  { label:"Placeholder 46", content:`The relationship between poverty and gender is well documented across many societies. Women are more likely to experience poverty, partly due to lower wages, unpaid care responsibilities, and discrimination. Anti-poverty strategies must be gender-sensitive to be effective.` },
+  { label:"Placeholder 47", content:`Community organising builds power from the ground up. Neighbourhood groups, mutual aid networks, and grassroots organisations have achieved significant change without large budgets or institutional backing. Local action and global solidarity reinforce each other.` },
+  { label:"Placeholder 48", content:`Beauty standards can be a source of both pleasure and harm. When standards are narrow and unattainable, they contribute to poor mental health and economic exploitation. Broadening definitions of beauty and challenging commercial pressure is part of broader cultural change.` },
+  { label:"Placeholder 49", content:`Women have made significant contributions to science throughout history, often without recognition. From Rosalind Franklin to Chien-Shiung Wu, their discoveries changed our understanding of the world. Acknowledging this history matters for inspiring future generations.` },
+  { label:"Placeholder 50", content:`Solidarity across difference is both challenging and necessary. Building coalitions that respect the specific experiences of different groups requires patience, humility, and genuine listening. The strongest movements are those that hold diversity as a strength.` },
+  { label:"Placeholder 51", content:`The concept of unpaid labour extends beyond domestic work to include emotional and community labour. Women are socialised to manage the feelings of others and maintain social bonds. Recognising this invisible work is a step toward valuing it appropriately.` },
+  { label:"Placeholder 52", content:`International law has increasingly addressed gender-based violence and discrimination. Treaties like CEDAW set standards that governments are expected to meet. Enforcement remains inconsistent, but these frameworks provide important tools for advocates.` },
+  { label:"Placeholder 53", content:`Workplace harassment and discrimination persist in many industries despite legal protections. Power imbalances and cultural norms enable abusive behaviour to continue. Creating accountable workplaces requires clear policies, accessible reporting, and real consequences.` },
+  { label:"Placeholder 54", content:`Literature has long been a space for exploring questions of identity, power, and belonging. Women writers have created rich traditions of narrative and poetry that reflect their experiences. These works deserve to be read and taught alongside those of their male contemporaries.` },
+  { label:"Placeholder 55", content:`Climate change is not gender neutral. Women in the Global South often bear the greatest burden of environmental disruption while contributing least to its causes. Gender-responsive climate policy is both more just and more effective.` },
+  { label:"Placeholder 56", content:`Mentorship and sponsorship can play a significant role in career advancement. Women and members of underrepresented groups often have less access to informal networks that facilitate promotion. Formalising support structures can help level the playing field.` },
+  { label:"Placeholder 57", content:`The social construction of gender shapes expectations from birth. Children learn early what is considered appropriate for their gender, which limits self-expression. Challenging rigid gender norms benefits everyone, regardless of how they identify.` },
+  { label:"Placeholder 58", content:`Access to clean water and sanitation has significant gender dimensions. Women and girls often travel long distances to collect water, limiting time for education and other activities. Infrastructure investment that considers gender can produce wide-ranging benefits.` },
+  { label:"Placeholder 59", content:`The study of history has traditionally centred male actors and experiences. Feminist historians have recovered the stories of women who were excluded from official narratives. This work enriches our understanding of the past and challenges assumptions about what counts as historical.` },
+  { label:"Placeholder 60", content:`Parity in leadership positions does not guarantee equitable outcomes on its own. Structural change and cultural shifts are also necessary. Representation matters, but it is the beginning of change, not the end goal.` },
+  { label:"Placeholder 61", content:`Sexual harassment in public spaces limits freedom of movement and expression for many people. Street harassment is widespread and often dismissed as trivial. Taking it seriously requires both individual accountability and changes in public culture.` },
+  { label:"Placeholder 62", content:`The experiences of Black women have been central to feminist theory and activism, even when not always acknowledged. Scholars like bell hooks and Kimberlé Crenshaw have made foundational contributions to understanding how race and gender intersect.` },
+  { label:"Placeholder 63", content:`Social norms around masculinity can be harmful to both men and the people around them. Rigid expectations about strength, emotional restraint, and dominance have real costs. Challenging toxic masculinity is part of building a healthier culture for everyone.` },
+  { label:"Placeholder 64", content:`Philanthropy and charitable giving can support important causes, but they also have limitations. Donor priorities do not always align with community needs. Long-term change requires systemic reform rather than reliance on individual generosity.` },
+  { label:"Placeholder 65", content:`Access to the internet and digital literacy are increasingly prerequisites for economic and civic participation. Gender gaps in technology access and use persist in many regions. Closing these gaps is essential for equitable development.` },
+  { label:"Placeholder 66", content:`The concept of bodily autonomy applies to many aspects of life beyond reproductive health. Control over one's own physical existence is foundational to freedom and dignity. Policies that restrict bodily autonomy must be examined critically.` },
+  { label:"Placeholder 67", content:`Traditional knowledge held by women in many communities has practical and cultural value that is rarely recognised. From agricultural practices to medicinal knowledge, this expertise deserves respect and protection. Intellectual property frameworks often fail to accommodate it.` },
+  { label:"Placeholder 68", content:`Migration for work is a significant global phenomenon with important gender dimensions. Women who migrate for domestic or care work are particularly vulnerable to exploitation. Stronger legal protections and bilateral agreements can improve their situation.` },
+  { label:"Placeholder 69", content:`Feminist economics challenges mainstream assumptions about rationality, markets, and value. It highlights the importance of care and reproduction to economic life. These insights have important implications for policy in areas like taxation and public spending.` },
+  { label:"Placeholder 70", content:`Community health workers, who are often women, play a vital role in delivering healthcare in under-resourced settings. Their work is frequently underpaid and undervalued by health systems. Investing in and fairly compensating these workers strengthens health outcomes for everyone.` },
+  { label:"Placeholder 71", content:`The relationship between sexuality and power is a subject of ongoing debate within feminist theory. Questions about agency, desire, and constraint are complex and do not have simple answers. Respecting the diversity of women's experiences is essential.` },
+  { label:"Placeholder 72", content:`Policing and criminal justice reform are increasingly recognised as feminist issues. Over-policing and under-protection affect women and marginalised communities in distinct ways. Meaningful reform requires listening to those most affected by the current system.` },
+  { label:"Placeholder 73", content:`Advertising shapes cultural values and perceptions of gender. Campaigns that rely on stereotyping or objectification normalise harmful ideas. The industry has the power to challenge as well as reinforce conventions, and is increasingly held accountable for its choices.` },
+  { label:"Placeholder 74", content:`Peace and security are linked to gender equality in well-documented ways. Societies with greater gender equity tend to be more peaceful. Including women in peace processes leads to more durable agreements and better outcomes.` },
+  { label:"Placeholder 75", content:`The wellbeing of older women is shaped by a lifetime of labour market disadvantage, caregiving responsibilities, and lower savings. Pension systems often fail to account for these realities. Age and gender together create particular vulnerabilities that policy must address.` },
+  { label:"Placeholder 76", content:`Volunteerism and unpaid civic work are essential to community life but are not equally distributed. Women contribute the majority of volunteer hours in many societies. Recognising this contribution and sharing it more equitably is important for sustainability.` },
+  { label:"Placeholder 77", content:`Fashion and clothing have always been sites of gender expression and social signalling. What people are permitted to wear has historically been policed, particularly for women. The politics of dress reflect deeper tensions about identity and social control.` },
+  { label:"Placeholder 78", content:`Access to justice for survivors of gender-based violence is often inadequate. Reporting rates are low, conviction rates are lower, and secondary trauma in legal proceedings is common. Trauma-informed approaches and specialist courts can improve outcomes.` },
+  { label:"Placeholder 79", content:`The history of psychiatry includes troubling examples of the pathologisation of women's behaviour and emotion. Diagnoses like hysteria reflected cultural assumptions rather than medical science. Critical examination of these histories is important for contemporary practice.` },
+  { label:"Placeholder 80", content:`Food production and agriculture depend heavily on women's labour, particularly in the Global South. Yet women farmers often have less access to resources, land, and markets than their male counterparts. Addressing this gap could significantly improve food security.` },
+  { label:"Placeholder 81", content:`Public infrastructure, including transport, lighting, and urban design, affects safety and access differently across genders. Cities that are designed with diverse users in mind are safer and more functional for everyone. Gender-responsive urban planning is gaining traction.` },
+  { label:"Placeholder 82", content:`The concept of the second shift describes the unpaid domestic work that many women perform after their paid working hours. This double burden has significant effects on health, wellbeing, and career advancement. Sharing domestic labour more equally is a matter of justice.` },
+  { label:"Placeholder 83", content:`Feminist approaches to international development have challenged top-down models that ignore local knowledge and community leadership. Effective development work centres the agency of those being supported. Listening is as important as resourcing.` },
+  { label:"Placeholder 84", content:`The treatment of women in historical narratives reveals as much about the historians as about the past. Women have been erased, diminished, or romanticised rather than portrayed as full historical actors. Correcting this requires both new research and different ways of asking historical questions.` },
+  { label:"Placeholder 85", content:`Social media influencers and online celebrities shape aspirations and norms, particularly for young people. Their power to promote both harmful and positive messages is significant. Media literacy education helps people engage critically with the content they consume.` },
+  { label:"Placeholder 86", content:`Feminist jurisprudence questions whether law is truly neutral and asks whose interests legal systems actually serve. Gender bias can be embedded in laws, legal processes, and judicial decision-making. Reform requires both rule changes and cultural shifts within legal institutions.` },
+  { label:"Placeholder 87", content:`Poverty is not simply a lack of income but a deprivation of capability and opportunity. Amartya Sen's capability approach offers a framework for thinking about wellbeing that goes beyond material resources. This perspective has been developed by feminist scholars in important ways.` },
+  { label:"Placeholder 88", content:`International women's conferences, such as those in Beijing and Mexico City, have been important milestones in the global struggle for gender equality. They brought together activists, policymakers, and scholars to articulate shared goals. The documents produced continue to shape advocacy and policy.` },
+  { label:"Placeholder 89", content:`The experiences of women in conflict zones reflect both particular vulnerabilities and remarkable resilience. Sexual violence has been used as a weapon of war in many conflicts. Accountability for these crimes and support for survivors are urgent imperatives.` },
+  { label:"Placeholder 90", content:`Queer theory and feminism have a complex and productive relationship. Both challenge binary thinking about gender and sexuality while sometimes disagreeing about priorities and approaches. Their interaction has generated important insights for understanding identity and power.` },
+  { label:"Placeholder 91", content:`The history of labour organising includes important examples of women's collective action. Garment workers, domestic workers, and farmworkers have all mounted significant campaigns for dignity and fair pay. These histories deserve to be remembered and celebrated.` },
+  { label:"Placeholder 92", content:`Public health emergencies, including pandemics, interact with gender in important ways. Women make up the majority of health workers and bore disproportionate burdens of care during the COVID-19 pandemic. Gender-sensitive emergency planning is essential for effective response.` },
+  { label:"Placeholder 93", content:`Children's books and toys shape early ideas about gender, capability, and belonging. When children see themselves represented in positive and diverse ways, it expands their sense of what is possible. Critically examining children's media is a part of feminist parenting and education.` },
+  { label:"Placeholder 94", content:`The right to peaceful protest and freedom of assembly is essential to democratic participation. Women and feminist activists have frequently been targeted by surveillance, arrest, and violence. Protecting civil liberties protects the ability to advocate for all rights.` },
+  { label:"Placeholder 95", content:`Feminist standpoint theory argues that knowledge is shaped by social position. Those who experience oppression may have insights unavailable to those who do not. This perspective challenges claims to universal objectivity and insists on the importance of diverse voices in knowledge production.` },
+  { label:"Placeholder 96", content:`The global care economy encompasses healthcare, education, childcare, and domestic services. It is largely feminised and frequently undervalued. Recognising its centrality to economic and social life is essential for building more equitable systems.` },
+  { label:"Placeholder 97", content:`Storytelling is one of the oldest forms of human communication and remains one of the most powerful. Personal narratives build empathy and challenge stereotypes. Creating space for diverse stories to be told and heard is an act of social transformation.` },
+  { label:"Placeholder 98", content:`The science of gender and sex is more complex than binary frameworks suggest. Biological sex exists on a spectrum, and gender identity is shaped by both biology and culture. Embracing this complexity challenges rigid categories and opens space for fuller human expression.` },
+  { label:"Placeholder 99", content:`Feminist movements have always been diverse, sometimes contentious, and always evolving. Internal debates about priorities, tactics, and inclusion have at times been painful but also productive. A movement that grapples seriously with its own contradictions is stronger for it.` },
+  { label:"Placeholder 100", content:`The future of gender equality depends on the choices and actions of people across every part of society. Policy matters, but so does culture, relationships, and everyday behaviour. The work of building a more just world is ongoing and belongs to everyone.` }
+];
 
-if(correct){
-document.getElementById("nextBtn").style.display="inline-block";
+// State
+let selected = [];
+let current = 0;
+let total = 1;
+let startTime;
+let taskStartTime;
+let timerInterval;
+let taskErrors = 0;
+let taskErrorCounted = {};
+let totalErrors = 0;
+let taskWpms = [];
+let pool = [];
+
+function adjustCount(delta) {
+  const el = document.getElementById('taskCount');
+  let v = parseInt(el.value) + delta;
+  if (v < 1) v = 1;
+  el.value = v;
 }
+
+function shuffleArray(arr) {
+  const a = [...arr];
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
 }
 
-function nextText(){
-current++;
-updateProgress();
-
-if(current>=total){
-endGame();
-}else{
-loadText();
-}
+function buildPool(needed) {
+  let result = [];
+  while (result.length < needed) {
+    const shuffled = shuffleArray(ALL_TEXTS);
+    result = result.concat(shuffled.slice(0, Math.min(shuffled.length, needed - result.length)));
+  }
+  return result;
 }
 
-function updateProgress(){
-let percent=(current/total)*100;
-document.getElementById("progressFill").style.width=percent+"%";
+function startGame() {
+  total = Math.max(1, parseInt(document.getElementById('taskCount').value) || 5);
+  selected = buildPool(total);
+  current = 0;
+  totalErrors = 0;
+  taskWpms = [];
+
+  startTime = Date.now();
+  startTimer();
+  switchScreen('play');
+  loadText();
 }
 
-function startTimer(){
-
-timerInterval=setInterval(()=>{
-let elapsed=Math.floor((Date.now()-startTime)/1000);
-
-let h=String(Math.floor(elapsed/3600)).padStart(2,'0');
-let m=String(Math.floor((elapsed%3600)/60)).padStart(2,'0');
-let s=String(elapsed%60).padStart(2,'0');
-
-document.getElementById("timer").innerText=`${h}:${m}:${s}`;
-
-},1000);
+function switchScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
 }
 
-function endGame(){
-clearInterval(timerInterval);
+function loadText() {
+  const text = selected[current].content;
+  document.getElementById('textLabel').innerText = selected[current].label;
+  document.getElementById('progressText').innerText = current + ' / ' + total;
 
-let elapsed=document.getElementById("timer").innerText;
-let id=Math.floor(100000000+Math.random()*900000000);
+  const words = text.split(' ');
+  document.getElementById('textDisplay').innerHTML = words.map((w, i) =>
+    `<span class="word" id="w${i}">${w}</span>`
+  ).join(' ');
 
-let list=selected.map(t=>t.label).join(", ");
+  document.getElementById('inputBox').value = '';
+  document.getElementById('inputBox').disabled = false;
+  document.getElementById('inputBox').focus();
+  document.getElementById('nextBtn').classList.remove('ready');
 
-let html=`
-Total Time Spent: ${elapsed}<br>
-Tasks Typed: ${total}<br>
-Game ID: ${id}<br><br>
-<div class='small'>${list}</div>
-`;
+  taskErrors = 0;
+  taskErrorCounted = {};
+  taskStartTime = Date.now();
 
-document.getElementById("results").innerHTML=html;
-
-switchScreen("end");
+  document.getElementById('liveWpm').innerText = '—';
+  document.getElementById('liveErrors').innerText = '0';
+  document.getElementById('liveChars').innerText = '0';
+  document.getElementById('liveAccuracy').innerText = '—';
+  updateProgress();
 }
 
+function handleKey(e) {
+  if (e.key === 'Enter') {
+    const btn = document.getElementById('nextBtn');
+    if (btn.classList.contains('ready')) {
+      e.preventDefault();
+      nextText();
+    } else {
+      e.preventDefault();
+    }
+  }
+}
+
+function checkTyping() {
+  const input = document.getElementById('inputBox').value;
+  const typedWords = input.split(' ');
+  const spans = document.querySelectorAll('.word');
+
+  const currentWordIdx = typedWords.length - 1;
+
+  let allCorrect = true;
+
+  spans.forEach((span, i) => {
+    span.classList.remove('correct', 'incorrect', 'cursor-on');
+
+    if (i > currentWordIdx || typedWords[i] === undefined) {
+      allCorrect = false;
+      return;
+    }
+
+    const typed = typedWords[i];
+    const target = span.innerText;
+
+    if (i === currentWordIdx) {
+      // Current word being typed — check character by character
+      let hasError = false;
+      for (let c = 0; c < typed.length; c++) {
+        if (typed[c] !== target[c]) {
+          hasError = true;
+          break;
+        }
+      }
+      if (hasError) {
+        span.classList.add('incorrect');
+        if (!taskErrorCounted[i]) {
+          taskErrorCounted[i] = true;
+          taskErrors++;
+        }
+      }
+
+      // If this is the last word and it matches exactly, mark complete
+      const isLastWord = i === spans.length - 1;
+      if (isLastWord && typed === target) {
+        span.classList.add('correct');
+        // allCorrect stays true if everything before was correct
+      } else {
+        span.classList.add('cursor-on');
+        allCorrect = false;
+      }
+      return;
+    }
+
+    // Committed word — compare fully
+    if (typed === target) {
+      span.classList.add('correct');
+    } else {
+      span.classList.add('incorrect');
+      allCorrect = false;
+      if (!taskErrorCounted[i]) {
+        taskErrorCounted[i] = true;
+        taskErrors++;
+      }
+    }
+  });
+
+  if (typedWords.length !== spans.length) allCorrect = false;
+
+  // live stats
+  const elapsed = (Date.now() - taskStartTime) / 1000 / 60;
+  const typedChars = input.replace(/\s/g, '').length;
+  const wordsTyped = Math.max(0, typedWords.length - 1);
+  const wpm = elapsed > 0.05 ? Math.round(wordsTyped / elapsed) : 0;
+
+  document.getElementById('liveWpm').innerText = elapsed > 0.05 ? wpm : '—';
+  document.getElementById('liveErrors').innerText = taskErrors;
+  document.getElementById('liveChars').innerText = typedChars;
+
+  const committedCorrect = Array.from(spans).filter(s => s.classList.contains('correct')).length;
+  const acc = wordsTyped > 0 ? Math.round((committedCorrect / wordsTyped) * 100) : 100;
+  document.getElementById('liveAccuracy').innerText = elapsed > 0.05 ? acc + '%' : '—';
+
+  if (allCorrect) {
+    document.getElementById('nextBtn').classList.add('ready');
+  } else {
+    document.getElementById('nextBtn').classList.remove('ready');
+  }
+}
+
+function nextText() {
+  if (!document.getElementById('nextBtn').classList.contains('ready')) return;
+  // record task stats
+  const taskElapsed = (Date.now() - taskStartTime) / 1000 / 60;
+  const wordCount = selected[current].content.split(' ').length;
+  const taskWpm = taskElapsed > 0 ? Math.round(wordCount / taskElapsed) : 0;
+  taskWpms.push(taskWpm);
+  totalErrors += taskErrors;
+
+  // show result row
+  const area = document.getElementById('taskResultsArea');
+  const row = document.createElement('div');
+  row.className = 'task-result';
+  row.innerHTML = `
+    <div class="tr-label">${selected[current].label}</div>
+    <div class="tr-stats">
+      <div class="tr-stat">
+        <span class="tv pink">${taskWpm}</span>
+        <span class="tl">WPM</span>
+      </div>
+      <div class="tr-stat">
+        <span class="tv red">${taskErrors}</span>
+        <span class="tl">Errors</span>
+      </div>
+    </div>
+  `;
+  area.prepend(row);
+
+  current++;
+  updateProgress();
+
+  if (current >= total) {
+    endGame();
+  } else {
+    loadText();
+  }
+}
+
+function updateProgress() {
+  const pct = (current / total) * 100;
+  document.getElementById('progressFill').style.width = pct + '%';
+  document.getElementById('progressText').innerText = current + ' / ' + total;
+}
+
+function startTimer() {
+  timerInterval = setInterval(() => {
+    const elapsed = Math.floor((Date.now() - startTime) / 1000);
+    const h = String(Math.floor(elapsed / 3600)).padStart(2, '0');
+    const m = String(Math.floor((elapsed % 3600) / 60)).padStart(2, '0');
+    const s = String(elapsed % 60).padStart(2, '0');
+    document.getElementById('timer').innerText = `${h}:${m}:${s}`;
+  }, 1000);
+}
+
+function endGame() {
+  clearInterval(timerInterval);
+
+  const elapsed = document.getElementById('timer').innerText;
+  const avgWpm = taskWpms.length > 0 ? Math.round(taskWpms.reduce((a, b) => a + b, 0) / taskWpms.length) : 0;
+  const id = Math.floor(100000000 + Math.random() * 900000000);
+
+  document.getElementById('endTime').innerText = elapsed;
+  document.getElementById('endWpm').innerText = avgWpm;
+  document.getElementById('endErrors').innerText = totalErrors;
+  document.getElementById('endTasks').innerText = total;
+  document.getElementById('endId').innerText = 'Session ID: ' + id;
+  document.getElementById('endSubtitle').innerText = total + ' text' + (total !== 1 ? 's' : '') + ' completed';
+  document.getElementById('endTextList').innerText = selected.map(t => t.label).join(' · ');
+
+  switchScreen('end');
+}
+
+function restartGame() {
+  document.getElementById('taskResultsArea').innerHTML = '';
+  document.getElementById('timer').innerText = '00:00:00';
+  updateProgress();
+  switchScreen('start');
+}
 </script>
-
 </body>
 </html>
