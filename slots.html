@@ -28,10 +28,59 @@ html, body { width:100%; height:100%; overflow:hidden; background:var(--red-deep
 .screen.active{display:flex;}
 
 /* ── START ── */
-#screen-start{background:radial-gradient(ellipse at center,var(--red-mid) 0%,var(--red-deep) 80%);flex-direction:column;align-items:center;justify-content:center;padding:20px;overflow-y:auto;}
-.start-title{font-family:'Bebas Neue';font-size:clamp(3rem,7vw,6rem);color:var(--gold);letter-spacing:.15em;text-shadow:0 0 30px rgba(212,160,23,.6),0 0 60px rgba(212,160,23,.3);line-height:1;text-align:center;}
-.start-subtitle{font-size:.72em;color:var(--dim);letter-spacing:.3em;text-align:center;margin-bottom:22px;}
-.start-panel{background:rgba(0,0,0,.55);border:1px solid var(--gold-dim);padding:26px 34px;width:min(460px,95vw);display:flex;flex-direction:column;gap:16px;}
+#screen-start{
+  background:radial-gradient(ellipse at center,var(--red-mid) 0%,var(--red-deep) 80%);
+  flex-direction:row;
+  align-items:stretch;
+  justify-content:center;
+  gap:0;
+  padding:0;
+  overflow:hidden;
+}
+
+/* Start screen outer wrappers — mirror game screen layout */
+.start-outer{
+  flex:1 1 0;
+  display:flex;
+  align-items:stretch;
+  min-width:0;
+  overflow:hidden;
+}
+.start-outer.left{ justify-content:flex-end; }
+.start-outer.right{ justify-content:flex-start; }
+
+/* Start screen how-to panel — LEFT */
+.start-how-panel{
+  width:min(175px,18vw);
+  background:rgba(0,0,0,.5);
+  border:1px solid var(--gold-dim);
+  border-right:none;
+  padding:10px;
+  display:flex;
+  flex-direction:column;
+  font-size:.65em;
+  overflow-y:auto;
+}
+.start-how-panel .instr-title{font-family:'Bebas Neue';font-size:1.3em;color:var(--gold);letter-spacing:.2em;text-align:center;border-bottom:1px solid var(--gold-dim);padding-bottom:6px;margin-bottom:8px;}
+.start-how-panel .instr-section{font-size:.75em;color:var(--gold-dim);letter-spacing:.16em;text-transform:uppercase;margin:7px 0 3px;}
+.start-how-panel .instr-text{color:var(--dim);line-height:1.5;margin-bottom:4px;}
+.start-how-panel .instr-divider{border:none;border-top:1px solid var(--gold-dim);margin:7px 0;}
+
+/* Start screen center column */
+.start-center{
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  flex:0 0 auto;
+  width:min(500px,54vw);
+  padding:20px 16px;
+  overflow-y:auto;
+  gap:14px;
+}
+.start-title{font-family:'Bebas Neue';font-size:clamp(2.2rem,5vw,4.5rem);color:var(--gold);letter-spacing:.15em;text-shadow:0 0 30px rgba(212,160,23,.6),0 0 60px rgba(212,160,23,.3);line-height:1;text-align:center;}
+.start-subtitle{font-size:.72em;color:var(--dim);letter-spacing:.3em;text-align:center;}
+.start-panel{background:rgba(0,0,0,.55);border:1px solid var(--gold-dim);padding:26px 34px;width:100%;display:flex;flex-direction:column;gap:16px;}
 .field-label{font-size:.7em;color:var(--dim);letter-spacing:.2em;text-transform:uppercase;margin-bottom:5px;}
 .field-row{display:flex;flex-direction:column;}
 input[type="text"],select{background:#080002;border:1px solid var(--gold-dim);color:var(--cream);font-family:'Share Tech Mono',monospace;font-size:1em;padding:8px 12px;outline:none;width:100%;letter-spacing:.1em;}
@@ -43,7 +92,27 @@ input[type="range"]::-webkit-slider-thumb{-webkit-appearance:none;width:18px;hei
 .slider-val{font-family:'Bebas Neue';font-size:1.6em;color:var(--gold-light);min-width:36px;text-align:right;}
 .btn-proceed{background:var(--gold);color:#080002;border:none;font-family:'Bebas Neue';font-size:1.6em;letter-spacing:.2em;padding:12px 0;cursor:pointer;width:100%;transition:background .15s;margin-top:4px;}
 .btn-proceed:hover{background:var(--gold-light);}
-.instructions{font-size:.68em;color:var(--dim);line-height:1.6;max-width:420px;text-align:center;margin-bottom:10px;}
+
+/* Start screen stakes panel — RIGHT */
+.start-stakes-panel{
+  width:min(175px,18vw);
+  background:rgba(0,0,0,.58);
+  border:1px solid var(--gold-dim);
+  border-left:none;
+  padding:10px;
+  display:flex;
+  flex-direction:column;
+  font-size:.65em;
+  overflow-y:auto;
+}
+.stakes-title{font-family:'Bebas Neue';font-size:1.35em;color:var(--gold);letter-spacing:.2em;text-align:center;border-bottom:1px solid var(--gold-dim);padding-bottom:7px;margin-bottom:8px;}
+.stake-entry{display:flex;flex-direction:column;gap:4px;padding:8px 0;border-bottom:1px solid rgba(255,255,255,.05);}
+.stake-entry:last-child{border-bottom:none;}
+.stake-entry-header{display:flex;align-items:center;gap:7px;}
+.stake-entry-icon{font-size:1.4em;line-height:1;flex-shrink:0;}
+.stake-entry-name{font-family:'Bebas Neue';font-size:1.15em;color:var(--gold-light);letter-spacing:.12em;}
+.stake-entry-desc{color:var(--dim);font-size:.88em;line-height:1.45;padding-left:2px;}
+.stake-divider{border:none;border-top:1px solid var(--gold-dim);margin:4px 0;}
 
 /* ── GAME ── */
 #screen-game{
@@ -222,7 +291,22 @@ input[type="range"]::-webkit-slider-thumb{-webkit-appearance:none;width:18px;hei
 #win-overlay.jackpot-win .win-text{animation:win-flash-jackpot .28s ease infinite alternate;}
 @keyframes win-flash-jackpot{from{color:#ff00ff;text-shadow:0 0 30px #ff00ff,0 0 60px #ff00ff;}to{color:var(--neon-yellow);text-shadow:0 0 30px var(--neon-yellow);}}
 
-/* End screen */
+/* One More Spin overlay */
+#one-more-overlay{position:fixed;inset:44px 0 36px 0;background:rgba(0,0,0,.88);z-index:500;display:none;flex-direction:column;align-items:center;justify-content:center;}
+#one-more-overlay.show{display:flex;}
+.oms-box{background:linear-gradient(180deg,#280008 0%,#160003 100%);border:2px solid var(--gold);padding:36px 48px;display:flex;flex-direction:column;align-items:center;gap:10px;box-shadow:0 0 60px rgba(212,160,23,.25);}
+.oms-icon{font-size:3em;animation:win-bounce .4s ease infinite alternate;}
+.oms-heading{font-family:'Bebas Neue';font-size:2em;color:var(--gold);letter-spacing:.3em;text-shadow:0 0 16px rgba(212,160,23,.6);}
+.oms-sub{font-size:.72em;color:var(--dim);letter-spacing:.12em;text-align:center;}
+.oms-question{font-family:'Bebas Neue';font-size:1.6em;color:var(--cream);letter-spacing:.2em;margin-top:8px;}
+.oms-buttons{display:flex;gap:18px;margin-top:10px;}
+.oms-btn{font-family:'Bebas Neue';font-size:1.6em;letter-spacing:.25em;padding:10px 44px;border:2px solid;cursor:pointer;transition:all .12s;}
+.oms-yes{background:var(--gold);color:#080002;border-color:var(--gold-light);}
+.oms-yes:hover{background:var(--gold-light);}
+.oms-no{background:transparent;color:var(--dim);border-color:var(--gold-dim);}
+.oms-no:hover{color:var(--gold);border-color:var(--gold);background:rgba(212,160,23,.08);}
+
+
 #screen-end{background:radial-gradient(ellipse at center,#200008 0%,var(--red-deep) 100%);flex-direction:column;align-items:center;justify-content:center;padding:20px;gap:14px;overflow-y:auto;}
 .end-heading{font-family:'Bebas Neue';font-size:clamp(2rem,5vw,4.2rem);color:var(--gold);letter-spacing:.2em;text-align:center;text-shadow:0 0 20px rgba(212,160,23,.5);}
 .end-panel{background:rgba(0,0,0,.6);border:1px solid var(--gold-dim);padding:18px 26px;width:min(440px,95vw);display:flex;flex-direction:column;}
@@ -259,33 +343,121 @@ input[type="range"]::-webkit-slider-thumb{-webkit-appearance:none;width:18px;hei
   <div class="win-sub"  id="win-sub"></div>
 </div>
 
+<!-- ONE MORE SPIN OVERLAY -->
+<div id="one-more-overlay">
+  <div class="oms-box">
+    <div class="oms-icon">🎰</div>
+    <div class="oms-heading">QUOTA COMPLETE</div>
+    <div class="oms-sub">You've completed your minimum required spins.</div>
+    <div class="oms-question">One more spin?</div>
+    <div class="oms-buttons">
+      <button class="oms-btn oms-yes" id="oms-yes">YES</button>
+      <button class="oms-btn oms-no"  id="oms-no">NO</button>
+    </div>
+  </div>
+</div>
+
 <!-- START -->
 <div class="screen active" id="screen-start">
-  <div class="start-title">PERFECTION'S SLOT MACHINE</div>
-  <p class="instructions">Enter the codeword Perfection assigned you, the number of spins you want to make, and which of the 3 stakes you will wager.</p>
-  <div class="start-panel">
-    <div class="field-row">
-      <div class="field-label">Codeword</div>
-      <input type="text" id="input-codeword" placeholder="ENTER CODEWORD" autocomplete="off" spellcheck="false">
+
+  <!-- HOW TO PLAY — LEFT -->
+  <div class="start-outer left">
+    <div class="start-how-panel">
+      <div class="instr-title">HOW TO PLAY</div>
+
+      <div class="instr-section">Overview</div>
+      <p class="instr-text">Click the button to spin the wheel! Every click guarantees a prize, so the reels will keep spinning until you win.</p>
+
+      <hr class="instr-divider">
+      <div class="instr-section">Prizes</div>
+      <p class="instr-text">As you play, the number of prizes you win will accumulate below the screen. Some are good, some are better! See the prize board for details.</p>
+
+      <hr class="instr-divider">
+      <div class="instr-section">Finishing/Proof</div>
+      <p class="instr-text">Once you finish all your spins you will be shown a summary of the prizes you won. Send a screenshot to Perfection as proof and follow the instructions to claim your prizes.</p>
+
+      <hr class="instr-divider">
+      <div class="instr-section">Codeword</div>
+      <p class="instr-text">Each game is verified by a codeword so Perfection can check if you're cheating. Refreshing won't help — accept whatever results you are given!</p>
     </div>
-    <div class="field-row">
-      <div class="field-label">Stake</div>
-      <select id="input-stake">
-        <option value="" disabled selected>— SELECT STAKE —</option>
-        <option value="lines">LINES</option>
-        <option value="mindbreaker">MINDBREAKER</option>
-        <option value="clock">CLOCK</option>
-      </select>
-    </div>
-    <div class="field-row">
-      <div class="field-label">Number of Spins <span style="color:var(--dim);font-size:.85em">(ASSIGN QUOTA)</span></div>
-      <div class="slider-row">
-        <input type="range" id="input-spins" min="1" max="100" value="10">
-        <div class="slider-val" id="spins-display">10</div>
-      </div>
-    </div>
-    <button class="btn-proceed" id="btn-start">COMMENCE</button>
   </div>
+
+  <!-- CENTER -->
+  <div class="start-center">
+    <div class="start-title">PERFECTION'S SLOT MACHINE</div>
+    <p class="start-subtitle">ENTER YOUR DETAILS BELOW</p>
+    <div class="start-panel">
+      <div class="field-row">
+        <div class="field-label">Codeword</div>
+        <input type="text" id="input-codeword" placeholder="ENTER CODEWORD" autocomplete="off" spellcheck="false">
+      </div>
+      <div class="field-row">
+        <div class="field-label">Stake</div>
+        <select id="input-stake">
+          <option value="" disabled selected>— SELECT STAKE —</option>
+          <option value="lines">LINES</option>
+          <option value="mindbreaker">MINDBREAKER</option>
+          <option value="clock">CLOCK</option>
+          <option value="mixed">MIXED</option>
+        </select>
+      </div>
+      <div class="field-row">
+        <div class="field-label">Minimum Required Spins <span style="color:var(--dim);font-size:.85em">(QUOTA)</span></div>
+        <div class="slider-row">
+          <input type="range" id="input-spins" min="1" max="100" value="10">
+          <div class="slider-val" id="spins-display">10</div>
+        </div>
+      </div>
+      <button class="btn-proceed" id="btn-start">COMMENCE</button>
+    </div>
+  </div>
+
+  <!-- STAKES INFO — RIGHT -->
+  <div class="start-outer right">
+    <div class="start-stakes-panel">
+      <div class="stakes-title">THE STAKES</div>
+
+      <div class="stake-entry">
+        <div class="stake-entry-header">
+          <div class="stake-entry-icon">✏️</div>
+          <div class="stake-entry-name">LINES</div>
+        </div>
+        <div class="stake-entry-desc">Wager your time by writing lines for Perfection if you lose!</div>
+      </div>
+
+      <hr class="stake-divider">
+
+      <div class="stake-entry">
+        <div class="stake-entry-header">
+          <div class="stake-entry-icon">🧠</div>
+          <div class="stake-entry-name">MINDBREAKER</div>
+        </div>
+        <div class="stake-entry-desc">Wager your time by completing mentally exhausting tasks under time pressure.</div>
+      </div>
+
+      <hr class="stake-divider">
+
+      <div class="stake-entry">
+        <div class="stake-entry-header">
+          <div class="stake-entry-icon">⏱️</div>
+          <div class="stake-entry-name">CLOCK</div>
+        </div>
+        <div class="stake-entry-desc">Wager your time by sitting and watching Perfection's clock.</div>
+      </div>
+
+      <hr class="stake-divider">
+
+      <div class="stake-entry">
+        <div class="stake-entry-header">
+          <div class="stake-entry-icon">🎲</div>
+          <div class="stake-entry-name" style="color:var(--neon-yellow)">MIXED</div>
+        </div>
+        <div class="stake-entry-desc">The ultimate gamble. Negative prizes are drawn from <em style="color:var(--cream)">all three</em> categories at random — Lines, Mindbreaker, and Clock. You could end up owing a little of everything. High risk, high chaos.</div>
+      </div>
+
+    </div>
+  </div>
+
 </div>
 
 <!-- GAME -->
@@ -407,14 +579,19 @@ const JACKPOT_PRIZES=[
 ];
 
 function buildActiveSymbols(stake){
-  return [...POSITIVE_PRIZES,...NEGATIVE_PRIZES[stake],...BONUS_PRIZES,...JACKPOT_PRIZES];
+  const negs = stake === 'mixed'
+    ? [...NEGATIVE_PRIZES.lines, ...NEGATIVE_PRIZES.mindbreaker, ...NEGATIVE_PRIZES.clock]
+    : NEGATIVE_PRIZES[stake];
+  return [...POSITIVE_PRIZES,...negs,...BONUS_PRIZES,...JACKPOT_PRIZES];
 }
 
 // ── SPIN SEQUENCE ──
 function buildSpinSequence(codeword,numSpins,stake){
   const seed=hashStr(codeword.toUpperCase().trim());
   const rng=makePRNG(seed);
-  const negs=NEGATIVE_PRIZES[stake];
+  const negs = stake === 'mixed'
+    ? [...NEGATIVE_PRIZES.lines, ...NEGATIVE_PRIZES.mindbreaker, ...NEGATIVE_PRIZES.clock]
+    : NEGATIVE_PRIZES[stake];
   const seq=[];let safety=0;
   while(seq.length<numSpins&&safety++<20000){
     const r1=rng();
@@ -515,14 +692,8 @@ function makeSymCard(sym) {
 }
 
 // ── REEL ANIMATION ──
-// Cards scroll upward: strip translateY goes from 0 to negative.
-// Symbols enter from the bottom, exit at the top — matching a real slot machine.
-// Speed is kept low enough (px/s) that each card is visible as it passes,
-// avoiding the stroboscopic "wrong direction" illusion.
+const SPIN_SPEED_PX_PER_S = 2200;
 
-const SPIN_SPEED_PX_PER_S = 2200; // slow enough to read direction clearly
-
-// One permanent <style> element per reel — no cross-reel keyframe conflicts
 const reelStyleEls = [0, 1, 2].map(i => {
   const el = document.createElement('style');
   el.id = `__reel_style_${i}__`;
@@ -530,8 +701,6 @@ const reelStyleEls = [0, 1, 2].map(i => {
   return el;
 });
 
-// Motion-blur overlay shown during fast phase to sell the speed feel
-// without the stroboscopic direction illusion
 function setMotorRunning(reelIdx, on) {
   const rc = document.getElementById(`reel-c${reelIdx}`);
   if (on) {
@@ -550,35 +719,28 @@ function animateReelScroll(reelIdx, finalSym, symbolPool, totalDurationMs) {
   return new Promise(resolve => {
     const strip = document.getElementById(`reel-strip${reelIdx}`);
 
-    // Hard reset
     strip.style.animation = 'none';
     strip.style.transition = 'none';
     strip.style.transform = 'translateY(0)';
     strip.innerHTML = '';
     void strip.offsetHeight;
 
-    // ── Timing split ──
     const warmupMs = totalDurationMs * 0.55;
     const landMs   = totalDurationMs * 0.45;
 
-    // ── Build card strip ──
-    // Warmup: enough cards to fill the fast-phase travel distance
-    // Landing: 12 visible cards of deceleration, then the final symbol
     const warmupPx    = Math.round(SPIN_SPEED_PX_PER_S * (warmupMs / 1000));
     const warmupCards = Math.ceil(warmupPx / CARD_H) + 2;
     const landCards   = 12;
-    const totalCards  = warmupCards + landCards + 1; // last = finalSym
+    const totalCards  = warmupCards + landCards + 1;
 
     for (let i = 0; i < warmupCards + landCards; i++) {
       strip.appendChild(makeSymCard(symbolPool[Math.floor(Math.random() * symbolPool.length)]));
     }
     strip.appendChild(makeSymCard(finalSym));
 
-    // Full scroll to land finalSym centred in the 140px window
     const fullScrollPx = (totalCards - 1) * CARD_H;
     const landScrollPx = fullScrollPx - warmupPx;
 
-    // ── Tick sounds ──
     const numTicks = Math.ceil(totalDurationMs / 130);
     let ticksDone = 0;
     const tickTimer = setInterval(() => {
@@ -588,7 +750,6 @@ function animateReelScroll(reelIdx, finalSym, symbolPool, totalDurationMs) {
       if (ticksDone >= numTicks) clearInterval(tickTimer);
     }, totalDurationMs / numTicks);
 
-    // ── Phase 1: CSS animation (GPU linear, constant speed, no JS drift) ──
     const kfName = `rs_${reelIdx}_${Date.now()}`;
     setReelKeyframe(reelIdx, kfName, warmupPx);
     setMotorRunning(reelIdx, true);
@@ -599,7 +760,6 @@ function animateReelScroll(reelIdx, finalSym, symbolPool, totalDurationMs) {
       });
     });
 
-    // ── Phase 2: rAF ease-out landing ──
     setTimeout(() => {
       setMotorRunning(reelIdx, false);
       strip.style.animation = 'none';
@@ -628,7 +788,6 @@ function animateReelScroll(reelIdx, finalSym, symbolPool, totalDurationMs) {
   });
 }
 
-// Prize spin — staggered start, reels 1 and 2 launch 1.5s apart
 async function playSpinAnimation(s0, s1, s2, pool) {
   document.querySelectorAll('.light-bulb').forEach(b => b.classList.add('spinning'));
   const p0 = animateReelScroll(0, s0, pool, 10000);
@@ -638,7 +797,6 @@ async function playSpinAnimation(s0, s1, s2, pool) {
   document.querySelectorAll('.light-bulb').forEach(b => b.classList.remove('spinning'));
 }
 
-// Fake spin — shorter, same structure
 async function playFakeSpinAnimation(s0, s1, s2, pool) {
   document.querySelectorAll('.light-bulb').forEach(b => b.classList.add('spinning'));
   const p0 = animateReelScroll(0, s0, pool, 3200);
@@ -648,7 +806,6 @@ async function playFakeSpinAnimation(s0, s1, s2, pool) {
   document.querySelectorAll('.light-bulb').forEach(b => b.classList.remove('spinning'));
 }
 
-// ── BUILD FAKE TRIPLET — 40% chance of near-miss (2 matching) ──
 function buildFakeTriplet(winId, pool, rng) {
   const otherPool = pool.filter(s => s.id !== winId);
   if (otherPool.length === 0) return [pool[0], pool[0], pool[0]];
@@ -656,30 +813,25 @@ function buildFakeTriplet(winId, pool, rng) {
   const nearMiss = rng() < 0.40;
 
   if (nearMiss && otherPool.length >= 2) {
-    // Pick a "teaser" symbol (not the real win, not the same as what we'd use for reel3)
     const teaserIdx = Math.floor(rng() * otherPool.length);
     const teaser = otherPool[teaserIdx];
-    // Third reel: a different symbol (not teaser, not winId)
     const thirdPool = otherPool.filter(s => s.id !== teaser.id);
     const third = thirdPool.length > 0
       ? thirdPool[Math.floor(rng() * thirdPool.length)]
       : otherPool[(teaserIdx + 1) % otherPool.length];
     return [teaser, teaser, third];
   } else {
-    // All three different, none matching win
     const picks = [];
     let att = 0;
     while (picks.length < 3 && att++ < 300) {
       const c = otherPool[Math.floor(rng() * otherPool.length)];
       if (picks.every(p => p.id !== c.id)) picks.push(c);
     }
-    // Pad if not enough distinct symbols
     while (picks.length < 3) picks.push(otherPool[picks.length % otherPool.length]);
     return picks;
   }
 }
 
-// ── PULSE ──
 function pulseReels(colour) {
   const c = colour === 'red' ? 'var(--neon-red)' : 'var(--neon-green)';
   document.querySelectorAll('.reel-container').forEach(el => {
@@ -696,7 +848,6 @@ function pulseReels(colour) {
   }, 550);
 }
 
-// ── WIN OVERLAY ──
 function showWinOverlay(icon, text, sub, mode, durationMs) {
   const ov = document.getElementById('win-overlay');
   document.getElementById('win-icon').textContent = icon;
@@ -708,12 +859,17 @@ function showWinOverlay(icon, text, sub, mode, durationMs) {
 
 // ── GAME STATE ──
 let state = {
-  codeword:'', stake:'', totalSpins:0, spinsDone:0, sequence:[],
+  codeword:'', stake:'', totalSpins:0, minSpins:0, spinsDone:0, sequence:[],
   totals:{}, isSpinning:false, gameId:'', pendingMultiplier:1, activeSymbols:[]
 };
 
-function typeKeyFor(stake){return{lines:'lines',mindbreaker:'mind',clock:'clock'}[stake];}
-function initTotals(stake){const t={praise:0,tick:0,heart:0,double:0,triple:0,jackpot_r:0,jackpot_p:0,jackpot_all:0,jackpot_spins:0};t[typeKeyFor(stake)]=0;return t;}
+function typeKeyFor(stake){return{lines:'lines',mindbreaker:'mind',clock:'clock',mixed:'mixed'}[stake];}
+function initTotals(stake){
+  const t={praise:0,tick:0,heart:0,double:0,triple:0,jackpot_r:0,jackpot_p:0,jackpot_all:0,jackpot_spins:0};
+  if(stake==='mixed'){t.lines=0;t.mind=0;t.clock=0;}
+  else{t[typeKeyFor(stake)]=0;}
+  return t;
+}
 
 function prizeToSymbol(entry) {
   const p = entry.prize;
@@ -730,7 +886,12 @@ function applyPrize(entry, multiplier) {
   } else if (entry.type === 'jackpot') {
     applyJackpot(p.id);
   } else {
-    const tk = p.id.replace(/\d+$/, '');
+    // Determine correct bucket key from prize id prefix
+    let tk;
+    if (p.id.startsWith('lines'))      tk = 'lines';
+    else if (p.id.startsWith('mind'))  tk = 'mind';
+    else if (p.id.startsWith('clock')) tk = 'clock';
+    else tk = p.id.replace(/\d+$/, '');
     state.totals[tk] = (state.totals[tk] || 0) + (p.amount * multiplier);
   }
 }
@@ -741,11 +902,19 @@ function applyJackpot(id) {
     ['praise','tick','heart'].forEach(k => { state.totals[k] = (state.totals[k] || 0) * 2; });
     state.totals.jk_r = (state.totals.jk_r || 0) + 1;
   } else if (id === 'jk_p') {
-    state.totals[tk] = (state.totals[tk] || 0) * 2;
+    if(state.stake==='mixed'){
+      ['lines','mind','clock'].forEach(k=>{state.totals[k]=(state.totals[k]||0)*2;});
+    } else {
+      state.totals[tk] = (state.totals[tk] || 0) * 2;
+    }
     state.totals.jk_p = (state.totals.jk_p || 0) + 1;
   } else if (id === 'jk_all') {
     ['praise','tick','heart'].forEach(k => { state.totals[k] = (state.totals[k] || 0) * 2; });
-    state.totals[tk] = (state.totals[tk] || 0) * 2;
+    if(state.stake==='mixed'){
+      ['lines','mind','clock'].forEach(k=>{state.totals[k]=(state.totals[k]||0)*2;});
+    } else {
+      state.totals[tk] = (state.totals[tk] || 0) * 2;
+    }
     state.totals.jk_all = (state.totals.jk_all || 0) + 1;
   } else if (id === 'jk_spin') {
     state.totalSpins += 10;
@@ -756,16 +925,21 @@ function applyJackpot(id) {
   }
 }
 
-// ── TOTALS ──
 function renderTotals() {
   const stake = state.stake; const t = state.totals;
-  const nm = {lines:{e:'✏️',l:'LINES'},mindbreaker:{e:'🧠',l:'MINDBREAKER'},clock:{e:'⏱️',l:'CLOCK'}}[stake];
-  const tk = typeKeyFor(stake);
+  const nm = {lines:{e:'✏️',l:'LINES'},mindbreaker:{e:'🧠',l:'MINDBREAKER'},clock:{e:'⏱️',l:'CLOCK'},mixed:{e:'🎲',l:'MIXED'}}[stake];
   let h = '<div class="tot-head">CURRENT PRIZES</div>';
   h += `<div class="tot-row"><span class="tot-label">💬 PRAISE</span><span class="tot-val pos">${t.praise||0}</span></div>`;
   h += `<div class="tot-row"><span class="tot-label">✔ TICK</span><span class="tot-val pos">${t.tick||0}</span></div>`;
   h += `<div class="tot-row"><span class="tot-label">❤️ HEART</span><span class="tot-val pos">${t.heart||0}</span></div>`;
-  h += `<div class="tot-row"><span class="tot-label">${nm.e} ${nm.l}</span><span class="tot-val neg">${t[tk]||0}</span></div>`;
+  if(stake==='mixed'){
+    h += `<div class="tot-row"><span class="tot-label">✏️ LINES</span><span class="tot-val neg">${t.lines||0}</span></div>`;
+    h += `<div class="tot-row"><span class="tot-label">🧠 MIND</span><span class="tot-val neg">${t.mind||0}</span></div>`;
+    h += `<div class="tot-row"><span class="tot-label">⏱️ CLOCK</span><span class="tot-val neg">${t.clock||0}</span></div>`;
+  } else {
+    const tk = typeKeyFor(stake);
+    h += `<div class="tot-row"><span class="tot-label">${nm.e} ${nm.l}</span><span class="tot-val neg">${t[tk]||0}</span></div>`;
+  }
   if(t.double>0)h+=`<div class="tot-row"><span class="tot-label">×2 DOUBLES</span><span class="tot-val" style="color:var(--neon-yellow)">${t.double}</span></div>`;
   if(t.triple>0)h+=`<div class="tot-row"><span class="tot-label">×3 TRIPLES</span><span class="tot-val" style="color:var(--neon-yellow)">${t.triple}</span></div>`;
   const anyJk=(t.jk_r||0)+(t.jk_p||0)+(t.jk_all||0)+(t.jk_spin||0);
@@ -773,7 +947,6 @@ function renderTotals() {
   document.getElementById('totals-panel').innerHTML=h;
 }
 
-// ── INFO PANEL ──
 function prizeRow(p){return `<div class="info-prize"><div class="info-prize-icon">${p.emoji}</div><div class="info-prize-body"><div class="info-prize-name">${p.label}</div><div class="info-prize-desc">${p.desc}</div></div></div>`;}
 const NEG_SUMMARY = {
   lines:      {emoji:'✏️', label:'LINES',       desc:'Adds 1–5 lines to your total. Amount varies per spin.'},
@@ -781,14 +954,26 @@ const NEG_SUMMARY = {
   clock:      {emoji:'⏱️', label:'CLOCK',       desc:'Adds 2–10 minutes of watching the clock. Amount varies per spin.'},
 };
 function renderInfoPanel(stake){
-  const negLabel={lines:'LINES',mindbreaker:'MINDBREAKER',clock:'CLOCK'}[stake];
-  const negSum = NEG_SUMMARY[stake];
   let h=`<div class="info-title">PRIZE BOARD</div>`;
   h+=`<div class="info-section-head">✦ POSITIVE (20%)</div>`;
   POSITIVE_PRIZES.forEach(p=>{h+=prizeRow(p);});
   h+=`<hr class="info-divider">`;
-  h+=`<div class="info-section-head">✦ ${negLabel} (75%)</div>`;
-  h+=prizeRow(negSum);
+  if(stake==='mixed'){
+    h+=`<div class="info-section-head" style="color:var(--neon-yellow)">✦ MIXED NEGATIVES (75%)</div>`;
+    h+=prizeRow({emoji:'🎲',label:'RANDOM DRAW',desc:'Each spin pulls from all 15 negative prizes across Lines, Mindbreaker, and Clock. Totals are tracked separately.'});
+    h+=`<hr class="info-divider">`;
+    h+=`<div class="info-section-head">LINES POOL</div>`;
+    h+=prizeRow(NEG_SUMMARY.lines);
+    h+=`<div class="info-section-head">MINDBREAKER POOL</div>`;
+    h+=prizeRow(NEG_SUMMARY.mindbreaker);
+    h+=`<div class="info-section-head">CLOCK POOL</div>`;
+    h+=prizeRow(NEG_SUMMARY.clock);
+  } else {
+    const negLabel={lines:'LINES',mindbreaker:'MINDBREAKER',clock:'CLOCK'}[stake];
+    const negSum = NEG_SUMMARY[stake];
+    h+=`<div class="info-section-head">✦ ${negLabel} (75%)</div>`;
+    h+=prizeRow(negSum);
+  }
   h+=`<hr class="info-divider">`;
   h+=`<div class="info-section-head">✦ BONUS (varies)</div>`;
   BONUS_PRIZES.forEach(p=>{h+=prizeRow(p);});
@@ -812,8 +997,6 @@ async function doSpin() {
   const flash = document.getElementById('result-flash');
   flash.className = ''; flash.textContent = '';
 
-  // Per-spin fake RNG: mix codeword hash with spin number using Knuth multiplicative hash
-  // to break the correlation between consecutive spin seeds
   const h1 = hashStr(state.codeword.toUpperCase() + '__FAKE__');
   const h2 = hashStr('__SPIN__' + state.spinsDone + '__F__');
   const fakeRng = makePRNG((h1 ^ h2 ^ (state.spinsDone * 2654435761)) >>> 0);
@@ -824,7 +1007,6 @@ async function doSpin() {
   const winSym    = prizeToSymbol(spinEntry);
   const winId     = winSym.id;
 
-  // ── FAKE SPINS ──
   for (let f = 0; f < fakeCount; f++) {
     flash.className = ''; flash.textContent = '';
     const triplet = buildFakeTriplet(winId, state.activeSymbols, fakeRng);
@@ -833,7 +1015,6 @@ async function doSpin() {
     await sleep(1800);
   }
 
-  // ── PRIZE SPIN ──
   flash.className = ''; flash.textContent = '';
 
   if (isJackpot) {
@@ -860,7 +1041,6 @@ async function doSpin() {
     playBonus();
     await showWinOverlay(spinEntry.prize.emoji, spinEntry.prize.label, 'AUTO-SPINNING...', 'bonus-win', 2000);
 
-    // Sub-prize spin
     flash.className = ''; flash.textContent = '';
     const sub = spinEntry.bonusPrize;
     const subSym = prizeToSymbol(sub);
@@ -892,11 +1072,16 @@ async function doSpin() {
 
   if (state.spinsDone >= state.totalSpins) {
     await sleep(600);
-    showEndScreen();
+    showOneMoreSpin();
   } else {
     document.getElementById('btn-spin').disabled = false;
     document.getElementById('hud-bottom-text').textContent = `SPIN ${state.spinsDone} OF ${state.totalSpins} COMPLETE — PRESS SPIN`;
   }
+}
+
+function showOneMoreSpin() {
+  document.getElementById('one-more-overlay').classList.add('show');
+  document.getElementById('hud-bottom-text').textContent = 'QUOTA REACHED — ONE MORE SPIN?';
 }
 
 function sleep(ms){ return new Promise(r => setTimeout(r, ms)); }
@@ -921,12 +1106,19 @@ const STAKE_INSTRUCTIONS = {
     link: 'https://zozodom327-ctrl.github.io/ppprison/clock.html',
     linkLabel: 'Watch The Clock →',
   },
+  mixed: {
+    head: 'WHAT TO DO WITH YOUR MIXED PENALTIES',
+    text: 'You played on Mixed stakes — you must complete ALL three penalty categories shown above before claiming your rewards. Complete your Lines at WriteForPerfection, your Mindbreaker tasks at Perfections Mindbreaker, and watch your Clock time at WatchTheClock. Send Perfection screenshots of each once complete!',
+    links: [
+      {href:'https://zozodom327-ctrl.github.io/ppprison/typing.html',    label:'WriteForPerfection →'},
+      {href:'https://zozodom327-ctrl.github.io/ppprison/Mindbreaker.html',label:'Perfections Mindbreaker →'},
+      {href:'https://zozodom327-ctrl.github.io/ppprison/clock.html',     label:'Watch The Clock →'},
+    ],
+  },
 };
 
 function showEndScreen() {
   const stake = state.stake; const t = state.totals;
-  const nm = {lines:{e:'✏️',l:'LINES'},mindbreaker:{e:'🧠',l:'MINDBREAKER'},clock:{e:'⏱️',l:'CLOCK'}}[stake];
-  const tk = typeKeyFor(stake); const negTotal = t[tk] || 0;
   let h = '';
   h += `<div class="end-section-head">SESSION INFO</div>`;
   h += sr('GAME ID', state.gameId); h += sr('CODEWORD', state.codeword.toUpperCase());
@@ -934,7 +1126,15 @@ function showEndScreen() {
   h += `<div class="end-section-head">POSITIVE PRIZES</div>`;
   h += sr('💬 PRAISE', t.praise||0,'pos'); h += sr('✔ TICK', t.tick||0,'pos'); h += sr('❤️ HEART', t.heart||0,'pos');
   h += `<div class="end-section-head">NEGATIVE PRIZES</div>`;
-  h += sr(`${nm.e} ${nm.l}`, negTotal||'NONE', negTotal>0?'neg':'');
+  if(stake==='mixed'){
+    h += sr('✏️ LINES',       t.lines||0, (t.lines||0)>0?'neg':'');
+    h += sr('🧠 MINDBREAKER', t.mind||0,  (t.mind||0)>0?'neg':'');
+    h += sr('⏱️ CLOCK (min)', t.clock||0, (t.clock||0)>0?'neg':'');
+  } else {
+    const nm={lines:{e:'✏️',l:'LINES'},mindbreaker:{e:'🧠',l:'MINDBREAKER'},clock:{e:'⏱️',l:'CLOCK'}}[stake];
+    const tk=typeKeyFor(stake); const negTotal=t[tk]||0;
+    h += sr(`${nm.e} ${nm.l}`, negTotal||'NONE', negTotal>0?'neg':'');
+  }
   h += `<div class="end-section-head">BONUS SPINS</div>`;
   h += sr('×2 DOUBLES', t.double||0); h += sr('×3 TRIPLES', t.triple||0);
   h += `<div class="end-section-head">JACKPOTS</div>`;
@@ -944,12 +1144,16 @@ function showEndScreen() {
   h += sr('⚡ +10 SPINS',  t.jk_spin||0);
   document.getElementById('end-panel').innerHTML = h;
 
-  // Stake-specific instructions panel
   const instr = STAKE_INSTRUCTIONS[stake];
-  document.getElementById('end-instructions').innerHTML =
-    `<div class="end-instr-head">${instr.head}</div>` +
-    `<p class="end-instr-text">${instr.text}</p>` +
-    `<a class="end-instr-link" href="${instr.link}" target="_blank" rel="noopener">${instr.linkLabel}</a>`;
+  let instrHtml = `<div class="end-instr-head">${instr.head}</div><p class="end-instr-text">${instr.text}</p>`;
+  if(instr.links){
+    instr.links.forEach(l=>{
+      instrHtml += `<a class="end-instr-link" href="${l.href}" target="_blank" rel="noopener">${l.label}</a>`;
+    });
+  } else {
+    instrHtml += `<a class="end-instr-link" href="${instr.link}" target="_blank" rel="noopener">${instr.linkLabel}</a>`;
+  }
+  document.getElementById('end-instructions').innerHTML = instrHtml;
 
   showScreen('screen-end');
   document.getElementById('hud-bottom-text').textContent = 'SESSION COMPLETE — RESULTS RECORDED';
@@ -973,7 +1177,7 @@ document.getElementById('btn-start').addEventListener('click', function() {
   if (!codeword) { document.getElementById('input-codeword').style.borderColor='var(--neon-red)'; return; }
   if (!stake)    { document.getElementById('input-stake').style.borderColor='var(--neon-red)'; return; }
 
-  state.codeword = codeword; state.stake = stake; state.totalSpins = numSpins; state.spinsDone = 0;
+  state.codeword = codeword; state.stake = stake; state.totalSpins = numSpins; state.minSpins = numSpins; state.spinsDone = 0;
   state.activeSymbols = buildActiveSymbols(stake);
   state.sequence = buildSpinSequence(codeword, numSpins, stake);
   state.totals = initTotals(stake);
@@ -982,7 +1186,6 @@ document.getElementById('btn-start').addEventListener('click', function() {
 
   showScreen('screen-game');
 
-  // Show first symbol in each reel
   const startSym = state.activeSymbols[0];
   [0,1,2].forEach(i => {
     const strip = document.getElementById(`reel-strip${i}`);
@@ -1008,7 +1211,25 @@ document.getElementById('btn-spin').addEventListener('click', function() {
   doSpin();
 });
 
+document.getElementById('oms-yes').addEventListener('click', function() {
+  document.getElementById('one-more-overlay').classList.remove('show');
+  // Add one more spin to the total and extend the sequence
+  state.totalSpins += 1;
+  const extraSeq = buildSpinSequence(state.codeword + '__OMS__' + state.spinsDone, 1, state.stake);
+  state.sequence = state.sequence.concat(extraSeq);
+  document.getElementById('spin-total').textContent = state.totalSpins;
+  document.getElementById('hud-spins').textContent = `${state.spinsDone} / ${state.totalSpins}`;
+  document.getElementById('btn-spin').disabled = false;
+  document.getElementById('hud-bottom-text').textContent = 'ONE MORE SPIN — PRESS SPIN';
+});
+
+document.getElementById('oms-no').addEventListener('click', function() {
+  document.getElementById('one-more-overlay').classList.remove('show');
+  showEndScreen();
+});
+
 document.getElementById('btn-again').addEventListener('click', function() {
+  document.getElementById('one-more-overlay').classList.remove('show');
   document.getElementById('input-codeword').value = '';
   document.getElementById('input-codeword').style.borderColor = '';
   document.getElementById('input-stake').value = '';
@@ -1021,23 +1242,23 @@ document.getElementById('btn-again').addEventListener('click', function() {
   showScreen('screen-start');
 });
 
-// ── DEV SHORTCUT: Shift+E — fast-forward to end screen ──
-// Applies all remaining spin outcomes instantly without animation, then shows results.
+// ── DEV SHORTCUT: Shift+E ──
 document.addEventListener('keydown', function(e) {
   if (!e.shiftKey || e.key !== 'E') return;
   if (!document.getElementById('screen-game').classList.contains('active')) return;
-  if (state.isSpinning) return; // don't interrupt a live spin
+  if (state.isSpinning) return;
 
-  // Dismiss win overlay if showing
   document.getElementById('win-overlay').className = '';
+  document.getElementById('one-more-overlay').classList.remove('show');
 
-  // Fast-apply all remaining spins in the sequence without any animation
   while (state.spinsDone < state.totalSpins) {
     const entry = state.sequence[state.spinsDone];
     state.spinsDone++;
     if (entry.type === 'bonus') {
       state.totals[entry.prize.id] = (state.totals[entry.prize.id] || 0) + 1;
       if (entry.bonusPrize) applyPrize(entry.bonusPrize, entry.prize.multiplier);
+    } else if (entry.type === 'jackpot') {
+      applyJackpot(entry.prize.id);
     } else {
       applyPrize(entry, 1);
     }
