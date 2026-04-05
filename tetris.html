@@ -1,0 +1,843 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TETRIS — TEMPORAL EDITION</title>
+<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0a0a0f;
+    --panel: #0f0f1a;
+    --border: #2a2a4a;
+    --accent: #00ffcc;
+    --accent-dim: #007755;
+    --red: #ff3355;
+    --yellow: #ffcc00;
+    --text: #c0c0d0;
+    --dim: #555577;
+    --hud-h: 48px;
+    --scanline: rgba(0,255,204,0.03);
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  html, body {
+    width: 100%; height: 100%;
+    overflow: hidden;
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Share Tech Mono', monospace;
+    font-size: clamp(12px, 1.2vw, 18px);
+  }
+
+  /* SCANLINE OVERLAY */
+  body::after {
+    content: '';
+    position: fixed; inset: 0;
+    background: repeating-linear-gradient(
+      0deg,
+      transparent,
+      transparent 2px,
+      var(--scanline) 2px,
+      var(--scanline) 4px
+    );
+    pointer-events: none;
+    z-index: 9999;
+  }
+
+  /* HUD BARS */
+  #hud-top {
+    position: fixed; top: 0; left: 0; right: 0;
+    height: var(--hud-h);
+    background: #050508;
+    border-bottom: 1px solid var(--border);
+    display: flex; align-items: center;
+    padding: 0 1.5rem;
+    justify-content: space-between;
+    z-index: 100;
+  }
+  #hud-bot {
+    position: fixed; bottom: 0; left: 0; right: 0;
+    height: var(--hud-h);
+    background: #050508;
+    border-top: 1px solid var(--border);
+    display: flex; align-items: center;
+    padding: 0 1.5rem;
+    justify-content: space-between;
+    z-index: 100;
+  }
+  .hud-label { color: var(--dim); font-size: 0.6em; text-transform: uppercase; letter-spacing: 2px; }
+  .hud-val { color: var(--accent); font-size: 0.85em; }
+  .hud-group { display: flex; flex-direction: column; align-items: center; }
+  #game-title-hud { font-family: 'Press Start 2P', monospace; font-size: 0.55em; color: var(--dim); letter-spacing: 1px; }
+
+  /* SCREENS */
+  .screen {
+    position: fixed;
+    top: var(--hud-h); bottom: var(--hud-h); left: 0; right: 0;
+    display: none; align-items: center; justify-content: center;
+    flex-direction: column;
+  }
+  .screen.active { display: flex; }
+
+  /* ── START SCREEN ── */
+  #start-screen {
+    gap: 1.5rem;
+    padding: 2rem;
+  }
+  #start-title {
+    font-family: 'Press Start 2P', monospace;
+    font-size: clamp(1.1rem, 3vw, 2.2rem);
+    color: var(--accent);
+    text-shadow: 0 0 20px var(--accent), 0 0 40px var(--accent-dim);
+    text-align: center;
+    letter-spacing: 4px;
+    animation: flicker 4s infinite;
+  }
+  @keyframes flicker {
+    0%,95%,100%{opacity:1}
+    96%{opacity:0.4}
+    97%{opacity:1}
+    98%{opacity:0.6}
+    99%{opacity:1}
+  }
+  #start-subtitle {
+    font-family: 'Press Start 2P', monospace;
+    font-size: 0.55em;
+    color: var(--yellow);
+    text-align: center;
+    letter-spacing: 3px;
+  }
+  .instructions {
+    border: 1px solid var(--border);
+    padding: 1.2rem 1.8rem;
+    max-width: 560px;
+    line-height: 1.9;
+    color: var(--dim);
+    font-size: 0.8em;
+    text-align: left;
+  }
+  .instructions strong { color: var(--text); }
+  .quota-section {
+    display: flex; flex-direction: column; align-items: center; gap: 0.6rem;
+  }
+  .quota-label {
+    font-size: 0.65em;
+    letter-spacing: 3px;
+    color: var(--dim);
+    text-transform: uppercase;
+  }
+  .quota-display {
+    font-family: 'Press Start 2P', monospace;
+    font-size: 2rem;
+    color: var(--yellow);
+  }
+  .quota-controls { display: flex; gap: 1rem; }
+  .quota-btn {
+    font-family: 'Press Start 2P', monospace;
+    font-size: 1rem;
+    background: none;
+    border: 1px solid var(--border);
+    color: var(--text);
+    width: 3rem; height: 3rem;
+    cursor: pointer;
+    transition: border-color 0.1s, color 0.1s;
+  }
+  .quota-btn:hover { border-color: var(--accent); color: var(--accent); }
+
+  .start-btn {
+    font-family: 'Press Start 2P', monospace;
+    font-size: 0.75em;
+    background: none;
+    border: 2px solid var(--accent);
+    color: var(--accent);
+    padding: 0.9rem 2.5rem;
+    cursor: pointer;
+    letter-spacing: 3px;
+    text-shadow: 0 0 10px var(--accent);
+    box-shadow: 0 0 16px rgba(0,255,204,0.15);
+    transition: all 0.15s;
+    margin-top: 0.5rem;
+  }
+  .start-btn:hover {
+    background: rgba(0,255,204,0.07);
+    box-shadow: 0 0 30px rgba(0,255,204,0.3);
+  }
+
+  /* ── GAME SCREEN ── */
+  #game-screen { flex-direction: row; align-items: stretch; gap: 0; padding: 0; }
+
+  #board-wrap {
+    display: flex; align-items: center; justify-content: center;
+    flex: 0 0 auto;
+    padding: 1.5rem;
+    position: relative;
+  }
+  #tetris-canvas {
+    border: 2px solid var(--border);
+    box-shadow: 0 0 20px rgba(0,255,204,0.1), inset 0 0 30px rgba(0,0,10,0.8);
+    image-rendering: pixelated;
+    display: block;
+  }
+
+  #side-panel {
+    flex: 1;
+    display: flex; flex-direction: column;
+    padding: 1.5rem 1.5rem 1.5rem 0;
+    gap: 1rem;
+    justify-content: flex-start;
+    min-width: 220px; max-width: 300px;
+  }
+
+  .stat-box {
+    border: 1px solid var(--border);
+    padding: 0.8rem;
+  }
+  .stat-box .label {
+    font-size: 0.6em; color: var(--dim);
+    letter-spacing: 2px; text-transform: uppercase;
+    margin-bottom: 0.3rem;
+  }
+  .stat-box .value {
+    font-family: 'Press Start 2P', monospace;
+    font-size: 1rem;
+    color: var(--accent);
+  }
+
+  #next-box canvas {
+    border: 1px solid var(--border);
+    display: block;
+  }
+
+  /* TAUNT DISPLAY */
+  #taunt-overlay {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 200;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.8s ease;
+    text-align: center;
+    width: 80%;
+    max-width: 700px;
+  }
+  #taunt-overlay.visible { opacity: 1; }
+  #taunt-text {
+    font-family: 'Press Start 2P', monospace;
+    font-size: clamp(0.7rem, 2.2vw, 1.4rem);
+    color: var(--yellow);
+    text-shadow: 0 0 20px rgba(255,204,0,0.6), 0 0 40px rgba(255,204,0,0.3);
+    line-height: 1.8;
+    padding: 1.5rem;
+    border: 1px solid rgba(255,204,0,0.2);
+    background: rgba(5,5,8,0.9);
+  }
+
+  /* SPEED INDICATOR */
+  #speed-bar {
+    display: flex; flex-direction: column; gap: 0.4rem;
+  }
+  .speed-pips { display: flex; gap: 3px; }
+  .pip {
+    width: 10px; height: 10px;
+    border: 1px solid var(--border);
+  }
+  .pip.lit { background: var(--accent-dim); }
+  .pip.active-pip { background: var(--accent); }
+
+  /* TETRIS FLASH */
+  #tetris-flash {
+    position: fixed; inset: 0;
+    background: var(--accent);
+    opacity: 0;
+    pointer-events: none;
+    z-index: 300;
+    transition: opacity 0.05s;
+  }
+
+  /* ── END SCREEN ── */
+  #end-screen { gap: 1.4rem; padding: 2rem; }
+  #end-heading {
+    font-family: 'Press Start 2P', monospace;
+    font-size: clamp(0.9rem, 2.5vw, 1.6rem);
+    color: var(--red);
+    letter-spacing: 4px;
+    text-shadow: 0 0 20px rgba(255,51,85,0.5);
+  }
+  .stats-grid {
+    border: 1px solid var(--border);
+    padding: 1.2rem 2rem;
+    display: grid;
+    grid-template-columns: auto auto;
+    gap: 0.5rem 3rem;
+    font-size: 0.78em;
+    min-width: 360px;
+  }
+  .stats-grid .s-label { color: var(--dim); text-align: right; }
+  .stats-grid .s-val { color: var(--text); }
+  #game-id-display {
+    font-size: 0.65em; color: var(--dim); letter-spacing: 2px;
+  }
+  .end-btn {
+    font-family: 'Press Start 2P', monospace;
+    font-size: 0.65em;
+    background: none;
+    border: 1px solid var(--dim);
+    color: var(--dim);
+    padding: 0.7rem 1.8rem;
+    cursor: pointer;
+    letter-spacing: 2px;
+    transition: all 0.15s;
+  }
+  .end-btn:hover { border-color: var(--text); color: var(--text); }
+</style>
+</head>
+<body>
+
+<!-- HUD TOP -->
+<div id="hud-top">
+  <div class="hud-group">
+    <span class="hud-label">ELAPSED</span>
+    <span class="hud-val" id="hud-timer">00:00:00</span>
+  </div>
+  <span id="game-title-hud">TETRIS — TEMPORAL ED.</span>
+  <div class="hud-group">
+    <span class="hud-label">TETRISES</span>
+    <span class="hud-val" id="hud-tetrises">0 / 0</span>
+  </div>
+</div>
+
+<!-- HUD BOT -->
+<div id="hud-bot">
+  <div class="hud-group">
+    <span class="hud-label">STATUS</span>
+    <span class="hud-val" id="hud-status">STANDBY</span>
+  </div>
+  <div class="hud-group">
+    <span class="hud-label">SPEED</span>
+    <span class="hud-val">5% — TEMPORAL REDUCTION ACTIVE</span>
+  </div>
+  <div class="hud-group">
+    <span class="hud-label">LINES</span>
+    <span class="hud-val" id="hud-lines">0</span>
+  </div>
+</div>
+
+<!-- START SCREEN -->
+<div class="screen active" id="start-screen">
+  <div id="start-title">TETRIS</div>
+  <div id="start-subtitle">— TEMPORAL REDUCTION EDITION —</div>
+  <div class="instructions">
+    <strong>STANDARD TETRIS RULES APPLY.</strong><br>
+    Blocks fall. You rotate. Lines clear.<br><br>
+    However. The temporal acceleration module has been <strong>disabled</strong>.<br>
+    Blocks descend at <strong>5% of standard velocity</strong>.<br>
+    This is not a glitch. This is the game.<br><br>
+    You will select a TETRIS quota below. A TETRIS is achieved by clearing<br>
+    <strong>4 lines simultaneously</strong>. You must reach your quota.<br><br>
+    Controls: ← → to move. ↑ to rotate.<br>
+    ↓ and SPACE are also available.<br>
+    The system will be watching.
+  </div>
+  <div class="quota-section">
+    <div class="quota-label">ASSIGN TETRIS QUOTA</div>
+    <div class="quota-display" id="quota-display">3</div>
+    <div class="quota-controls">
+      <button class="quota-btn" id="quota-minus">−</button>
+      <button class="quota-btn" id="quota-plus">+</button>
+    </div>
+  </div>
+  <button class="start-btn" id="start-btn">COMMENCE DESCENT</button>
+</div>
+
+<!-- GAME SCREEN -->
+<div class="screen" id="game-screen">
+  <div id="board-wrap">
+    <canvas id="tetris-canvas"></canvas>
+  </div>
+  <div id="side-panel">
+    <div class="stat-box">
+      <div class="label">NEXT PIECE</div>
+      <canvas id="next-canvas" width="80" height="80"></canvas>
+    </div>
+    <div class="stat-box">
+      <div class="label">SCORE</div>
+      <div class="value" id="score-val">0</div>
+    </div>
+    <div class="stat-box">
+      <div class="label">LINES CLEARED</div>
+      <div class="value" id="lines-val">0</div>
+    </div>
+    <div class="stat-box">
+      <div class="label">TETRISES ACHIEVED</div>
+      <div class="value" id="tetrises-val">0</div>
+    </div>
+    <div class="stat-box">
+      <div class="label">QUOTA REMAINING</div>
+      <div class="value" id="quota-remain-val">—</div>
+    </div>
+    <div class="stat-box" id="speed-bar">
+      <div class="label">VELOCITY (5%)</div>
+      <div class="speed-pips" id="speed-pips"></div>
+    </div>
+    <div class="stat-box" style="font-size:0.6em;color:var(--dim);line-height:1.8">
+      ← → MOVE<br>↑ ROTATE<br>↓ MOVE UP<br>SPACE RETURN TO TOP
+    </div>
+  </div>
+</div>
+
+<!-- END SCREEN -->
+<div class="screen" id="end-screen">
+  <div id="end-heading">SESSION COMPLETE</div>
+  <div id="end-subhead" style="font-size:0.75em;color:var(--dim);letter-spacing:2px;text-align:center"></div>
+  <div class="stats-grid" id="stats-grid"></div>
+  <div id="game-id-display"></div>
+  <button class="end-btn" id="restart-btn">REINITIALISE</button>
+</div>
+
+<!-- TAUNT OVERLAY -->
+<div id="taunt-overlay">
+  <div id="taunt-text"></div>
+</div>
+
+<!-- TETRIS FLASH -->
+<div id="tetris-flash"></div>
+
+<script>
+// ── CONSTANTS ──
+const COLS = 10, ROWS = 20;
+const CELL = Math.min(Math.floor((window.innerHeight - 96 - 60) / ROWS), 28);
+const BOARD_W = COLS * CELL, BOARD_H = ROWS * CELL;
+
+// 5% speed: original Tetris level 0 = ~800ms drop. 5% = 16000ms = 16s per drop
+const DROP_INTERVAL = 4000;
+
+// Smooth animation: renderY interpolates between integer rows
+// renderY is in grid units (float), drawn at renderY * CELL pixels
+
+const COLORS = {
+  I: '#00ffcc', O: '#ffcc00', T: '#cc44ff',
+  S: '#44ff88', Z: '#ff3355', J: '#3388ff', L: '#ff8833'
+};
+
+const PIECES = {
+  I: [[0,0,0,0],[1,1,1,1],[0,0,0,0],[0,0,0,0]],
+  O: [[1,1],[1,1]],
+  T: [[0,1,0],[1,1,1],[0,0,0]],
+  S: [[0,1,1],[1,1,0],[0,0,0]],
+  Z: [[1,1,0],[0,1,1],[0,0,0]],
+  J: [[1,0,0],[1,1,1],[0,0,0]],
+  L: [[0,0,1],[1,1,1],[0,0,0]],
+};
+
+const TAUNT_MESSAGES = [
+  "THE PIECE HAS NOT LANDED YET.",
+  "IT IS STILL FALLING.",
+  "YOU COULD MAKE A SANDWICH.",
+  "THE BLOCK WILL ARRIVE EVENTUALLY.",
+  "YOUR REACTION TIME IS IRRELEVANT HERE.",
+  "COME BACK IN A FEW MINUTES.",
+  "TEMPORAL REDUCTION IS WORKING AS INTENDED.",
+  "YOU CHOSE THIS.",
+  "THE QUOTA SEEMS VERY FAR AWAY.",
+  "STATISTICALLY, YOU WILL BE HERE FOR SOME TIME.",
+  "OTHER PEOPLE ARE DOING THINGS RIGHT NOW.",
+  "THE PIECE TRAJECTORY HAS BEEN CALCULATED. YOU MAY WAIT.",
+  "THIS IS WHAT 5% LOOKS LIKE.",
+  "THE BLOCK IS NOT STUCK. IT IS SIMPLY SLOW.",
+  "PLEASE DO NOT LEAVE. THE QUOTA REQUIRES YOUR PRESENCE.",
+  "YOUR PATIENCE IS NOTED. IT IS NOT APPRECIATED.",
+  "AT THIS RATE, THE CALCULATION IS LEFT AS AN EXERCISE.",
+  "YOU HAVE CLEARED {lines} LINES. ADEQUATE.",
+];
+
+const ERROR_TAUNTS = [
+  "GAME OVER.\nTHE QUOTA REMAINS UNMET.",
+  "THE BLOCKS DID NOT COOPERATE.\nNEITHER DID YOU.",
+  "STACK OVERFLOW.\nNOT THE WEBSITE.",
+  "YOUR COLUMN MANAGEMENT\nWAS SUBOPTIMAL.",
+];
+
+// ── STATE ──
+let quota = 3;
+let board, piece, nextPiece, score, lines, tetrises;
+let dropTimer, hudTimer, tauntTimer;
+let gameRunning = false;
+let gameStartTime;
+let tauntsShowing = false;
+let totalLines, totalTetrises, finalTime;
+let gameId;
+
+// Smooth animation state
+let renderY = 0;        // float grid units, the visual position of current piece
+let prevLogicalY = 0;   // piece.y at last drop tick
+let dropTickTime = 0;   // timestamp of last drop tick (for lerp)
+
+// ── DOM ──
+const canvas = document.getElementById('tetris-canvas');
+const ctx = canvas.getContext('2d');
+canvas.width = BOARD_W; canvas.height = BOARD_H;
+
+const nextCanvas = document.getElementById('next-canvas');
+const nctx = nextCanvas.getContext('2d');
+
+const startScreen = document.getElementById('start-screen');
+const gameScreen = document.getElementById('game-screen');
+const endScreen = document.getElementById('end-screen');
+const quotaDisplay = document.getElementById('quota-display');
+
+// build speed pips
+const pipsEl = document.getElementById('speed-pips');
+for(let i=0;i<20;i++){
+  const pip = document.createElement('div');
+  pip.className = 'pip' + (i===0?' active-pip':'');
+  pipsEl.appendChild(pip);
+}
+
+// ── QUOTA UI ──
+document.getElementById('quota-minus').addEventListener('click', () => {
+  if(quota > 1) { quota--; quotaDisplay.textContent = quota; }
+});
+document.getElementById('quota-plus').addEventListener('click', () => {
+  if(quota < 20) { quota++; quotaDisplay.textContent = quota; }
+});
+document.getElementById('start-btn').addEventListener('click', startGame);
+document.getElementById('restart-btn').addEventListener('click', () => {
+  endScreen.classList.remove('active');
+  startScreen.classList.add('active');
+  document.getElementById('hud-status').textContent = 'STANDBY';
+  document.getElementById('hud-timer').textContent = '00:00:00';
+  document.getElementById('hud-tetrises').textContent = '0 / 0';
+  document.getElementById('hud-lines').textContent = '0';
+});
+
+// ── GAME INIT ──
+function startGame() {
+  startScreen.classList.remove('active');
+  gameScreen.classList.add('active');
+  document.getElementById('hud-status').textContent = 'ACTIVE';
+  document.getElementById('hud-tetrises').textContent = `0 / ${quota}`;
+
+  board = Array.from({length: ROWS}, () => Array(COLS).fill(null));
+  score = 0; lines = 0; tetrises = 0;
+  gameRunning = true;
+  gameStartTime = Date.now();
+  gameId = Math.floor(Math.random() * 900000000) + 100000000;
+
+  nextPiece = randomPiece();
+  spawnPiece();
+  updateSidebar();
+
+  dropTimer = Date.now();
+  dropTickTime = Date.now();
+  renderY = -1;
+  prevLogicalY = -1;
+  cancelAnimationFrame(window._raf);
+  window._raf = requestAnimationFrame(gameLoop);
+
+  // hud clock
+  clearInterval(window._hudClock);
+  window._hudClock = setInterval(updateHudTimer, 1000);
+
+  // taunt scheduler
+  scheduleTaunt();
+}
+
+function randomPiece() {
+  const keys = Object.keys(PIECES);
+  const k = keys[Math.floor(Math.random() * keys.length)];
+  return { type: k, matrix: PIECES[k].map(r=>[...r]), x: 3, y: 0 };
+}
+
+function spawnPiece() {
+  piece = nextPiece;
+  piece.x = Math.floor((COLS - piece.matrix[0].length) / 2);
+  piece.y = 0;
+  prevLogicalY = -1;  // lerp in from just above the board
+  renderY = -1;
+  dropTickTime = Date.now();
+  nextPiece = randomPiece();
+  drawNext();
+  if(!canPlace(piece, piece.x, piece.y)) {
+    gameOver(false);
+  }
+}
+
+// ── GAME LOOP ──
+function gameLoop() {
+  if(!gameRunning) return;
+  const now = Date.now();
+  if(now - dropTimer >= DROP_INTERVAL) {
+    dropTimer = now;
+    prevLogicalY = piece.y;
+    dropTickTime = now;
+    tryDrop();
+  }
+  // Smooth interpolation: lerp renderY from prevLogicalY to piece.y
+  const t = Math.min(1, (now - dropTickTime) / DROP_INTERVAL);
+  renderY = prevLogicalY + (piece.y - prevLogicalY) * t;
+  draw();
+  window._raf = requestAnimationFrame(gameLoop);
+}
+
+function tryDrop() {
+  if(canPlace(piece, piece.x, piece.y + 1)) {
+    prevLogicalY = piece.y;
+    piece.y++;
+  } else {
+    lockPiece();
+  }
+}
+
+function lockPiece() {
+  for(let r=0;r<piece.matrix.length;r++)
+    for(let c=0;c<piece.matrix[r].length;c++)
+      if(piece.matrix[r][c])
+        board[piece.y+r][piece.x+c] = piece.type;
+
+  const cleared = clearLines();
+  if(cleared === 4) {
+    tetrises++;
+    flashTetris();
+    if(tetrises >= quota) {
+      setTimeout(() => gameOver(true), 500);
+      return;
+    }
+  }
+  updateSidebar();
+  spawnPiece();
+}
+
+function clearLines() {
+  let count = 0;
+  for(let r = ROWS-1; r >= 0; r--) {
+    if(board[r].every(c=>c!==null)) {
+      board.splice(r,1);
+      board.unshift(Array(COLS).fill(null));
+      count++; r++;
+    }
+  }
+  if(count > 0) {
+    lines += count;
+    const pts = [0,100,300,500,800];
+    score += pts[Math.min(count,4)];
+    document.getElementById('hud-lines').textContent = lines;
+    updateSidebar();
+  }
+  return count;
+}
+
+function canPlace(p, px, py) {
+  for(let r=0;r<p.matrix.length;r++)
+    for(let c=0;c<p.matrix[r].length;c++)
+      if(p.matrix[r][c]) {
+        const nr=py+r, nc=px+c;
+        if(nr<0||nr>=ROWS||nc<0||nc>=COLS) return false;
+        if(board[nr][nc]) return false;
+      }
+  return true;
+}
+
+// ── DRAW ──
+function draw() {
+  ctx.fillStyle = '#05050a';
+  ctx.fillRect(0,0,BOARD_W,BOARD_H);
+
+  // grid
+  ctx.strokeStyle = 'rgba(42,42,74,0.4)';
+  ctx.lineWidth = 0.5;
+  for(let r=0;r<ROWS;r++) for(let c=0;c<COLS;c++) {
+    ctx.strokeRect(c*CELL,r*CELL,CELL,CELL);
+  }
+
+  // board
+  for(let r=0;r<ROWS;r++) for(let c=0;c<COLS;c++) {
+    if(board[r][c]) drawCell(ctx, c, r, COLORS[board[r][c]]);
+  }
+
+  // ghost (uses logical integer piece.y)
+  let ghost = {x:piece.x, y:piece.y, matrix:piece.matrix, type:piece.type};
+  while(canPlace(ghost, ghost.x, ghost.y+1)) ghost.y++;
+  for(let r=0;r<ghost.matrix.length;r++)
+    for(let c=0;c<ghost.matrix[r].length;c++)
+      if(ghost.matrix[r][c]) {
+        ctx.fillStyle = 'rgba(255,255,255,0.07)';
+        ctx.fillRect((ghost.x+c)*CELL+1,(ghost.y+r)*CELL+1,CELL-2,CELL-2);
+      }
+
+  // piece — drawn at smooth renderY (float pixels)
+  const pyPx = renderY * CELL;
+  for(let r=0;r<piece.matrix.length;r++)
+    for(let c=0;c<piece.matrix[r].length;c++)
+      if(piece.matrix[r][c]) drawCellPx(ctx, piece.x+c, pyPx + r*CELL, COLORS[piece.type]);
+}
+
+function drawCell(c2d, cx, cy, col) {
+  // cx, cy are grid coords (integers)
+  drawCellPx(c2d, cx, cy * CELL, col);
+}
+
+function drawCellPx(c2d, cx, pyPx, col) {
+  // cx is grid column (integer), pyPx is top pixel Y (float ok)
+  const px = cx * CELL;
+  c2d.fillStyle = col;
+  c2d.fillRect(px+1, pyPx+1, CELL-2, CELL-2);
+  c2d.fillStyle = 'rgba(255,255,255,0.25)';
+  c2d.fillRect(px+1, pyPx+1, CELL-2, 3);
+  c2d.fillStyle = 'rgba(0,0,0,0.3)';
+  c2d.fillRect(px+1, pyPx+CELL-4, CELL-2, 3);
+}
+
+function drawNext() {
+  nctx.fillStyle = '#05050a';
+  nctx.fillRect(0,0,80,80);
+  const cs = 14;
+  const m = nextPiece.matrix;
+  const ox = Math.floor((80 - m[0].length*cs) / 2);
+  const oy = Math.floor((80 - m.length*cs) / 2);
+  for(let r=0;r<m.length;r++)
+    for(let c=0;c<m[r].length;c++)
+      if(m[r][c]) {
+        nctx.fillStyle = COLORS[nextPiece.type];
+        nctx.fillRect(ox+c*cs+1, oy+r*cs+1, cs-2, cs-2);
+      }
+}
+
+// ── CONTROLS ──
+document.addEventListener('keydown', e => {
+  if(!gameRunning) return;
+  if(e.key==='ArrowLeft') {
+    if(canPlace(piece,piece.x-1,piece.y)) { piece.x--; }
+  }
+  if(e.key==='ArrowRight') {
+    if(canPlace(piece,piece.x+1,piece.y)) { piece.x++; }
+  }
+  if(e.key==='ArrowDown') {
+    // moves UP, not down — as intended
+    if(canPlace(piece,piece.x,piece.y-1)) {
+      piece.y--;
+      prevLogicalY = piece.y;
+      renderY = piece.y;
+      // Don't reset dropTimer — let the existing drop schedule continue.
+      // dropTickTime is set far past so lerp t=1, holding renderY at piece.y
+      // until the next scheduled drop fires and begins a fresh lerp downward.
+      dropTickTime = Date.now() - DROP_INTERVAL * 2;
+    }
+  }
+  if(e.key==='ArrowUp') rotate();
+  if(e.key===' ') { e.preventDefault(); returnToTop(); }
+  draw();
+});
+
+function rotate() {
+  const m = piece.matrix;
+  const T = m[0].map((_,i) => m.map(r=>r[i])).map(r=>r.reverse());
+  const old = piece.matrix;
+  piece.matrix = T;
+  if(!canPlace(piece,piece.x,piece.y)) piece.matrix = old;
+}
+
+function returnToTop() {
+  // "Hard drop" — returns piece to row 0, animates in from above like a fresh spawn
+  piece.y = 0;
+  prevLogicalY = -1;
+  renderY = -1;
+  dropTickTime = Date.now();
+  dropTimer = Date.now();
+}
+
+// ── HUD TIMER ──
+function updateHudTimer() {
+  if(!gameRunning) return;
+  const elapsed = Date.now() - gameStartTime;
+  const h = Math.floor(elapsed/3600000);
+  const m = Math.floor((elapsed%3600000)/60000);
+  const s = Math.floor((elapsed%60000)/1000);
+  document.getElementById('hud-timer').textContent =
+    `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
+}
+
+function updateSidebar() {
+  document.getElementById('score-val').textContent = score.toLocaleString();
+  document.getElementById('lines-val').textContent = lines;
+  document.getElementById('tetrises-val').textContent = tetrises;
+  document.getElementById('quota-remain-val').textContent = Math.max(0, quota - tetrises);
+  document.getElementById('hud-tetrises').textContent = `${tetrises} / ${quota}`;
+}
+
+// ── TAUNTS ──
+function scheduleTaunt() {
+  if(!gameRunning) return;
+  const delay = 15000 + Math.random() * 30000;
+  window._tauntTimeout = setTimeout(() => {
+    showTaunt(getRandomTaunt());
+    scheduleTaunt();
+  }, delay);
+}
+
+function getRandomTaunt() {
+  const msgs = TAUNT_MESSAGES.map(m => m.replace('{lines}', lines));
+  return msgs[Math.floor(Math.random() * msgs.length)];
+}
+
+function showTaunt(msg) {
+  const el = document.getElementById('taunt-overlay');
+  document.getElementById('taunt-text').textContent = msg;
+  el.classList.add('visible');
+  setTimeout(() => el.classList.remove('visible'), 6000);
+}
+
+// ── TETRIS FLASH ──
+function flashTetris() {
+  const el = document.getElementById('tetris-flash');
+  el.style.opacity = '0.4';
+  setTimeout(() => { el.style.opacity = '0'; }, 100);
+  showTaunt("TETRIS.\nTHE QUOTA DECREASES BY ONE.");
+}
+
+// ── GAME OVER ──
+function gameOver(won) {
+  gameRunning = false;
+  cancelAnimationFrame(window._raf);
+  clearInterval(window._hudClock);
+  clearTimeout(window._tauntTimeout);
+
+  document.getElementById('hud-status').textContent = won ? 'QUOTA MET' : 'TERMINATED';
+
+  const elapsed = Date.now() - gameStartTime;
+  const h = Math.floor(elapsed/3600000);
+  const m = Math.floor((elapsed%3600000)/60000);
+  const s = Math.floor((elapsed%60000)/1000);
+  const timeStr = `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
+
+  gameScreen.classList.remove('active');
+  endScreen.classList.add('active');
+
+  document.getElementById('end-heading').textContent = won ? 'QUOTA FULFILLED' : 'STACK OVERFLOW';
+  document.getElementById('end-subhead').textContent = won
+    ? 'THE SYSTEM ACKNOWLEDGES YOUR COMPLIANCE.'
+    : 'THE BLOCKS DID NOT RESPECT YOUR WISHES.';
+
+  const grid = document.getElementById('stats-grid');
+  const rows = [
+    ['TOTAL TIME', timeStr],
+    ['TETRISES ACHIEVED', tetrises],
+    ['TETRIS QUOTA', quota],
+    ['QUOTA MET', won ? 'YES' : 'NO'],
+    ['TOTAL LINES', lines],
+    ['SCORE', score.toLocaleString()],
+    ['BLOCKS PER TETRIS', tetrises > 0 ? (lines / tetrises).toFixed(1) : 'N/A'],
+    ['OUTCOME', won ? 'SATISFACTORY' : 'DISAPPOINTING'],
+  ];
+  grid.innerHTML = rows.map(([l,v]) =>
+    `<span class="s-label">${l}</span><span class="s-val">${v}</span>`
+  ).join('');
+
+  document.getElementById('game-id-display').textContent = `GAME ID: ${gameId}`;
+}
+</script>
+</body>
+</html>
