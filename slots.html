@@ -515,12 +515,10 @@ function makeSymCard(sym) {
 }
 
 // ── REEL ANIMATION ──
-// Cards scroll upward: strip translateY goes from 0 to negative.
-// Symbols enter from the bottom, exit at the top — matching a real slot machine.
-// Speed is kept low enough (px/s) that each card is visible as it passes,
-// avoiding the stroboscopic "wrong direction" illusion.
+// All spins — fake and real — use identical timing so they are visually indistinguishable.
+// The only difference is what symbol lands in the centre.
 
-const SPIN_SPEED_PX_PER_S = 2200; // slow enough to read direction clearly
+const SPIN_SPEED_PX_PER_S = 2200;
 
 // One permanent <style> element per reel — no cross-reel keyframe conflicts
 const reelStyleEls = [0, 1, 2].map(i => {
@@ -530,15 +528,9 @@ const reelStyleEls = [0, 1, 2].map(i => {
   return el;
 });
 
-// Motion-blur overlay shown during fast phase to sell the speed feel
-// without the stroboscopic direction illusion
 function setMotorRunning(reelIdx, on) {
   const rc = document.getElementById(`reel-c${reelIdx}`);
-  if (on) {
-    rc.style.setProperty('--blur-opacity', '1');
-  } else {
-    rc.style.setProperty('--blur-opacity', '0');
-  }
+  rc.style.setProperty('--blur-opacity', on ? '1' : '0');
 }
 
 function setReelKeyframe(reelIdx, kfName, distancePx) {
@@ -546,39 +538,37 @@ function setReelKeyframe(reelIdx, kfName, distancePx) {
     `@keyframes ${kfName} { from { transform:translateY(0); } to { transform:translateY(${-distancePx}px); } }`;
 }
 
+// Shared animation engine — fake and real spins both use these exact durations.
+// Reel 0: 10000ms, Reel 1: 11500ms, Reel 2: 13000ms — same every time.
+const REEL_DURATIONS = [10000, 11500, 13000];
+const REEL_STAGGER   = [0,     1500,  3000];
+
 function animateReelScroll(reelIdx, finalSym, symbolPool, totalDurationMs) {
   return new Promise(resolve => {
     const strip = document.getElementById(`reel-strip${reelIdx}`);
 
-    // Hard reset
     strip.style.animation = 'none';
     strip.style.transition = 'none';
     strip.style.transform = 'translateY(0)';
     strip.innerHTML = '';
     void strip.offsetHeight;
 
-    // ── Timing split ──
     const warmupMs = totalDurationMs * 0.55;
     const landMs   = totalDurationMs * 0.45;
 
-    // ── Build card strip ──
-    // Warmup: enough cards to fill the fast-phase travel distance
-    // Landing: 12 visible cards of deceleration, then the final symbol
     const warmupPx    = Math.round(SPIN_SPEED_PX_PER_S * (warmupMs / 1000));
     const warmupCards = Math.ceil(warmupPx / CARD_H) + 2;
     const landCards   = 12;
-    const totalCards  = warmupCards + landCards + 1; // last = finalSym
+    const totalCards  = warmupCards + landCards + 1;
 
     for (let i = 0; i < warmupCards + landCards; i++) {
       strip.appendChild(makeSymCard(symbolPool[Math.floor(Math.random() * symbolPool.length)]));
     }
     strip.appendChild(makeSymCard(finalSym));
 
-    // Full scroll to land finalSym centred in the 140px window
     const fullScrollPx = (totalCards - 1) * CARD_H;
     const landScrollPx = fullScrollPx - warmupPx;
 
-    // ── Tick sounds ──
     const numTicks = Math.ceil(totalDurationMs / 130);
     let ticksDone = 0;
     const tickTimer = setInterval(() => {
@@ -588,7 +578,6 @@ function animateReelScroll(reelIdx, finalSym, symbolPool, totalDurationMs) {
       if (ticksDone >= numTicks) clearInterval(tickTimer);
     }, totalDurationMs / numTicks);
 
-    // ── Phase 1: CSS animation (GPU linear, constant speed, no JS drift) ──
     const kfName = `rs_${reelIdx}_${Date.now()}`;
     setReelKeyframe(reelIdx, kfName, warmupPx);
     setMotorRunning(reelIdx, true);
@@ -599,7 +588,6 @@ function animateReelScroll(reelIdx, finalSym, symbolPool, totalDurationMs) {
       });
     });
 
-    // ── Phase 2: rAF ease-out landing ──
     setTimeout(() => {
       setMotorRunning(reelIdx, false);
       strip.style.animation = 'none';
@@ -628,22 +616,12 @@ function animateReelScroll(reelIdx, finalSym, symbolPool, totalDurationMs) {
   });
 }
 
-// Prize spin — staggered start, reels 1 and 2 launch 1.5s apart
+// Both fake and real spins call this same function with identical stagger/duration.
 async function playSpinAnimation(s0, s1, s2, pool) {
   document.querySelectorAll('.light-bulb').forEach(b => b.classList.add('spinning'));
-  const p0 = animateReelScroll(0, s0, pool, 10000);
-  const p1 = sleep(1500).then(() => animateReelScroll(1, s1, pool, 11500));
-  const p2 = sleep(3000).then(() => animateReelScroll(2, s2, pool, 13000));
-  await Promise.all([p0, p1, p2]);
-  document.querySelectorAll('.light-bulb').forEach(b => b.classList.remove('spinning'));
-}
-
-// Fake spin — shorter, same structure
-async function playFakeSpinAnimation(s0, s1, s2, pool) {
-  document.querySelectorAll('.light-bulb').forEach(b => b.classList.add('spinning'));
-  const p0 = animateReelScroll(0, s0, pool, 3200);
-  const p1 = sleep(600).then(() => animateReelScroll(1, s1, pool, 3800));
-  const p2 = sleep(1200).then(() => animateReelScroll(2, s2, pool, 4400));
+  const p0 = animateReelScroll(0, s0, pool, REEL_DURATIONS[0]);
+  const p1 = sleep(REEL_STAGGER[1]).then(() => animateReelScroll(1, s1, pool, REEL_DURATIONS[1]));
+  const p2 = sleep(REEL_STAGGER[2]).then(() => animateReelScroll(2, s2, pool, REEL_DURATIONS[2]));
   await Promise.all([p0, p1, p2]);
   document.querySelectorAll('.light-bulb').forEach(b => b.classList.remove('spinning'));
 }
@@ -656,24 +634,20 @@ function buildFakeTriplet(winId, pool, rng) {
   const nearMiss = rng() < 0.40;
 
   if (nearMiss && otherPool.length >= 2) {
-    // Pick a "teaser" symbol (not the real win, not the same as what we'd use for reel3)
     const teaserIdx = Math.floor(rng() * otherPool.length);
     const teaser = otherPool[teaserIdx];
-    // Third reel: a different symbol (not teaser, not winId)
     const thirdPool = otherPool.filter(s => s.id !== teaser.id);
     const third = thirdPool.length > 0
       ? thirdPool[Math.floor(rng() * thirdPool.length)]
       : otherPool[(teaserIdx + 1) % otherPool.length];
     return [teaser, teaser, third];
   } else {
-    // All three different, none matching win
     const picks = [];
     let att = 0;
     while (picks.length < 3 && att++ < 300) {
       const c = otherPool[Math.floor(rng() * otherPool.length)];
       if (picks.every(p => p.id !== c.id)) picks.push(c);
     }
-    // Pad if not enough distinct symbols
     while (picks.length < 3) picks.push(otherPool[picks.length % otherPool.length]);
     return picks;
   }
@@ -812,8 +786,7 @@ async function doSpin() {
   const flash = document.getElementById('result-flash');
   flash.className = ''; flash.textContent = '';
 
-  // Per-spin fake RNG: mix codeword hash with spin number using Knuth multiplicative hash
-  // to break the correlation between consecutive spin seeds
+  // Per-spin fake RNG
   const h1 = hashStr(state.codeword.toUpperCase() + '__FAKE__');
   const h2 = hashStr('__SPIN__' + state.spinsDone + '__F__');
   const fakeRng = makePRNG((h1 ^ h2 ^ (state.spinsDone * 2654435761)) >>> 0);
@@ -824,11 +797,11 @@ async function doSpin() {
   const winSym    = prizeToSymbol(spinEntry);
   const winId     = winSym.id;
 
-  // ── FAKE SPINS ──
+  // ── FAKE SPINS — identical timing to real spins ──
   for (let f = 0; f < fakeCount; f++) {
     flash.className = ''; flash.textContent = '';
     const triplet = buildFakeTriplet(winId, state.activeSymbols, fakeRng);
-    await playFakeSpinAnimation(triplet[0], triplet[1], triplet[2], state.activeSymbols);
+    await playSpinAnimation(triplet[0], triplet[1], triplet[2], state.activeSymbols);
     pulseReels('red');
     await sleep(1800);
   }
@@ -944,7 +917,6 @@ function showEndScreen() {
   h += sr('⚡ +10 SPINS',  t.jk_spin||0);
   document.getElementById('end-panel').innerHTML = h;
 
-  // Stake-specific instructions panel
   const instr = STAKE_INSTRUCTIONS[stake];
   document.getElementById('end-instructions').innerHTML =
     `<div class="end-instr-head">${instr.head}</div>` +
@@ -982,7 +954,6 @@ document.getElementById('btn-start').addEventListener('click', function() {
 
   showScreen('screen-game');
 
-  // Show first symbol in each reel
   const startSym = state.activeSymbols[0];
   [0,1,2].forEach(i => {
     const strip = document.getElementById(`reel-strip${i}`);
@@ -1022,16 +993,13 @@ document.getElementById('btn-again').addEventListener('click', function() {
 });
 
 // ── DEV SHORTCUT: Shift+E — fast-forward to end screen ──
-// Applies all remaining spin outcomes instantly without animation, then shows results.
 document.addEventListener('keydown', function(e) {
   if (!e.shiftKey || e.key !== 'E') return;
   if (!document.getElementById('screen-game').classList.contains('active')) return;
-  if (state.isSpinning) return; // don't interrupt a live spin
+  if (state.isSpinning) return;
 
-  // Dismiss win overlay if showing
   document.getElementById('win-overlay').className = '';
 
-  // Fast-apply all remaining spins in the sequence without any animation
   while (state.spinsDone < state.totalSpins) {
     const entry = state.sequence[state.spinsDone];
     state.spinsDone++;
