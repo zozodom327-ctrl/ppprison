@@ -1,0 +1,977 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Maples Cute Clock~</title>
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&family=Pacifico&family=Quicksand:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --bg: #fff5f8;
+  --surface: #fff0f5;
+  --surface2: #ffe8f0;
+  --border: rgba(255,160,195,0.35);
+  --pink-dim: #f7a8c8;
+  --pink-mid: #f472b6;
+  --pink-bright: #ec4899;
+  --pink-glow: rgba(244,114,182,0.18);
+  --pink-pale: #fce7f3;
+  --text-primary: #7c2d6b;
+  --text-secondary: #c0659a;
+  --text-dim: #e8a0c5;
+  --accent-yellow: #fde68a;
+  --accent-mint: #a7f3d0;
+  --font-display: 'Pacifico', cursive;
+  --font-body: 'Nunito', sans-serif;
+  --font-ui: 'Quicksand', sans-serif;
+}
+
+html, body {
+  width: 100%; height: 100%;
+  overflow: hidden;
+  background: var(--bg);
+  color: var(--text-primary);
+  font-family: var(--font-body);
+}
+
+/* ── Sticker / sparkle canvas ── */
+#bgCanvas {
+  position: fixed; inset: 0;
+  width: 100%; height: 100%;
+  z-index: 0;
+  pointer-events: none;
+  display: block;
+}
+
+body::before {
+  content: '';
+  position: fixed; inset: 0;
+  background: radial-gradient(ellipse at 40% 30%, rgba(252,231,243,0.7) 0%, rgba(255,245,248,0.1) 70%);
+  pointer-events: none;
+  z-index: 1;
+}
+
+.screen {
+  display: none;
+  position: fixed; inset: 0;
+  z-index: 10;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+}
+.screen.active { display: flex; }
+
+/* START SCREEN */
+.start-panel {
+  background: rgba(255,255,255,0.88);
+  border: 2.5px solid var(--border);
+  border-radius: 28px;
+  padding: clamp(32px,5vh,60px) clamp(32px,5vw,72px);
+  text-align: center;
+  max-width: 640px;
+  width: 92vw;
+  position: relative;
+  overflow: hidden;
+  backdrop-filter: blur(12px);
+  box-shadow: 0 8px 48px rgba(236,72,153,0.12), 0 2px 12px rgba(236,72,153,0.08);
+}
+.start-panel::before {
+  content: '';
+  position: absolute; inset: 0;
+  background: radial-gradient(ellipse at 50% 0%, rgba(244,114,182,0.10) 0%, transparent 65%);
+  pointer-events: none;
+}
+/* Cute corner decorations */
+.start-panel::after {
+  content: '🌸';
+  position: absolute;
+  top: 14px; right: 18px;
+  font-size: 28px;
+  opacity: 0.6;
+  animation: floatBob 3s ease-in-out infinite;
+}
+@keyframes floatBob {
+  0%,100% { transform: translateY(0) rotate(-5deg); }
+  50%      { transform: translateY(-6px) rotate(5deg); }
+}
+
+.title-text {
+  font-family: var(--font-display);
+  font-size: clamp(28px,4.5vw,46px);
+  letter-spacing: 0.04em;
+  font-weight: 400;
+  color: var(--pink-bright);
+  line-height: 1.3;
+  text-shadow: 0 2px 12px rgba(236,72,153,0.25), 0 0 40px rgba(236,72,153,0.12);
+}
+.title-sub {
+  display: block;
+  font-family: var(--font-ui);
+  font-size: 0.42em;
+  letter-spacing: 0.22em;
+  color: var(--text-dim);
+  margin-top: 8px;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+.divider {
+  width: 80px; height: 3px;
+  background: linear-gradient(to right, transparent, var(--pink-mid), var(--pink-dim), transparent);
+  margin: 20px auto;
+  border-radius: 99px;
+}
+.start-panel > p {
+  color: var(--text-secondary);
+  font-size: clamp(16px,2.3vw,22px);
+  line-height: 1.6;
+  font-weight: 600;
+}
+.input-row {
+  display: flex; align-items: center; justify-content: center;
+  gap: 16px; margin: 22px 0 10px;
+}
+.input-group { display: flex; flex-direction: column; align-items: center; gap: 7px; }
+.input-group label {
+  font-family: var(--font-ui);
+  font-size: clamp(9px,1.2vw,12px);
+  letter-spacing: 0.22em;
+  color: var(--text-dim);
+  font-weight: 700;
+  text-transform: uppercase;
+}
+.input-group input {
+  background: var(--pink-pale);
+  border: 2px solid var(--border);
+  border-radius: 14px;
+  color: var(--pink-bright);
+  font-family: var(--font-display);
+  font-size: clamp(26px,4vw,42px);
+  width: 100px; text-align: center;
+  padding: 10px 4px; outline: none;
+  transition: border-color 0.3s, box-shadow 0.3s;
+  -moz-appearance: textfield;
+}
+.input-group input::-webkit-inner-spin-button,
+.input-group input::-webkit-outer-spin-button { -webkit-appearance: none; }
+.input-group input:focus { border-color: var(--pink-mid); box-shadow: 0 0 0 3px rgba(244,114,182,0.18); }
+.input-sep {
+  font-size: clamp(24px,3.5vw,36px);
+  color: var(--pink-dim);
+  padding-top: 20px;
+  font-weight: 800;
+  font-family: var(--font-body);
+}
+.instructions {
+  font-size: clamp(13px,1.6vw,16px);
+  color: var(--text-dim);
+  line-height: 1.9; margin: 18px 0 26px;
+  font-style: italic;
+  font-weight: 600;
+}
+.btn-begin {
+  background: linear-gradient(135deg, #f472b6, #ec4899, #db2777);
+  border: none;
+  color: #fff;
+  font-family: var(--font-display);
+  font-size: clamp(16px,1.9vw,22px);
+  letter-spacing: 0.08em;
+  padding: 14px 44px;
+  cursor: pointer;
+  border-radius: 99px;
+  transition: all 0.3s;
+  box-shadow: 0 4px 18px rgba(236,72,153,0.35);
+  position: relative; overflow: hidden;
+}
+.btn-begin::after {
+  content: ' ✨';
+}
+.btn-begin:hover {
+  transform: translateY(-2px) scale(1.03);
+  box-shadow: 0 8px 28px rgba(236,72,153,0.5);
+}
+.btn-begin:active { transform: translateY(0) scale(0.98); }
+
+/* GAME SCREEN */
+#gameScreen {
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  gap: 0;
+}
+
+.game-title {
+  font-family: var(--font-display);
+  font-size: clamp(18px,2.8vw,28px);
+  letter-spacing: 0.04em;
+  color: var(--pink-bright);
+  font-weight: 400;
+  position: absolute;
+  top: max(14px,1.8vh);
+  left: 50%;
+  transform: translateX(-50%);
+  white-space: nowrap;
+  z-index: 20;
+  text-shadow: 0 2px 10px rgba(236,72,153,0.2);
+}
+
+#clock {
+  position: relative;
+  border-radius: 50%;
+  border: 3px solid rgba(244,114,182,0.22);
+  flex-shrink: 0;
+  transition: box-shadow 1.2s ease;
+  z-index: 10;
+  background: rgba(255,255,255,0.7);
+  backdrop-filter: blur(4px);
+}
+#clock.running {
+  animation: clockPulse 2.8s ease-in-out infinite;
+}
+@keyframes clockPulse {
+  0%,100% { box-shadow: 0 0 30px rgba(244,114,182,0.25), 0 0 70px rgba(236,72,153,0.1); }
+  50%      { box-shadow: 0 0 60px rgba(244,114,182,0.5), 0 0 120px rgba(236,72,153,0.22); }
+}
+
+#clockCanvas {
+  position: absolute; inset: 0;
+  border-radius: 50%;
+  display: block;
+}
+
+/* Hypno mask */
+#hypnoMask {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background: radial-gradient(circle at 50% 30%, rgba(255,245,248,0.95) 0%, rgba(255,245,248,0.5) 40%, transparent 75%);
+  z-index: 25;
+  opacity: 0;
+  transition: opacity 5s ease;
+  pointer-events: none;
+}
+
+#hud {
+  position: absolute;
+  top: max(16px,2vh);
+  left: max(18px,2vw);
+  z-index: 20;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.hud-row {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+}
+.hud-label {
+  font-family: var(--font-ui);
+  font-size: clamp(9px,1vw,11px);
+  letter-spacing: 0.22em;
+  color: var(--text-dim);
+  white-space: nowrap;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+.hud-value {
+  font-family: var(--font-display);
+  font-size: clamp(13px,1.6vw,18px);
+  letter-spacing: 0.06em;
+  color: var(--pink-bright);
+  font-weight: 400;
+}
+
+.game-hud {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  position: absolute;
+  bottom: max(16px,2vh);
+  left: 50%;
+  transform: translateX(-50%);
+  white-space: nowrap;
+  z-index: 20;
+  text-align: center;
+}
+
+#prompt {
+  font-family: var(--font-ui);
+  font-size: clamp(16px,2.2vw,26px);
+  letter-spacing: 0.06em;
+  color: var(--text-secondary);
+  text-align: center;
+  min-height: 1.3em;
+  line-height: 1.3;
+  font-weight: 700;
+}
+#prompt .key-letter {
+  font-size: 1.5em;
+  font-weight: 800;
+  color: var(--pink-bright);
+  letter-spacing: 0.04em;
+  text-shadow:
+    0 0 12px rgba(236,72,153,0.7),
+    0 0 32px rgba(236,72,153,0.4),
+    0 0 64px rgba(244,114,182,0.3);
+}
+
+#failTimer {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, 80px);
+  z-index: 40;
+  pointer-events: none;
+  font-family: var(--font-display);
+  font-size: clamp(24px, 3vw, 40px);
+  color: #e11d86;
+  letter-spacing: 0.05em;
+  display: none;
+  text-shadow: 0 0 20px rgba(225,29,134,0.5);
+  animation: pulseRed 0.7s ease-in-out infinite;
+}
+@keyframes pulseRed {
+  0%,100% { opacity: 1; }
+  50%      { opacity: 0.5; }
+}
+
+/* Hypno message — cute font + colour */
+#hypno {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -120%);
+  width: 80vw;
+  text-align: center;
+  opacity: 0;
+  pointer-events: none;
+  color: var(--pink-bright);
+  font-family: var(--font-display);
+  font-size: clamp(28px,5vw,64px);
+  font-weight: 400;
+  letter-spacing: 0.06em;
+  line-height: 1.4;
+  z-index: 30;
+  text-shadow:
+    0 2px 0 rgba(255,255,255,0.8),
+    0 0 20px rgba(244,114,182,0.6),
+    0 0 50px rgba(236,72,153,0.3);
+}
+#hypno.visible {
+  animation: hypnoPulse 3.5s ease-in-out infinite;
+}
+@keyframes hypnoPulse {
+  0%,100% { text-shadow: 0 2px 0 rgba(255,255,255,0.8), 0 0 20px rgba(244,114,182,0.6), 0 0 50px rgba(236,72,153,0.3); }
+  50%      { text-shadow: 0 2px 0 rgba(255,255,255,0.9), 0 0 30px rgba(244,114,182,0.9), 0 0 70px rgba(236,72,153,0.55); }
+}
+
+#rewindOverlay {
+  position: fixed; inset: 0;
+  z-index: 50;
+  pointer-events: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  transition: opacity 0.12s;
+}
+#rewindOverlay.active { opacity: 1; }
+.rewind-msg {
+  font-family: var(--font-display);
+  font-size: clamp(20px,4vw,46px);
+  letter-spacing: 0.12em;
+  color: #e11d86;
+  text-align: center;
+  text-shadow: 0 0 28px rgba(225,29,134,0.45);
+  animation: glitch 0.1s steps(2,end) infinite;
+}
+@keyframes glitch {
+  0%   { transform: translate(0, 0); }
+  25%  { transform: translate(-2px, 1px); }
+  75%  { transform: translate(2px, -1px); }
+  100% { transform: translate(0, 0); }
+}
+
+/* END SCREEN */
+.end-panel {
+  background: rgba(255,255,255,0.95);
+  border: 2.5px solid var(--border);
+  border-radius: 28px;
+  padding: clamp(40px,6vh,70px) clamp(40px,6vw,80px);
+  text-align: center;
+  max-width: 520px;
+  width: 92vw;
+  position: relative;
+  overflow: hidden;
+  backdrop-filter: blur(8px);
+  box-shadow: 0 8px 48px rgba(236,72,153,0.12);
+}
+.end-panel::before {
+  content: '🌸';
+  position: absolute;
+  top: 14px; right: 18px;
+  font-size: 28px;
+  opacity: 0.5;
+  animation: floatBob 3.5s ease-in-out infinite;
+}
+.end-panel h1 {
+  font-family: var(--font-display);
+  font-size: clamp(18px,3vw,28px);
+  letter-spacing: 0.05em;
+  font-weight: 400;
+  color: var(--pink-bright);
+  text-shadow: 0 2px 10px rgba(236,72,153,0.2);
+}
+.end-panel h2 {
+  font-family: var(--font-body);
+  font-weight: 700;
+  font-size: clamp(15px,2.2vw,22px);
+  color: var(--text-secondary);
+  margin-top: 14px;
+}
+.end-stat {
+  color: var(--text-dim);
+  font-family: var(--font-ui);
+  font-size: clamp(11px,1.3vw,14px);
+  letter-spacing: 0.14em;
+  font-weight: 700;
+  margin-top: 12px;
+  display: flex;
+  justify-content: space-between;
+  gap: 24px;
+  text-transform: uppercase;
+}
+#gameID {
+  margin-top: 20px;
+  font-family: var(--font-display);
+  font-size: clamp(13px,1.5vw,18px);
+  color: var(--pink-mid);
+  letter-spacing: 0.1em;
+  opacity: 0.9;
+  text-shadow: 0 0 10px rgba(244,114,182,0.4);
+}
+.btn-again {
+  margin-top: 22px;
+  background: linear-gradient(135deg, #f472b6, #ec4899);
+  border: none;
+  color: #fff;
+  font-family: var(--font-display);
+  font-size: clamp(14px,1.7vw,19px);
+  padding: 12px 36px;
+  cursor: pointer;
+  border-radius: 99px;
+  transition: all 0.3s;
+  box-shadow: 0 4px 16px rgba(236,72,153,0.3);
+  letter-spacing: 0.06em;
+}
+.btn-again:hover { transform: translateY(-2px); box-shadow: 0 7px 22px rgba(236,72,153,0.45); }
+</style>
+</head>
+<body>
+
+<canvas id="bgCanvas"></canvas>
+
+<div id="startScreen" class="screen active">
+  <div class="start-panel">
+    <h1 class="title-text">Maples Cute Clock~<span class="title-sub">A Fun Timeout ✨</span></h1>
+    <div class="divider"></div>
+    <p>How long will you watch my cute clock? 🕐</p>
+
+    <div class="input-row">
+      <div class="input-group">
+        <label>Hours</label>
+        <input type="number" id="hours" value="0" min="0" max="23">
+      </div>
+      <div class="input-sep">:</div>
+      <div class="input-group">
+        <label>Minutes</label>
+        <input type="number" id="minutes" value="10" min="0" max="59">
+      </div>
+    </div>
+
+    <p class="instructions">
+The clock will only move by holding the correct key until it changes~ 🌷<br>
+If you forget to hold the key for 3 seconds, then my clock rewinds 10 minutes~ Don’t slip up~ 💔 <br>
+Warning: The key will change with little warning, so please pay attention~ ‼️
+    </p>
+    <button class="btn-begin" onclick="startGame()">Begin</button>
+  </div>
+</div>
+
+<div id="gameScreen" class="screen">
+  <div class="game-title">Maples Cute Clock~</div>
+
+  <div id="hud">
+    <div class="hud-row">
+      <span class="hud-label">Current</span>
+      <span class="hud-value" id="hudCurrent">12:00</span>
+    </div>
+    <div class="hud-row">
+      <span class="hud-label">Reach</span>
+      <span class="hud-value" id="hudTarget">—</span>
+    </div>
+  </div>
+
+  <div id="hypno"></div>
+  <div id="failTimer">3</div>
+  <div id="rewindOverlay"><div class="rewind-msg">Oopsie~ rewinding 💔</div></div>
+
+  <div id="clock" class="idle">
+    <div id="hypnoMask"></div>
+    <canvas id="clockCanvas"></canvas>
+  </div>
+
+  <div class="game-hud">
+    <div id="prompt"></div>
+  </div>
+</div>
+
+<div id="endScreen" class="screen">
+  <div class="end-panel">
+    <h1>Maples Cute Clock~</h1>
+    <div class="divider"></div>
+    <h2>Congratulations sweetheart, you watched my cute clock~ 🌸</h2>
+    <div class="end-stat">Time watched <span id="finalTime">—</span></div>
+    <div class="end-stat">Rewinds suffered <span id="finalRewinds">0</span></div>
+    <div id="gameID"></div>
+    <button class="btn-again" onclick="location.reload()">Again~ ✨</button>
+  </div>
+</div>
+
+<script>
+// ── STATE ──
+let targetTime    = 0;
+let elapsed       = 0;
+let holdingKey    = false;
+let currentKey    = "";
+let lastKey       = "";
+let failCountdown = 3;
+let failInterval  = null;
+let gameInterval  = null;
+let switchTimer   = 0;
+let activeKeys    = new Set();
+let starting      = true;
+let gameOver      = false;
+let rewinding     = false;
+let warningActive = false;
+let rewindCount   = 0;
+
+const clockEl    = document.getElementById("clock");
+const canvas     = document.getElementById("clockCanvas");
+const promptEl   = document.getElementById("prompt");
+const failTimerEl= document.getElementById("failTimer");
+const rewindOv   = document.getElementById("rewindOverlay");
+const hypnoEl    = document.getElementById("hypno");
+const maskEl     = document.getElementById("hypnoMask");
+const hudCurrent = document.getElementById("hudCurrent");
+const hudTarget  = document.getElementById("hudTarget");
+const ctx        = canvas.getContext("2d");
+
+// ── BACKGROUND: floating stickers & sparkles ──
+const bgCanvas = document.getElementById("bgCanvas");
+const bgCtx    = bgCanvas.getContext("2d");
+let bgW, bgH;
+
+const STICKERS = ["🌸","🌷","✨","💖","🍓","🌺","💕","⭐","🦋","🌼","💗","🎀","🌈","🍒","🌻","💝","🌟","💫","🩷","🧁"];
+
+const floaters = [];
+
+function resizeBg() {
+  bgW = bgCanvas.width  = window.innerWidth;
+  bgH = bgCanvas.height = window.innerHeight;
+}
+
+function spawnFloater() {
+  floaters.push({
+    x: Math.random() * bgW,
+    y: bgH + 30,
+    emoji: STICKERS[Math.floor(Math.random() * STICKERS.length)],
+    size: Math.random() * 28 + 18,
+    speed: Math.random() * 0.55 + 0.2,
+    drift: (Math.random() - 0.5) * 0.4,
+    rot: Math.random() * Math.PI * 2,
+    rotSpeed: (Math.random() - 0.5) * 0.025,
+    alpha: Math.random() * 0.35 + 0.65,
+    wobble: Math.random() * Math.PI * 2,
+    wobbleSpeed: Math.random() * 0.03 + 0.01,
+  });
+}
+
+// Sparkle particles
+const sparks = [];
+function spawnSpark() {
+  sparks.push({
+    x: Math.random() * bgW,
+    y: Math.random() * bgH,
+    r: Math.random() * 2.5 + 1,
+    alpha: Math.random() * 0.6 + 0.2,
+    pulseSpeed: Math.random() * 0.04 + 0.01,
+    phase: Math.random() * Math.PI * 2,
+    color: Math.random() < 0.5 ? `rgba(244,114,182,` : `rgba(253,186,116,`,
+  });
+}
+for (let i = 0; i < 55; i++) spawnSpark();
+
+function drawBg() {
+  bgCtx.clearRect(0, 0, bgW, bgH);
+
+  // White base
+  bgCtx.fillStyle = "#fff5f8";
+  bgCtx.fillRect(0, 0, bgW, bgH);
+
+  // Soft rosy blush gradient
+  const grad = bgCtx.createRadialGradient(bgW*0.35, bgH*0.3, 0, bgW*0.35, bgH*0.3, bgW*0.75);
+  grad.addColorStop(0, "rgba(252,207,232,0.45)");
+  grad.addColorStop(0.6, "rgba(255,228,242,0.2)");
+  grad.addColorStop(1, "rgba(255,245,248,0)");
+  bgCtx.fillStyle = grad;
+  bgCtx.fillRect(0, 0, bgW, bgH);
+
+  // Sparkle dots
+  const now = Date.now() / 1000;
+  for (const s of sparks) {
+    const a = s.alpha * (0.5 + 0.5 * Math.sin(now * s.pulseSpeed * 60 + s.phase));
+    bgCtx.beginPath();
+    bgCtx.arc(s.x, s.y, s.r, 0, Math.PI * 2);
+    bgCtx.fillStyle = s.color + a.toFixed(3) + ")";
+    bgCtx.fill();
+
+    // Plus-cross sparkle shape on larger ones
+    if (s.r > 2) {
+      bgCtx.strokeStyle = s.color + (a*0.5).toFixed(3) + ")";
+      bgCtx.lineWidth = 0.8;
+      bgCtx.beginPath();
+      bgCtx.moveTo(s.x - s.r * 2.5, s.y); bgCtx.lineTo(s.x + s.r * 2.5, s.y);
+      bgCtx.moveTo(s.x, s.y - s.r * 2.5); bgCtx.lineTo(s.x, s.y + s.r * 2.5);
+      bgCtx.stroke();
+    }
+  }
+
+  // Emoji floaters — skip any that overlap the clock circle
+  bgCtx.textBaseline = "middle";
+  bgCtx.textAlign = "center";
+
+  // Get clock bounds in screen space for avoidance
+  const clockRect = clockEl.getBoundingClientRect();
+  const clockCX = clockRect.left + clockRect.width  / 2;
+  const clockCY = clockRect.top  + clockRect.height / 2;
+  const clockR  = clockRect.width / 2 + 18; // small padding
+
+  for (let i = floaters.length - 1; i >= 0; i--) {
+    const f = floaters[i];
+    f.y -= f.speed;
+    f.x += f.drift + Math.sin(f.wobble) * 0.3;
+    f.wobble += f.wobbleSpeed;
+    f.rot += f.rotSpeed;
+    if (f.y < -40) { floaters.splice(i, 1); continue; }
+
+    // Skip drawing if inside clock circle
+    const dx = f.x - clockCX, dy = f.y - clockCY;
+    if (Math.sqrt(dx*dx + dy*dy) < clockR + f.size * 0.5) continue;
+
+    bgCtx.save();
+    bgCtx.globalAlpha = f.alpha;
+    bgCtx.translate(f.x, f.y);
+    bgCtx.rotate(f.rot);
+    bgCtx.font = `${f.size}px serif`;
+    bgCtx.fillText(f.emoji, 0, 0);
+    bgCtx.restore();
+  }
+
+  requestAnimationFrame(drawBg);
+}
+
+function scheduleFloater() {
+  spawnFloater();
+  setTimeout(scheduleFloater, Math.random() * 1200 + 400);
+}
+
+window.addEventListener("resize", resizeBg);
+resizeBg();
+// Pre-seed some floaters
+for (let i = 0; i < 18; i++) {
+  const f = { x: Math.random()*window.innerWidth, y: Math.random()*window.innerHeight,
+    emoji: STICKERS[Math.floor(Math.random()*STICKERS.length)],
+    size: Math.random()*28+18, speed: Math.random()*0.55+0.2, drift: (Math.random()-0.5)*0.4,
+    rot: Math.random()*Math.PI*2, rotSpeed: (Math.random()-0.5)*0.025,
+    alpha: Math.random()*0.35+0.65, wobble: Math.random()*Math.PI*2, wobbleSpeed: Math.random()*0.03+0.01 };
+  floaters.push(f);
+}
+scheduleFloater();
+drawBg();
+
+// ── CLOCK DRAWING ──
+function setClockSize() {
+  const vw = window.innerWidth, vh = window.innerHeight;
+  const size = Math.min(vw * 0.80, vh - 220, 680);
+  clockEl.style.width  = size + "px";
+  clockEl.style.height = size + "px";
+  canvas.width  = size;
+  canvas.height = size;
+  drawClock(elapsed);
+}
+window.addEventListener("resize", setClockSize);
+
+function drawClock(sec) {
+  const s  = canvas.width;
+  const cx = s / 2, cy = s / 2, r = s / 2;
+  ctx.clearRect(0, 0, s, s);
+
+  // Clock face — white with soft pink gradient
+  const faceGrad = ctx.createRadialGradient(cx, cy*0.8, 0, cx, cy, r);
+  faceGrad.addColorStop(0, "#fff8fb");
+  faceGrad.addColorStop(1, "#fce7f3");
+  ctx.beginPath();
+  ctx.arc(cx, cy, r - 1, 0, Math.PI * 2);
+  ctx.fillStyle = faceGrad;
+  ctx.fill();
+
+  // Outer ring
+  ctx.beginPath();
+  ctx.arc(cx, cy, r * 0.905, 0, Math.PI * 2);
+  ctx.strokeStyle = "rgba(244,114,182,0.18)";
+  ctx.lineWidth = 1.5; ctx.stroke();
+
+  // Tick marks
+  for (let i = 0; i < 60; i++) {
+    const angle  = (i / 60) * Math.PI * 2 - Math.PI / 2;
+    const major  = i % 5 === 0;
+    const outerR = r * 0.89;
+    const innerR = major ? r * 0.77 : r * 0.84;
+    ctx.beginPath();
+    ctx.moveTo(cx + Math.cos(angle) * innerR, cy + Math.sin(angle) * innerR);
+    ctx.lineTo(cx + Math.cos(angle) * outerR, cy + Math.sin(angle) * outerR);
+    ctx.strokeStyle = major ? "rgba(236,72,153,0.45)" : "rgba(244,114,182,0.2)";
+    ctx.lineWidth   = major ? 2 : 1;
+    ctx.stroke();
+  }
+
+  // Numbers
+  const numR = r * 0.67;
+  const numSize = Math.max(12, s * 0.055);
+  ctx.font = `700 ${numSize}px 'Quicksand', sans-serif`;
+  ctx.textAlign = "center";
+  ctx.textBaseline = "middle";
+  for (let i = 1; i <= 12; i++) {
+    const angle = (i / 12) * Math.PI * 2 - Math.PI / 2;
+    ctx.fillStyle = "rgba(219,39,119,0.7)";
+    ctx.fillText(i, cx + Math.cos(angle) * numR, cy + Math.sin(angle) * numR);
+  }
+
+  // Little heart decorations at cardinal points
+  ctx.font = `${Math.max(10, s * 0.028)}px serif`;
+  ctx.fillStyle = "rgba(244,114,182,0.22)";
+  const decoR = r * 0.53;
+  const decoAngles = [0, Math.PI/2, Math.PI, Math.PI*3/2].map(a => a - Math.PI/2);
+  // skip - keeps it clean
+
+  // Hands
+  const norm = ((sec % 43200) + 43200) % 43200;
+  const secAngle = ((norm % 60) / 60) * Math.PI * 2 - Math.PI / 2;
+  const minAngle = ((norm % 3600) / 3600) * Math.PI * 2 - Math.PI / 2;
+  const hrAngle  = (norm / 43200) * Math.PI * 2 - Math.PI / 2;
+
+  function drawHand(angle, length, width, color, alpha) {
+    ctx.save();
+    ctx.globalAlpha = alpha;
+    ctx.beginPath();
+    ctx.moveTo(cx - Math.cos(angle)*length*0.14, cy - Math.sin(angle)*length*0.14);
+    ctx.lineTo(cx + Math.cos(angle)*length, cy + Math.sin(angle)*length);
+    ctx.strokeStyle = color;
+    ctx.lineWidth = width; ctx.lineCap = "round";
+    ctx.shadowColor = color; ctx.shadowBlur = 8;
+    ctx.stroke();
+    ctx.restore();
+  }
+  drawHand(hrAngle,  r * 0.50, r * 0.042, "#db2777", 1.0);
+  drawHand(minAngle, r * 0.72, r * 0.026, "#ec4899", 1.0);
+  drawHand(secAngle, r * 0.82, r * 0.013, "#f9a8d4", 1.0);
+
+  // Center dot
+  ctx.beginPath();
+  ctx.arc(cx, cy, r * 0.032, 0, Math.PI * 2);
+  ctx.fillStyle   = "#ec4899";
+  ctx.shadowColor = "rgba(236,72,153,0.7)";
+  ctx.shadowBlur  = 10;
+  ctx.fill();
+  ctx.shadowBlur = 0;
+
+  hudCurrent.textContent = formatClockTime(sec);
+}
+
+// ── AUDIO ──
+let audioCtx = null;
+function initAudio() { if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)(); }
+function playTick() {
+  if (!audioCtx) return;
+  audioCtx.resume();
+  const t = audioCtx.currentTime;
+  const sr = audioCtx.sampleRate;
+  const len = Math.floor(sr * 0.06);
+  const buf = audioCtx.createBuffer(1, len, sr);
+  const d = buf.getChannelData(0);
+  for (let i = 0; i < len; i++) {
+    const env = i < sr * 0.002 ? i / (sr * 0.002) : Math.exp(-(i - sr * 0.002) / (sr * 0.012));
+    d[i] = (Math.random() * 2 - 1) * env;
+  }
+  const src = audioCtx.createBufferSource();
+  src.buffer = buf;
+  const bp = audioCtx.createBiquadFilter();
+  bp.type = "bandpass"; bp.frequency.value = 1800; bp.Q.value = 2.5;
+  const gain = audioCtx.createGain();
+  gain.gain.setValueAtTime(0.18, t);
+  gain.gain.exponentialRampToValueAtTime(0.001, t + 0.05);
+  src.connect(bp); bp.connect(gain); gain.connect(audioCtx.destination);
+  src.start(t);
+}
+
+// ── HYPNO CYCLE ──
+const messages = ["Someone looks tired~","Time is ticking~","Time goes on and on~","Maple is always watching~","Maple doesn't like quitters~","This clock controls you~","Focus on the clock baby~","You've got this sweetheart~","Look how strong you are~","Are those eyes getting heavy~?","Keep on pushing cutie~","Am I distracting you~?","Maple is very patient~","Are you drifting away~?","Give me your full attention~","You haven't left, have you~?","Pay close attention love~","It's too hard to focus on the clock~?","I always get what I want~","You're getting closer now~","Maple is so proud of you~","Look how focused you are~","Don't let those eyes wander now~","Aw, did someone lose focus~?","Maple believes in you~","Do you feel special~?","Slow down and relax sweetheart~","Let Maple guide you deeper~","Lose yourself to my clock~","The world moves… slower~","Focus please~","Getting sleepy now~?","Each tick feels good~","Maple is waiting dear~","You're fading away slowly~","Mind bends for my clock~","Obey Maple's clock~","Keep your eyes open baby~","Was that too long~?","I distracted you, perfect~","You're starting to fall behind~","One second at a time~","Just a little longer, so close~","Do this for Maple~","You like my clock… don't you~?","Just one more second~","Relax, breathe, obey my words~","Surrender yourself to these colors~","Maple is cheering you on~","What a good sub~"];
+let hypnoToggle = false;
+let hypnoTimeout = null;
+
+function hypnoCycle() {
+  if (gameOver) return;
+  const msg = hypnoToggle ? messages[Math.floor(Math.random() * messages.length)] : "Keep watching darling~";
+  hypnoToggle = !hypnoToggle;
+  hypnoEl.innerText = msg;
+
+  hypnoEl.style.transition = "opacity 7s ease";
+  hypnoEl.style.opacity = "1";
+  hypnoEl.classList.add("visible");
+  maskEl.style.opacity = "1";
+
+  hypnoTimeout = setTimeout(() => {
+    hypnoEl.style.transition = "opacity 5s ease";
+    hypnoEl.style.opacity = "0";
+    hypnoEl.classList.remove("visible");
+    maskEl.style.opacity = "0";
+    hypnoTimeout = setTimeout(hypnoCycle, 10000);
+  }, 4000);
+}
+
+// ── GAMEPLAY LOGIC ──
+function startGame() {
+  initAudio();
+  const h = parseInt(document.getElementById("hours").value) || 0;
+  const m = parseInt(document.getElementById("minutes").value) || 10;
+  targetTime = h * 3600 + m * 60;
+  elapsed = 0; rewindCount = 0;
+  hudTarget.textContent = formatClockTime(targetTime);
+  hudCurrent.textContent = formatClockTime(0);
+  document.getElementById("startScreen").classList.remove("active");
+  document.getElementById("gameScreen").classList.add("active");
+  setClockSize(); drawClock(0);
+  starting = true;
+  clockEl.className = "idle";
+  let count = 10;
+  setPromptPlain("Starting in " + count + " 🌸");
+  const cd = setInterval(() => {
+    count--;
+    if (count > 0) setPromptPlain("Starting in " + count + " 🌸");
+    else {
+      clearInterval(cd); starting = false;
+      pickNewKey(true);
+      gameInterval = setInterval(gameLoop, 1000);
+      hypnoCycle();
+    }
+  }, 1000);
+}
+
+function gameLoop() {
+  if (gameOver) return;
+  if (holdingKey) { elapsed++; drawClock(elapsed); playTick(); clockEl.className = "running"; }
+  if (!warningActive) {
+    switchTimer++;
+    if (switchTimer >= rand(20, 30)) { switchTimer = 0; keyWarning(); }
+  }
+  if (elapsed >= targetTime) endGame();
+}
+
+document.addEventListener("keydown", e => {
+  if (starting || gameOver || rewinding) return;
+  if (e.key.length > 1) return;
+  activeKeys.add(e.key.toLowerCase());
+  if (activeKeys.has(currentKey)) { holdingKey = true; stopFailTimer(); }
+});
+
+document.addEventListener("keyup", e => {
+  if (starting || gameOver) return;
+  if (e.key.length > 1) return;
+  activeKeys.delete(e.key.toLowerCase());
+  if (!activeKeys.has(currentKey)) { holdingKey = false; if (!rewinding) startFailTimer(); clockEl.className = "paused"; }
+});
+
+function startFailTimer() {
+  if (starting || gameOver || failInterval) return;
+  failCountdown = 3; failTimerEl.innerText = failCountdown; failTimerEl.style.display = "block";
+  failInterval = setInterval(() => {
+    failCountdown--; failTimerEl.innerText = failCountdown;
+    if (failCountdown <= 0) { clearInterval(failInterval); failInterval = null; triggerRewind(); }
+  }, 1000);
+}
+function stopFailTimer() { clearInterval(failInterval); failInterval = null; failTimerEl.style.display = "none"; }
+
+function triggerRewind() {
+  if (gameOver) return;
+  rewinding = true; holdingKey = false; activeKeys.clear(); failTimerEl.style.display = "none";
+  rewindCount++; rewindOv.classList.add("active"); setPromptPlain("Oopsie~ rewinding 💔");
+  const targetElapsed = elapsed - 600;
+  const steps = 40; const stepSize = 600 / steps; let step = 0;
+  const anim = setInterval(() => {
+    step++; elapsed -= stepSize; drawClock(elapsed);
+    if (step >= steps) {
+      clearInterval(anim); elapsed = targetElapsed; drawClock(elapsed);
+      rewindOv.classList.remove("active"); rewinding = false; pickNewKey(true);
+    }
+  }, 40);
+}
+
+function setPromptPlain(text) { promptEl.textContent = text; }
+function setPromptKey(letter) {
+  promptEl.innerHTML = "Hold the '" + '<span class="key-letter">' + letter + '</span>' + "' key~ 🌷";
+}
+function pickNewKey(requireHold = false) {
+  const letters = "abcdefghijklmnopqrstuvwxyz";
+  let newKey; do { newKey = letters[Math.floor(Math.random() * letters.length)]; } while (newKey === lastKey);
+  lastKey = newKey; currentKey = newKey; activeKeys.clear(); holdingKey = false;
+  setPromptKey(currentKey.toUpperCase()); clockEl.className = "paused";
+  if (requireHold) startFailTimer();
+}
+function keyWarning() {
+  if (warningActive) return;
+  warningActive = true; let count = 3;
+  const warn = setInterval(() => {
+    setPromptPlain("Changing in " + count + "~ ✨"); count--;
+    if (count < 0) { clearInterval(warn); warningActive = false; pickNewKey(true); }
+  }, 1000);
+}
+
+function endGame() {
+  gameOver = true; clearInterval(gameInterval); clearInterval(failInterval); clearTimeout(hypnoTimeout);
+  hypnoEl.style.opacity = "0"; maskEl.style.opacity = "0";
+  document.getElementById("gameScreen").classList.remove("active");
+  document.getElementById("endScreen").classList.add("active");
+  const displaySec = Math.max(0, elapsed);
+  const h = Math.floor(displaySec / 3600), m = Math.floor((displaySec % 3600) / 60);
+  document.getElementById("finalTime").textContent = pad(h) + "h " + pad(m) + "m";
+  document.getElementById("finalRewinds").textContent = rewindCount;
+  document.getElementById("gameID").textContent = "Game ID: " + Math.floor(100000000 + Math.random() * 900000000);
+}
+
+function formatClockTime(sec) {
+  const wrapped = ((sec % 43200) + 43200) % 43200;
+  const h = Math.floor(wrapped / 3600) % 12 || 12, m = Math.floor((wrapped % 3600) / 60);
+  return pad(h) + ":" + pad(m);
+}
+function pad(n) { return n < 10 ? "0" + n : "" + n; }
+function rand(min, max) { return Math.floor(Math.random() * (max - min + 1)) + min; }
+window.addEventListener("load", () => { setClockSize(); drawClock(0); });
+</script>
+</body>
+</html>
