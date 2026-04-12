@@ -37,13 +37,20 @@ html, body {
   font-family: var(--font-body);
 }
 
-/* ── Sticker / sparkle canvas ── */
-#bgCanvas {
-  position: fixed; inset: 0;
-  width: 100%; height: 100%;
-  z-index: 0;
+/* ── Sticker floaters ── */
+.sticker {
+  position: fixed;
   pointer-events: none;
-  display: block;
+  z-index: 2;
+  font-size: 28px;
+  line-height: 1;
+  will-change: transform;
+  animation: floatUp linear forwards;
+}
+@keyframes floatUp {
+  0%   { transform: translateY(0); opacity: 1; }
+  90%  { opacity: 1; }
+  100% { transform: translateY(calc(-100vh - 80px)); opacity: 0; }
 }
 
 body::before {
@@ -474,8 +481,6 @@ body::before {
 </head>
 <body>
 
-<canvas id="bgCanvas"></canvas>
-
 <div id="startScreen" class="screen active">
   <div class="start-panel">
     <h1 class="title-text">Maples Cute Clock~<span class="title-sub">A Fun Timeout ✨</span></h1>
@@ -496,7 +501,7 @@ body::before {
 
     <p class="instructions">
 The clock will only move by holding the correct key until it changes~ 🌷<br>
-If you forget to hold the key for 3 seconds, then my clock rewinds 10 minutes~ Don’t slip up~ 💔 <br>
+If you forget to hold the key for 3 seconds, then my clock rewinds 10 minutes~ Don't slip up~ 💔 <br>
 Warning: The key will change with little warning, so please pay attention~ ‼️
     </p>
     <button class="btn-begin" onclick="startGame()">Begin</button>
@@ -572,138 +577,50 @@ const hudCurrent = document.getElementById("hudCurrent");
 const hudTarget  = document.getElementById("hudTarget");
 const ctx        = canvas.getContext("2d");
 
-// ── BACKGROUND: floating stickers & sparkles ──
-const bgCanvas = document.getElementById("bgCanvas");
-const bgCtx    = bgCanvas.getContext("2d");
-let bgW, bgH;
-
+// ── BACKGROUND: DOM sticker floaters ──
 const STICKERS = ["🌸","🌷","✨","💖","🍓","🌺","💕","⭐","🦋","🌼","💗","🎀","🌈","🍒","🌻","💝","🌟","💫","🩷","🧁"];
 
-const floaters = [];
-
-function resizeBg() {
-  bgW = bgCanvas.width  = window.innerWidth;
-  bgH = bgCanvas.height = window.innerHeight;
+function spawnSticker() {
+  const el = document.createElement("div");
+  el.className = "sticker";
+  const size = Math.random() * 18 + 20; // 20–38px
+  const duration = Math.random() * 16 + 20; // 20–36s (half speed)
+  const x = Math.random() * (window.innerWidth - 40);
+  el.textContent = STICKERS[Math.floor(Math.random() * STICKERS.length)];
+  el.style.fontSize = size + "px";
+  el.style.left = x + "px";
+  el.style.bottom = "-60px";
+  el.style.opacity = "0.5";
+  el.style.animationDuration = duration + "s";
+  document.body.appendChild(el);
+  el.addEventListener("animationend", () => el.remove());
 }
 
-function spawnFloater() {
-  floaters.push({
-    x: Math.random() * bgW,
-    y: bgH + 30,
-    emoji: STICKERS[Math.floor(Math.random() * STICKERS.length)],
-    size: Math.random() * 28 + 18,
-    speed: Math.random() * 0.55 + 0.2,
-    drift: (Math.random() - 0.5) * 0.4,
-    rot: Math.random() * Math.PI * 2,
-    rotSpeed: (Math.random() - 0.5) * 0.025,
-    alpha: Math.random() * 0.35 + 0.65,
-    wobble: Math.random() * Math.PI * 2,
-    wobbleSpeed: Math.random() * 0.03 + 0.01,
-  });
+function scheduleSticker() {
+  spawnSticker();
+  setTimeout(scheduleSticker, Math.random() * 500 + 200); // doubled rate
 }
 
-// Sparkle particles
-const sparks = [];
-function spawnSpark() {
-  sparks.push({
-    x: Math.random() * bgW,
-    y: Math.random() * bgH,
-    r: Math.random() * 2.5 + 1,
-    alpha: Math.random() * 0.6 + 0.2,
-    pulseSpeed: Math.random() * 0.04 + 0.01,
-    phase: Math.random() * Math.PI * 2,
-    color: Math.random() < 0.5 ? `rgba(244,114,182,` : `rgba(253,186,116,`,
-  });
-}
-for (let i = 0; i < 55; i++) spawnSpark();
-
-function drawBg() {
-  bgCtx.clearRect(0, 0, bgW, bgH);
-
-  // White base
-  bgCtx.fillStyle = "#fff5f8";
-  bgCtx.fillRect(0, 0, bgW, bgH);
-
-  // Soft rosy blush gradient
-  const grad = bgCtx.createRadialGradient(bgW*0.35, bgH*0.3, 0, bgW*0.35, bgH*0.3, bgW*0.75);
-  grad.addColorStop(0, "rgba(252,207,232,0.45)");
-  grad.addColorStop(0.6, "rgba(255,228,242,0.2)");
-  grad.addColorStop(1, "rgba(255,245,248,0)");
-  bgCtx.fillStyle = grad;
-  bgCtx.fillRect(0, 0, bgW, bgH);
-
-  // Sparkle dots
-  const now = Date.now() / 1000;
-  for (const s of sparks) {
-    const a = s.alpha * (0.5 + 0.5 * Math.sin(now * s.pulseSpeed * 60 + s.phase));
-    bgCtx.beginPath();
-    bgCtx.arc(s.x, s.y, s.r, 0, Math.PI * 2);
-    bgCtx.fillStyle = s.color + a.toFixed(3) + ")";
-    bgCtx.fill();
-
-    // Plus-cross sparkle shape on larger ones
-    if (s.r > 2) {
-      bgCtx.strokeStyle = s.color + (a*0.5).toFixed(3) + ")";
-      bgCtx.lineWidth = 0.8;
-      bgCtx.beginPath();
-      bgCtx.moveTo(s.x - s.r * 2.5, s.y); bgCtx.lineTo(s.x + s.r * 2.5, s.y);
-      bgCtx.moveTo(s.x, s.y - s.r * 2.5); bgCtx.lineTo(s.x, s.y + s.r * 2.5);
-      bgCtx.stroke();
-    }
-  }
-
-  // Emoji floaters — skip any that overlap the clock circle
-  bgCtx.textBaseline = "middle";
-  bgCtx.textAlign = "center";
-
-  // Get clock bounds in screen space for avoidance
-  const clockRect = clockEl.getBoundingClientRect();
-  const clockCX = clockRect.left + clockRect.width  / 2;
-  const clockCY = clockRect.top  + clockRect.height / 2;
-  const clockR  = clockRect.width / 2 + 18; // small padding
-
-  for (let i = floaters.length - 1; i >= 0; i--) {
-    const f = floaters[i];
-    f.y -= f.speed;
-    f.x += f.drift + Math.sin(f.wobble) * 0.3;
-    f.wobble += f.wobbleSpeed;
-    f.rot += f.rotSpeed;
-    if (f.y < -40) { floaters.splice(i, 1); continue; }
-
-    // Skip drawing if inside clock circle
-    const dx = f.x - clockCX, dy = f.y - clockCY;
-    if (Math.sqrt(dx*dx + dy*dy) < clockR + f.size * 0.5) continue;
-
-    bgCtx.save();
-    bgCtx.globalAlpha = f.alpha;
-    bgCtx.translate(f.x, f.y);
-    bgCtx.rotate(f.rot);
-    bgCtx.font = `${f.size}px serif`;
-    bgCtx.fillText(f.emoji, 0, 0);
-    bgCtx.restore();
-  }
-
-  requestAnimationFrame(drawBg);
+// Pre-seed stickers already partway up the screen
+for (let i = 0; i < 30; i++) {
+  const el = document.createElement("div");
+  el.className = "sticker";
+  const size = Math.random() * 18 + 20;
+  const duration = Math.random() * 16 + 20;
+  const progress = Math.random();
+  const x = Math.random() * (window.innerWidth - 40);
+  el.textContent = STICKERS[Math.floor(Math.random() * STICKERS.length)];
+  el.style.fontSize = size + "px";
+  el.style.left = x + "px";
+  el.style.bottom = "-60px";
+  el.style.opacity = "0.5";
+  el.style.animationDuration = duration + "s";
+  el.style.animationDelay = `-${progress * duration}s`;
+  document.body.appendChild(el);
+  el.addEventListener("animationend", () => el.remove());
 }
 
-function scheduleFloater() {
-  spawnFloater();
-  setTimeout(scheduleFloater, Math.random() * 1200 + 400);
-}
-
-window.addEventListener("resize", resizeBg);
-resizeBg();
-// Pre-seed some floaters
-for (let i = 0; i < 18; i++) {
-  const f = { x: Math.random()*window.innerWidth, y: Math.random()*window.innerHeight,
-    emoji: STICKERS[Math.floor(Math.random()*STICKERS.length)],
-    size: Math.random()*28+18, speed: Math.random()*0.55+0.2, drift: (Math.random()-0.5)*0.4,
-    rot: Math.random()*Math.PI*2, rotSpeed: (Math.random()-0.5)*0.025,
-    alpha: Math.random()*0.35+0.65, wobble: Math.random()*Math.PI*2, wobbleSpeed: Math.random()*0.03+0.01 };
-  floaters.push(f);
-}
-scheduleFloater();
-drawBg();
+scheduleSticker();
 
 // ── CLOCK DRAWING ──
 function setClockSize() {
@@ -762,13 +679,6 @@ function drawClock(sec) {
     ctx.fillStyle = "rgba(219,39,119,0.7)";
     ctx.fillText(i, cx + Math.cos(angle) * numR, cy + Math.sin(angle) * numR);
   }
-
-  // Little heart decorations at cardinal points
-  ctx.font = `${Math.max(10, s * 0.028)}px serif`;
-  ctx.fillStyle = "rgba(244,114,182,0.22)";
-  const decoR = r * 0.53;
-  const decoAngles = [0, Math.PI/2, Math.PI, Math.PI*3/2].map(a => a - Math.PI/2);
-  // skip - keeps it clean
 
   // Hands
   const norm = ((sec % 43200) + 43200) % 43200;
