@@ -1,0 +1,685 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CalculateForPerfection</title>
+<link href="https://fonts.googleapis.com/css2?family=Special+Elite&family=Share+Tech+Mono&family=Bebas+Neue&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html, body {
+  overflow: hidden;
+  width: 100%; height: 100%;
+  font-size: clamp(14px, 1.4vw, 22px);
+  background: #1e3a1e;
+  color: #f0f8e0;
+  font-family: 'Share Tech Mono', monospace;
+  user-select: none;
+}
+body::before {
+  content: '';
+  position: fixed; inset: 0;
+  background-image:
+    radial-gradient(circle at 25% 30%, rgba(255,255,255,0.04) 0%, transparent 60%),
+    repeating-linear-gradient(0deg, transparent, transparent 26px, rgba(255,255,255,0.03) 26px, rgba(255,255,255,0.03) 27px);
+  pointer-events: none; z-index: 0;
+}
+
+/* HUD */
+#hud-top, #hud-bottom {
+  position: fixed; left: 0; right: 0;
+  background: #2a4a2a; z-index: 100;
+  display: flex; align-items: center;
+  padding: 0 1.6rem;
+  font-family: 'Special Elite', cursive;
+  font-size: 0.82rem; letter-spacing: 0.12em;
+  border: 2px solid #4a6a3a;
+}
+#hud-top { top: 0; height: 50px; border-bottom: 4px solid #5a7a4a; justify-content: space-between; }
+#hud-bottom { bottom: 0; height: 44px; border-top: 4px solid #5a7a4a; justify-content: space-between; }
+.hud-label { color: #b0d090; text-transform: uppercase; }
+.hud-val { color: #e8f8c0; margin-left: 0.5em; }
+#hud-title { font-family: 'Bebas Neue', sans-serif; font-size: 1.15rem; color: #d0e8a0; letter-spacing: 0.2em; }
+
+/* Screens */
+.screen {
+  position: absolute; inset: 50px 0 44px 0;
+  display: none; flex-direction: column;
+  align-items: center; justify-content: center; z-index: 1;
+}
+.screen.active { display: flex; }
+
+/* Start Screen */
+#start-screen {
+  gap: clamp(0.8rem, 2vh, 1.6rem);
+  padding: clamp(1.2rem, 3vh, 2.2rem) 1.8rem;
+}
+#start-screen .game-title {
+  font-family: 'Special Elite', cursive;
+  font-size: clamp(2.2rem, 6.5vh, 4.8rem);
+  color: #fff8d0;
+  letter-spacing: 0.08em;
+  text-align: center;
+  line-height: 1.05;
+  text-shadow: 3px 3px 0 #000, -2px -2px 0 #000, 2px -2px 0 #000, -2px 2px 0 #000;
+}
+#start-screen .game-title::after {
+  content: " ÷ × + − = ";
+  display: block;
+  font-size: 0.45em;
+  letter-spacing: 0.6em;
+  color: #d0e8a0;
+  margin-top: 0.2rem;
+  opacity: 0.85;
+}
+#start-screen .subtitle {
+  font-family: 'Special Elite', cursive;
+  font-size: clamp(0.8rem, 1.7vh, 1rem); 
+  color: #b0d090;
+  text-align: center; 
+  max-width: 540px;
+}
+
+.chalk-box {
+  border: 4px solid #6a8a4a;
+  background: #2a4a2a;
+  padding: clamp(1rem, 2.5vh, 1.8rem) 2rem;
+  max-width: 560px; width: 100%;
+  box-shadow: inset 0 0 50px rgba(0,0,0,0.6);
+}
+.chalk-box .box-title {
+  font-family: 'Special Elite', cursive;
+  font-size: 0.8rem; letter-spacing: 0.3em; color: #c0e0a0;
+  text-transform: uppercase; margin-bottom: 0.7rem;
+  border-bottom: 2px solid #5a7a4a; padding-bottom: 0.4rem;
+}
+.instructions { 
+  font-family: 'Special Elite', cursive;
+  font-size: clamp(0.78rem, 1.55vh, 0.95rem); 
+  color: #d8f0c0; 
+  line-height: 1.7;
+}
+
+/* Game Screen */
+#game-screen { justify-content: flex-start; padding: 1rem 1.4rem; }
+#time-banner {
+  width: 100%; max-width: 980px;
+  display: flex; justify-content: space-between; align-items: center;
+  margin-bottom: 0.8rem;
+}
+#session-timer-display {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: clamp(2.6rem, 6vw, 4.2rem);
+  letter-spacing: 0.1em; color: #fff8d0;
+}
+#session-timer-display.warning { color: #ffdd70; }
+#session-timer-display.danger { color: #ff7070; text-shadow: 0 0 25px rgba(255,100,100,0.7); }
+
+/* Blackboard */
+#chalkboard {
+  width: 100%; max-width: 980px;
+  background: #0a1a0a;
+  border: 14px solid #6b4a2a;
+  box-shadow: inset 0 0 120px rgba(0,0,0,0.85), 0 10px 40px rgba(0,0,0,0.75), inset 0 30px 80px rgba(255,255,255,0.07);
+  padding: 2rem 2.4rem 2.6rem;
+  display: flex; flex-direction: column;
+  align-items: center; position: relative;
+  flex: 1;
+  justify-content: space-between;
+  border-radius: 6px;
+}
+
+#chalkboard::before {
+  content: '';
+  position: absolute; inset: 0;
+  background: radial-gradient(circle at 40% 35%, rgba(255,255,255,0.045) 0%, transparent 55%),
+              radial-gradient(circle at 70% 65%, rgba(255,255,255,0.03) 0%, transparent 70%);
+  background-size: 180px 140px;
+  opacity: 0.75;
+  pointer-events: none;
+  z-index: 1;
+}
+
+#chalkboard::after {
+  content: '';
+  position: absolute;
+  bottom: -18px; left: -14px; right: -14px;
+  height: 22px;
+  background: linear-gradient(#8b5f35, #5c3f22);
+  border: 5px solid #3f2a18;
+  border-top: none;
+  box-shadow: 0 6px 12px rgba(0,0,0,0.6);
+  z-index: 2;
+}
+
+#question-display {
+  font-family: 'Special Elite', cursive;
+  font-size: clamp(4rem, 10.5vw, 8rem);
+  color: #f8ffe8;
+  text-shadow: 3px 3px 2px #000, -2px -2px 2px #000, 2px -2px 2px #000, -2px 2px 2px #000;
+  text-align: center; 
+  letter-spacing: 0.03em;
+  line-height: 1.05;
+  transition: opacity 0.3s;
+  z-index: 2;
+}
+
+#board-msg {
+  position: absolute; inset: 0; z-index: 3;
+  display: flex; align-items: center; justify-content: center;
+  padding: 0 2.5rem;
+  opacity: 0; pointer-events: none;
+  transition: opacity 0.35s;
+  background: rgba(10,26,10,0.82);
+}
+#board-msg.show { opacity: 1; }
+#board-msg-text {
+  font-family: 'Special Elite', cursive;
+  font-size: clamp(1.9rem, 4.2vw, 3.2rem);
+  text-align: center; line-height: 1.45;
+  text-shadow: 2px 2px 4px #000;
+  padding: 1.4rem;
+}
+#board-msg-text.correct { color: #e8ffcc; }
+#board-msg-text.wrong { color: #ff9070; }
+
+#answer-row {
+  display: flex; align-items: center; gap: 1.4rem;
+  padding-top: 1.4rem;
+  border-top: 2px dashed #4a6a3a;
+  width: 100%; justify-content: center;
+  z-index: 2;
+}
+#answer-prompt { font-family: 'Special Elite', cursive; font-size: 2.8rem; color: #c8e0a0; }
+#answer-input {
+  font-family: 'Special Elite', cursive; font-size: 2.8rem;
+  background: transparent; border: none;
+  border-bottom: 5px solid #e0f090;
+  color: #f8ffe8; width: 160px; text-align: center; outline: none;
+  caret-color: #f8ffe8;
+}
+
+#q-timer-ring { position: absolute; top: 1.2rem; right: 1.6rem; width: 66px; height: 66px; }
+#q-timer-ring svg { transform: rotate(-90deg); width: 66px; height: 66px; }
+.ring-bg { stroke: #1a2a1a; }
+.ring-fg { stroke: #e0f090; stroke-dasharray: 165; stroke-dashoffset: 0; transition: stroke-dashoffset 0.08s linear, stroke 0.3s; }
+#q-timer-num {
+  position: absolute; top: 50%; left: 50%;
+  transform: translate(-50%, -50%);
+  font-family: 'Bebas Neue', sans-serif; font-size: 1.5rem; color: #fff8d0;
+}
+
+#penalty-flash {
+  position: fixed; inset: 0;
+  background: rgba(240,70,40,0.25);
+  pointer-events: none; opacity: 0; transition: opacity 0.15s; z-index: 60;
+}
+#penalty-flash.active { opacity: 1; }
+
+/* End Screen */
+#end-screen { gap: 1.6rem; padding: 2.2rem; }
+#end-screen .end-heading {
+  font-family: 'Special Elite', cursive;
+  font-size: clamp(2.4rem, 6vw, 4rem);
+  color: #fff8d0;
+  text-shadow: 3px 3px 0 #000;
+  letter-spacing: 0.1em;
+}
+#end-screen .end-sub { font-size: 0.85rem; color: #b0d090; letter-spacing: 0.25em; }
+#stats-panel {
+  max-width: 540px; width: 100%;
+  border: 4px solid #6a8a4a; background: #2a4a2a; padding: 1.6rem 2rem;
+}
+.stat-row { padding: 0.45rem 0; border-bottom: 1px solid #3f5a3a; font-size: 0.9rem; }
+.stat-key { color: #b0d090; }
+.stat-val { color: #e0f0b0; }
+</style>
+</head>
+<body>
+
+<div id="hud-top">
+  <div><span id="hud-title">CalculateForPerfection</span></div>
+  <div style="display:flex;gap:1.6rem;">
+    <span><span class="hud-label">CORRECT</span><span class="hud-val" id="hud-correct">0</span></span>
+    <span><span class="hud-label">ERRORS</span><span class="hud-val" id="hud-errors">0</span></span>
+    <span><span class="hud-label">PENALTIES</span><span class="hud-val" id="hud-penalties">+0 min</span></span>
+  </div>
+</div>
+<div id="hud-bottom">
+  <div><span class="hud-label">STATUS</span><span class="hud-val" id="hud-status">STANDING BY</span></div>
+  <div><span class="hud-label">ELAPSED</span><span class="hud-val" id="hud-elapsed">00:00</span></div>
+</div>
+<div id="penalty-flash"></div>
+
+<!-- START SCREEN -->
+<div class="screen active" id="start-screen">
+  <div class="game-title">Calculate For Perfection</div>
+  
+  <div class="chalk-box">
+    <div class="box-title">Assignment Brief</div>
+    <div class="instructions">
+      Questions will appear on the blackboard. You have <strong style="color:#e0f090">5 seconds</strong> to submit the correct answer.<br><br>
+      Every mistake or timeout adds <strong style="color:#ff9070">one minute</strong> to your session.
+    </div>
+  </div>
+  
+  <div class="chalk-box">
+    <div class="box-title">Settings</div>
+    <div class="setting-row" style="margin-top:0.8rem;display:flex;justify-content:space-between;align-items:center;">
+      <span class="setting-label">Duration (minutes)</span>
+      <input class="chalk-input" type="number" id="duration-input" min="1" max="60" value="5">
+    </div>
+    <div class="toggle-row" style="margin-top:1rem;display:flex;justify-content:space-between;align-items:center;">
+      <span class="setting-label">BadAtMaths Mode<span style="color:#9ab070;font-size:0.8em"> (1–5 only)</span></span>
+      <input class="chalk-toggle" type="checkbox" id="easy-toggle">
+    </div>
+  </div>
+  
+  <button class="btn-commence" id="btn-start" style="font-family:'Special Elite',cursive;font-size:1.7rem;letter-spacing:0.25em;border:4px solid #9ab070;color:#f0f8d0;background:#2a4a2a;padding:0.7rem 3rem;cursor:pointer;">BEGIN</button>
+</div>
+
+<!-- GAME SCREEN -->
+<div class="screen" id="game-screen">
+  <div id="time-banner">
+    <div>
+      <div style="font-size:0.7rem;letter-spacing:0.25em;color:#b0d090;text-transform:uppercase;margin-bottom:0.3rem">Time Remaining</div>
+      <div id="session-timer-display">05:00</div>
+    </div>
+    <div style="text-align:right;font-size:0.75rem;color:#b0d090;letter-spacing:0.2em;line-height:1.4">SESSION<br>IN PROGRESS</div>
+  </div>
+  
+  <div id="chalkboard">
+    <div id="q-timer-ring">
+      <svg viewBox="0 0 56 56">
+        <circle class="ring-bg" cx="28" cy="28" r="24"/>
+        <circle class="ring-fg" id="ring-fg" cx="28" cy="28" r="24"/>
+      </svg>
+      <div id="q-timer-num">5</div>
+    </div>
+    
+    <div id="board-display" style="flex:1;width:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:0;position:relative;">
+      <div id="question-display">—</div>
+      <div id="board-msg">
+        <div id="board-msg-text"></div>
+      </div>
+    </div>
+    
+    <div id="answer-row">
+      <div id="answer-prompt">= ?</div>
+      <input id="answer-input" type="number" inputmode="numeric" placeholder="__" autocomplete="off">
+    </div>
+  </div>
+</div>
+
+<!-- END SCREEN -->
+<div class="screen" id="end-screen">
+  <div class="end-heading">LESSON COMPLETE</div>
+  <div class="end-sub">Final Report</div>
+  <div id="stats-panel">
+    <div class="stat-row"><span class="stat-key">ASSIGNED DURATION</span><span class="stat-val" id="e-assigned">—</span></div>
+    <div class="stat-row"><span class="stat-key">TOTAL TIME ELAPSED</span><span class="stat-val" id="e-elapsed">—</span></div>
+    <div class="stat-row"><span class="stat-key">QUESTIONS ANSWERED</span><span class="stat-val" id="e-answered">—</span></div>
+    <div class="stat-row"><span class="stat-key">CORRECT</span><span class="stat-val" id="e-correct">—</span></div>
+    <div class="stat-row"><span class="stat-key">ERRORS / TIMEOUTS</span><span class="stat-val" id="e-errors">—</span></div>
+    <div class="stat-row"><span class="stat-key">PENALTY MINUTES</span><span class="stat-val" id="e-penalties">—</span></div>
+    <div class="stat-row"><span class="stat-key">MODE</span><span class="stat-val" id="e-mode">—</span></div>
+  </div>
+  <div style="margin-top:1.5rem;font-size:0.8rem;color:#6a8a4a;letter-spacing:0.15em;">GAME ID: <span id="e-gameid">—</span></div>
+  <button class="btn-again" id="btn-again" style="margin-top:1.8rem;font-family:'Special Elite',cursive;font-size:1.55rem;letter-spacing:0.25em;">BACK TO THE DESK</button>
+</div>
+
+<script>
+// ══════════════ AUDIO ══════════════
+const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+
+function playBeep() {
+  const osc = audioCtx.createOscillator();
+  const gain = audioCtx.createGain();
+  osc.type = "sine";
+  osc.frequency.value = 650;
+  gain.gain.setValueAtTime(0.4, audioCtx.currentTime);
+  gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.2);
+  osc.connect(gain);
+  gain.connect(audioCtx.destination);
+  osc.start();
+  osc.stop(audioCtx.currentTime + 0.2);
+}
+
+function playErrorBeep() {
+  const now = audioCtx.currentTime;
+  const master = audioCtx.createGain();
+  master.gain.setValueAtTime(2.2, now);
+  master.connect(audioCtx.destination);
+
+  const distortion = audioCtx.createWaveShaper();
+  distortion.curve = makeDistortionCurve(250);
+  distortion.oversample = "4x";
+  distortion.connect(master);
+
+  const filter = audioCtx.createBiquadFilter();
+  filter.type = "lowpass";
+  filter.frequency.setValueAtTime(1200, now);
+  filter.Q.value = 1.2;
+  filter.connect(distortion);
+
+  const subOsc = audioCtx.createOscillator();
+  const subGain = audioCtx.createGain();
+  subOsc.type = "sine";
+  subOsc.frequency.setValueAtTime(95, now);
+  subOsc.frequency.exponentialRampToValueAtTime(70, now + 0.4);
+  subGain.gain.setValueAtTime(1.8, now);
+  subGain.gain.exponentialRampToValueAtTime(0.001, now + 0.45);
+  subOsc.connect(subGain); subGain.connect(filter);
+  subOsc.start(now); subOsc.stop(now + 0.45);
+
+  const buzz1 = audioCtx.createOscillator();
+  const bGain1 = audioCtx.createGain();
+  buzz1.type = "sawtooth";
+  buzz1.frequency.setValueAtTime(110, now);
+  buzz1.frequency.exponentialRampToValueAtTime(80, now + 0.4);
+  bGain1.gain.setValueAtTime(1.2, now);
+  bGain1.gain.exponentialRampToValueAtTime(0.001, now + 0.45);
+  buzz1.connect(bGain1); bGain1.connect(filter);
+  buzz1.start(now); buzz1.stop(now + 0.45);
+
+  const buzz2 = audioCtx.createOscillator();
+  const bGain2 = audioCtx.createGain();
+  buzz2.type = "sawtooth";
+  buzz2.frequency.setValueAtTime(114, now);
+  bGain2.gain.setValueAtTime(1.0, now);
+  bGain2.gain.exponentialRampToValueAtTime(0.001, now + 0.45);
+  buzz2.connect(bGain2); bGain2.connect(filter);
+  buzz2.start(now); buzz2.stop(now + 0.45);
+
+  const tremoloGain = audioCtx.createGain();
+  tremoloGain.gain.value = 1.0;
+  master.disconnect();
+  master.connect(tremoloGain);
+  tremoloGain.connect(audioCtx.destination);
+
+  const tremOsc = audioCtx.createOscillator();
+  const tremDepth = audioCtx.createGain();
+  tremOsc.type = "sine";
+  tremOsc.frequency.value = 18;
+  tremDepth.gain.value = 0.4;
+  tremOsc.connect(tremDepth);
+  tremDepth.connect(tremoloGain.gain);
+  tremOsc.start(now); tremOsc.stop(now + 0.45);
+
+  if (navigator.vibrate) navigator.vibrate([150, 40, 150]);
+}
+
+function makeDistortionCurve(amount) {
+  const k = amount || 50;
+  const n = 44100;
+  const curve = new Float32Array(n);
+  const deg = Math.PI / 180;
+  for (let i = 0; i < n; i++) {
+    const x = i * 2 / n - 1;
+    curve[i] = (3 + k) * x * 20 * deg / (Math.PI + k * Math.abs(x));
+  }
+  return curve;
+}
+
+function beepTick() { playBeep(); }
+function beepUrgent() { playBeep(); }
+function beepError() { playErrorBeep(); }
+
+function beepCorrect() {
+  const t = audioCtx.currentTime;
+  const notes = [[523.25,0,0.28,1.1],[659.25,0.07,0.22,0.85],[783.99,0.13,0.18,0.65],[1046.5,0.19,0.30,1.4]];
+  notes.forEach(([freq,delay,vol,decay]) => {
+    const o = audioCtx.createOscillator();
+    const g = audioCtx.createGain();
+    o.connect(g); g.connect(audioCtx.destination);
+    o.type = 'sine'; o.frequency.value = freq;
+    const st = t + delay;
+    g.gain.setValueAtTime(0, st);
+    g.gain.linearRampToValueAtTime(vol, st + 0.008);
+    g.gain.exponentialRampToValueAtTime(0.001, st + decay);
+    o.start(st); o.stop(st + decay + 0.05);
+  });
+}
+
+// ══════════════ GAME LOGIC (Division Fixed) ══════════════
+const PRAISE = ["Well done. That was the minimum acceptable standard.","Correct. You have met the basic requirements. Do not celebrate.","Yes. That is the right answer. You needn't look so pleased.","Acceptable. Most children manage that one eventually.","Good. I would have been disappointed had you failed that one. Again.","Technically correct. The lowest bar has been cleared.","You answered correctly. This is what is expected of you.","Right. It appears some small amount of learning has occurred.","Correct. One would hope so, at this stage.","That is right. Please do not let it go to your head.","Yes, well done. A clock is right twice a day as well.","Correct. Perhaps there is hope for you yet. Perhaps.","You got it. I am not applauding. This is required behaviour.","That answer was correct. Try to maintain this standard.","Satisfactory. The bar was low, but you cleared it."];
+
+const SCOLD = ["That was wrong. Pay closer attention.","Incorrect. An additional minute has been added to your session.","No. Think before you submit an answer.","Wrong. You have only made things worse for yourself.","That is not the correct answer. You are still here, you know.","Incorrect. This is basic arithmetic. Apply yourself.","No. Another minute. You have no one to blame but yourself.","Wrong answer. The session is now longer. I hope you are satisfied.","That was a mistake. Please do not repeat it.","Incorrect. Try to focus. Your time is not decreasing.","No. I expected better. The clock did not.","Wrong. You have extended your own suffering.","That is incorrect. The penalty has been applied.","No. Basic arithmetic. Perhaps revise this before next time.","Wrong again. The numbers have not changed. You have."];
+
+const TIMEOUT = ["You failed to answer in time. An additional minute has been added.","Too slow. The clock waits for no one. A minute has been added.","No answer was provided. The session is now longer.","Silence is not a correct answer. A minute has been added.","Time expired. I trust you felt that."];
+
+function pick(arr) { return arr[Math.floor(Math.random()*arr.length)]; }
+
+let state = {};
+function resetState(minutes, easyMode) {
+  state = {
+    sessionSeconds: minutes*60,
+    assignedMinutes: minutes,
+    easyMode,
+    correct:0, errors:0, penalties:0, answered:0, elapsedSeconds:0,
+    gameId: Math.floor(Math.random()*900000000)+100000000,
+    running:false, accepting:false,
+    sessionInterval:null, elapsedInterval:null, qTimerInterval:null,
+  };
+}
+
+const $ = id => document.getElementById(id);
+const startScreen=$('start-screen'), gameScreen=$('game-screen'), endScreen=$('end-screen');
+const hudCorrect=$('hud-correct'), hudErrors=$('hud-errors'), hudPenalties=$('hud-penalties'), hudStatus=$('hud-status'), hudElapsed=$('hud-elapsed');
+const sessionTimerDisplay=$('session-timer-display');
+const questionDisplay=$('question-display');
+const answerInput=$('answer-input');
+const boardMsg=$('board-msg'), boardMsgText=$('board-msg-text');
+const penaltyFlash=$('penalty-flash');
+const ringFg=$('ring-fg'), qTimerNum=$('q-timer-num');
+
+const fmt = s => `${Math.floor(s/60).toString().padStart(2,'0')}:${(s%60).toString().padStart(2,'0')}`;
+
+function showScreen(scr) {
+  [startScreen,gameScreen,endScreen].forEach(s=>s.classList.remove('active'));
+  scr.classList.add('active');
+}
+function updateHUD() {
+  hudCorrect.textContent = state.correct;
+  hudErrors.textContent = state.errors;
+  hudPenalties.textContent = `+${state.penalties} min`;
+  hudElapsed.textContent = fmt(state.elapsedSeconds);
+}
+
+function rnd(a,b) { return Math.floor(Math.random()*(b-a+1))+a; }
+
+function generateQuestion(easy) {
+  if (easy) {
+    const ops = ['+','-','×'];
+    const op = ops[Math.floor(Math.random()*3)];
+    let a, b, answer, display;
+    if (op === '+') { a = rnd(1,5); b = rnd(1,5); answer = a + b; display = `${a} + ${b}`; }
+    else if (op === '-') { a = rnd(2,5); b = rnd(1,a-1); answer = a - b; display = `${a} − ${b}`; }
+    else { a = rnd(1,5); b = rnd(1,5); answer = a * b; display = `${a} × ${b}`; }
+    return {display, answer};
+  } 
+  else {
+    const ops = ['+','-','×','÷'];
+    const op = ops[Math.floor(Math.random()*4)];
+    let display, answer;
+
+    if (op === '+') {
+      const a = rnd(10, 99);
+      const b = rnd(10, 99);
+      answer = a + b;
+      display = `${a} + ${b}`;
+    } 
+    else if (op === '-') {
+      const a = rnd(20, 99);
+      const b = rnd(10, a - 1);
+      answer = a - b;
+      display = `${a} − ${b}`;
+    } 
+    else if (op === '×') {
+      const a = rnd(2, 12);
+      const b = 10;
+      answer = a * b;
+      display = `${a} × ${b}`;
+    } 
+    else { // Division — FIXED
+      const multiplier = rnd(2, 12);   // This is the correct answer (2 to 12)
+      const divisor = 10;
+      answer = multiplier;
+      display = `${multiplier * divisor} ÷ ${divisor}`;
+    }
+    return {display, answer};
+  }
+}
+
+const RING_CIRC = 2*Math.PI*24;
+function setRing(frac) {
+  ringFg.style.strokeDashoffset = RING_CIRC*(1-frac);
+  ringFg.style.stroke = frac>0.5?'#e0f090':frac>0.2?'#ffdd70':'#ff7070';
+}
+
+function showBoardMsg(text, cls) {
+  if(text.includes('\n')) {
+    const [header, body] = text.split('\n');
+    boardMsgText.innerHTML = `<span style="display:block;font-size:1.4em;letter-spacing:0.18em;margin-bottom:0.5em">${header}</span>${body}`;
+  } else boardMsgText.textContent = text;
+  boardMsgText.className = cls;
+  boardMsg.classList.add('show');
+  questionDisplay.style.opacity = '0.09';
+  answerInput.disabled = true;
+}
+function hideBoardMsg() {
+  boardMsg.classList.remove('show');
+  questionDisplay.style.opacity = '1';
+}
+
+let currentQ = null;
+function startQuestion() {
+  if(!state.running) return;
+  hideBoardMsg();
+  currentQ = generateQuestion(state.easyMode);
+  questionDisplay.textContent = currentQ.display;
+  answerInput.value = '';
+  answerInput.disabled = false;
+  state.accepting = true;
+  setRing(1);
+  qTimerNum.textContent = '5';
+  answerInput.focus();
+  hudStatus.textContent = 'ANSWERING';
+  clearInterval(state.qTimerInterval);
+  const startTime = Date.now(), DURATION = 5000;
+  state.qTimerInterval = setInterval(() => {
+    if(!state.running){clearInterval(state.qTimerInterval);return;}
+    const elapsed = Date.now() - startTime;
+    const remaining = Math.max(0, DURATION - elapsed);
+    const frac = remaining / DURATION;
+    const secs = Math.ceil(remaining / 1000);
+    qTimerNum.textContent = secs;
+    setRing(frac);
+    const prevSec = Math.ceil((DURATION - (elapsed - 100)) / 1000);
+    if (secs < prevSec && secs > 0) { secs <= 1 ? beepUrgent() : beepTick(); }
+    if (remaining <= 0) { clearInterval(state.qTimerInterval); if(state.accepting) onTimeout(); }
+  }, 50);
+}
+
+function onCorrect() {
+  state.correct++; state.answered++;
+  state.accepting = false;
+  clearInterval(state.qTimerInterval);
+  beepCorrect();
+  hudStatus.textContent = 'CORRECT';
+  updateHUD();
+  showBoardMsg(pick(PRAISE), 'correct');
+  setTimeout(() => { hideBoardMsg(); startQuestion(); }, 3000);
+}
+function onWrong(isTimeout) {
+  state.errors++; state.answered++;
+  state.penalties++; state.sessionSeconds += 60;
+  state.accepting = false;
+  clearInterval(state.qTimerInterval);
+  beepError();
+  penaltyFlash.classList.add('active');
+  setTimeout(() => penaltyFlash.classList.remove('active'), 320);
+  hudStatus.textContent = isTimeout ? 'TIMEOUT — PENALISED' : 'WRONG — PENALISED';
+  hudErrors.classList.add('err-blink');
+  updateHUD();
+  updateSessionDisplay();
+  const base = pick(isTimeout ? TIMEOUT : SCOLD);
+  showBoardMsg(`+1 MINUTE\n${base}`, 'wrong');
+  setTimeout(() => { hideBoardMsg(); startQuestion(); }, 3000);
+}
+function onTimeout() { onWrong(true); }
+
+function updateSessionDisplay() {
+  sessionTimerDisplay.textContent = fmt(state.sessionSeconds);
+  if(state.sessionSeconds <= 60) sessionTimerDisplay.className = 'danger';
+  else if(state.sessionSeconds <= 180) sessionTimerDisplay.className = 'warning';
+  else sessionTimerDisplay.className = '';
+}
+function tickSession() {
+  if(!state.running) return;
+  state.sessionSeconds = Math.max(0, state.sessionSeconds - 1);
+  updateSessionDisplay();
+  if(state.sessionSeconds <= 0) endGame();
+}
+function tickElapsed() {
+  state.elapsedSeconds++;
+  hudElapsed.textContent = fmt(state.elapsedSeconds);
+}
+
+function startGame() {
+  const mins = Math.max(1, Math.min(60, parseInt($('duration-input').value) || 5));
+  const easy = $('easy-toggle').checked;
+  resetState(mins, easy);
+  showScreen(gameScreen);
+  updateSessionDisplay();
+  updateHUD();
+  hudStatus.textContent = 'COMMENCING';
+  state.running = true;
+  state.sessionInterval = setInterval(tickSession, 1000);
+  state.elapsedInterval = setInterval(tickElapsed, 1000);
+  setTimeout(startQuestion, 400);
+}
+function endGame() {
+  state.running = false;
+  clearInterval(state.sessionInterval);
+  clearInterval(state.elapsedInterval);
+  clearInterval(state.qTimerInterval);
+  $('e-assigned').textContent = `${state.assignedMinutes} minute${state.assignedMinutes !== 1 ? 's' : ''}`;
+  $('e-elapsed').textContent = fmt(state.elapsedSeconds);
+  $('e-answered').textContent = state.answered;
+  $('e-correct').textContent = state.correct;
+  $('e-errors').textContent = state.errors;
+  $('e-penalties').textContent = `${state.penalties} min`;
+  $('e-gameid').textContent = state.gameId;
+  const modeEl = $('e-mode');
+  modeEl.textContent = state.easyMode ? 'EASY MODE (1–5)' : 'STANDARD';
+  showScreen(endScreen);
+  hudStatus.textContent = 'SESSION TERMINATED';
+}
+
+answerInput.addEventListener('keydown', e => {
+  if(e.key !== 'Enter') return;
+  e.preventDefault();
+  if(!state.accepting) return;
+  const val = parseInt(answerInput.value);
+  if(isNaN(val)) return;
+  val === currentQ.answer ? onCorrect() : onWrong(false);
+});
+$('btn-start').addEventListener('click', startGame);
+$('btn-again').addEventListener('click', () => {
+  showScreen(startScreen);
+  hudStatus.textContent = 'STANDING BY';
+  hudElapsed.textContent = '00:00';
+  hudCorrect.textContent = '0';
+  hudErrors.textContent = '0';
+  hudPenalties.textContent = '+0 min';
+  sessionTimerDisplay.textContent = '00:00';
+  sessionTimerDisplay.className = '';
+  hideBoardMsg();
+});
+document.addEventListener('click', () => {
+  if(gameScreen.classList.contains('active') && state.running && state.accepting) answerInput.focus();
+});
+</script>
+</body>
+</html>
