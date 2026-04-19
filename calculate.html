@@ -259,7 +259,7 @@ body::before {
   <div class="chalk-box">
     <div class="box-title">Assignment Brief</div>
     <div class="instructions">
-      Questions will appear on the blackboard. You have <strong style="color:#e0f090">3 seconds</strong> per question.<br><br>
+      Questions will appear on the blackboard. You have <strong style="color:#e0f090">5 seconds</strong> per question.<br><br>
       Every mistake or timeout adds <strong style="color:#ff9070">one minute</strong> to your session.<br>
       The clock ticks. You stay until it reaches zero.
     </div>
@@ -296,7 +296,7 @@ body::before {
         <circle class="ring-bg" cx="28" cy="28" r="24"/>
         <circle class="ring-fg" id="ring-fg" cx="28" cy="28" r="24"/>
       </svg>
-      <div id="q-timer-num">3</div>
+      <div id="q-timer-num">5</div>
     </div>
     
     <div id="board-display" style="flex:1;width:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:0;position:relative;">
@@ -502,7 +502,7 @@ function generateQuestion(easy) {
     return {display, answer};
   } 
   else {
-    // Standard mode - simpler as requested
+    // Standard mode - simpler version you requested
     const ops = ['+','-','×'];
     const op = ops[Math.floor(Math.random()*3)];
     let a, b, answer, display;
@@ -560,11 +560,11 @@ function startQuestion() {
   answerInput.disabled = false;
   state.accepting = true;
   setRing(1);
-  qTimerNum.textContent = '3';
+  qTimerNum.textContent = '5';
   answerInput.focus();
   hudStatus.textContent = 'ANSWERING';
   clearInterval(state.qTimerInterval);
-  const startTime = Date.now(), DURATION = 3000;   // 3 seconds for both modes
+  const startTime = Date.now(), DURATION = 5000;   // 5 seconds for both modes
   state.qTimerInterval = setInterval(() => {
     if(!state.running){clearInterval(state.qTimerInterval);return;}
     const elapsed = Date.now() - startTime;
