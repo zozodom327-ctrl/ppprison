@@ -1,0 +1,854 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>WriteForMaple</title>
+<link href="https://fonts.googleapis.com/css2?family=Nunito:ital,wght@0,400;0,700;0,800;0,900;1,400&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --pink: #ff85c2;
+  --pink-dark: #e05fa0;
+  --pink-soft: #ffd6ec;
+  --pink-glow: rgba(255,133,194,0.25);
+  --pink-glow-lg: rgba(255,133,194,0.10);
+  --bg: #fff5fa;
+  --surface: #ffffff;
+  --surface2: #ffeaf5;
+  --border: rgba(255,133,194,0.35);
+  --border-strong: rgba(255,133,194,0.65);
+  --text: #5a2a42;
+  --muted: #c48aaa;
+  --correct: #ff85c2;
+  --incorrect: #ff5577;
+  --untyped: #c8a0b8;
+  --cursor: #ff85c2;
+  --star: #ffb3d9;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: 'Nunito', sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background:
+    radial-gradient(circle at 10% 15%, rgba(255,192,220,0.3) 0%, transparent 35%),
+    radial-gradient(circle at 90% 80%, rgba(255,192,220,0.2) 0%, transparent 30%),
+    radial-gradient(ellipse 100% 60% at 50% 0%, rgba(255,214,236,0.5) 0%, transparent 60%);
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* Floating hearts decoration */
+body::after {
+  content: '🌸';
+  position: fixed;
+  top: 12px;
+  right: 24px;
+  font-size: 1.4rem;
+  opacity: 0.4;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.screen { display: none; position: relative; z-index: 1; }
+.screen.active { display: flex; flex-direction: column; align-items: center; }
+
+/* ── BRAND ── */
+.brand {
+  font-family: 'Nunito', sans-serif;
+  font-size: clamp(2.8rem, 8vw, 5rem);
+  font-weight: 900;
+  letter-spacing: -0.01em;
+  color: var(--text);
+  line-height: 1;
+}
+
+.brand em {
+  font-style: italic;
+  color: var(--pink-dark);
+}
+
+.brand-sub {
+  font-family: 'Nunito', sans-serif;
+  font-size: 0.8rem;
+  font-weight: 700;
+  letter-spacing: 0.15em;
+  color: var(--muted);
+  text-transform: uppercase;
+  margin-top: 6px;
+}
+
+/* ── START SCREEN ── */
+#start {
+  min-height: 100vh;
+  justify-content: center;
+  padding: 2rem;
+  gap: 0;
+}
+
+.start-inner {
+  width: 100%;
+  max-width: 480px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2rem;
+}
+
+.brand-block { text-align: center; }
+
+.brand-emoji {
+  font-size: 3rem;
+  display: block;
+  margin-bottom: 8px;
+  animation: bounce 2s ease-in-out infinite;
+}
+
+@keyframes bounce {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-6px); }
+}
+
+.divider {
+  width: 80px;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, var(--pink), transparent);
+  border-radius: 2px;
+}
+
+.start-card {
+  width: 100%;
+  background: var(--surface);
+  border: 2px solid var(--border);
+  border-radius: 24px;
+  padding: 2rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  box-shadow: 0 4px 32px rgba(255,133,194,0.12), 0 1px 0 rgba(255,255,255,0.9) inset;
+}
+
+.start-card label {
+  font-size: 0.78rem;
+  font-weight: 800;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.start-card p {
+  font-size: 1rem;
+  color: var(--text);
+  opacity: 0.85;
+  line-height: 1.6;
+  font-weight: 600;
+}
+
+.num-input-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.num-btn {
+  width: 38px; height: 38px;
+  border-radius: 50%;
+  border: 2px solid var(--border-strong);
+  background: var(--pink-soft);
+  color: var(--pink-dark);
+  font-size: 1.3rem;
+  font-weight: 900;
+  cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  transition: background 0.15s, transform 0.1s;
+  flex-shrink: 0;
+  line-height: 1;
+}
+.num-btn:hover { background: var(--pink); color: white; transform: scale(1.08); }
+
+#taskCount {
+  width: 80px;
+  background: var(--surface2);
+  border: 2px solid var(--border);
+  border-radius: 12px;
+  color: var(--text);
+  font-family: 'DM Mono', monospace;
+  font-size: 1.3rem;
+  font-weight: 500;
+  text-align: center;
+  padding: 6px;
+  -moz-appearance: textfield;
+}
+#taskCount::-webkit-outer-spin-button,
+#taskCount::-webkit-inner-spin-button { -webkit-appearance: none; }
+
+.btn-primary {
+  width: 100%;
+  padding: 14px 24px;
+  font-family: 'Nunito', sans-serif;
+  font-size: 1rem;
+  font-weight: 800;
+  letter-spacing: 0.05em;
+  cursor: pointer;
+  background: linear-gradient(135deg, var(--pink), var(--pink-dark));
+  color: white;
+  border: none;
+  border-radius: 14px;
+  transition: opacity 0.15s, transform 0.1s;
+  box-shadow: 0 4px 16px rgba(255,133,194,0.4);
+}
+.btn-primary:hover { opacity: 0.9; transform: translateY(-1px); box-shadow: 0 6px 20px rgba(255,133,194,0.5); }
+.btn-primary:active { transform: scale(0.98) translateY(0); }
+
+/* ── PLAY SCREEN ── */
+#play {
+  min-height: 100vh;
+  padding: 1.5rem 1rem;
+  justify-content: flex-start;
+  gap: 1.25rem;
+}
+
+.play-header {
+  width: 100%;
+  max-width: 800px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding-top: 0.5rem;
+}
+
+/* Progress bar */
+.progress-wrap {
+  width: 100%;
+  max-width: 800px;
+}
+
+.progress-track {
+  position: relative;
+  width: 100%;
+  height: 40px;
+  background: var(--surface);
+  border: 2px solid var(--border);
+  border-radius: 20px;
+  overflow: hidden;
+  box-shadow: 0 2px 12px rgba(255,133,194,0.08);
+}
+
+.progress-fill {
+  position: absolute;
+  left: 0; top: 0; bottom: 0;
+  width: 0%;
+  background: linear-gradient(90deg, var(--pink-soft), var(--pink));
+  transition: width 0.5s cubic-bezier(0.4,0,0.2,1);
+  border-radius: 20px;
+}
+
+.progress-label {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: 'DM Mono', monospace;
+  font-size: 0.8rem;
+  color: var(--text);
+  z-index: 2;
+  pointer-events: none;
+  gap: 12px;
+  font-weight: 500;
+}
+
+.progress-counter { color: var(--muted); }
+
+/* Live stats */
+.live-stats {
+  width: 100%;
+  max-width: 800px;
+  display: flex;
+  gap: 10px;
+}
+
+.stat-pill {
+  flex: 1;
+  background: var(--surface);
+  border: 2px solid var(--border);
+  border-radius: 14px;
+  padding: 8px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  box-shadow: 0 2px 8px rgba(255,133,194,0.06);
+}
+
+.stat-pill .slabel {
+  font-size: 0.6rem;
+  font-weight: 800;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.stat-pill .sval {
+  font-family: 'DM Mono', monospace;
+  font-size: 1rem;
+  font-weight: 500;
+  color: var(--text);
+}
+
+.stat-pill .sval.pink { color: var(--pink-dark); }
+.stat-pill .sval.red { color: var(--incorrect); }
+
+/* Text label */
+.text-label {
+  width: 100%;
+  max-width: 800px;
+  font-family: 'Nunito', sans-serif;
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--muted);
+  padding-left: 4px;
+}
+
+/* Typing display */
+.typing-area {
+  width: 100%;
+  max-width: 800px;
+  background: var(--surface);
+  border: 2px solid var(--border);
+  border-radius: 20px;
+  padding: 1.75rem 2rem;
+  box-shadow: 0 4px 24px rgba(255,133,194,0.08);
+}
+
+#textDisplay {
+  font-family: 'DM Mono', monospace;
+  font-size: 1.05rem;
+  line-height: 2;
+  letter-spacing: 0.01em;
+  word-break: break-word;
+}
+
+.word { color: var(--untyped); transition: color 0.08s; }
+.word.correct { color: var(--correct); }
+.word.incorrect { color: var(--incorrect); }
+.word.cursor-on { border-bottom: 2px solid var(--cursor); }
+
+/* Input */
+.input-wrap {
+  width: 100%;
+  max-width: 800px;
+  position: relative;
+}
+
+#inputBox {
+  width: 100%;
+  padding: 14px 18px;
+  font-family: 'DM Mono', monospace;
+  font-size: 1rem;
+  background: var(--surface);
+  color: var(--text);
+  border: 2px solid var(--border);
+  border-radius: 14px;
+  resize: none;
+  outline: none;
+  transition: border-color 0.15s, box-shadow 0.15s;
+  line-height: 1.5;
+  box-shadow: 0 2px 12px rgba(255,133,194,0.06);
+}
+#inputBox:focus { border-color: var(--pink); box-shadow: 0 0 0 4px var(--pink-glow); }
+
+.next-btn {
+  width: 100%;
+  max-width: 800px;
+  padding: 13px;
+  font-family: 'Nunito', sans-serif;
+  font-size: 0.95rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  cursor: not-allowed;
+  background: var(--surface2);
+  color: var(--muted);
+  border: 2px solid var(--border);
+  border-radius: 14px;
+  transition: background 0.2s, color 0.2s, border-color 0.2s, box-shadow 0.2s;
+}
+.next-btn.ready {
+  cursor: pointer;
+  background: linear-gradient(135deg, var(--pink), var(--pink-dark));
+  color: white;
+  border-color: var(--pink-dark);
+  box-shadow: 0 4px 16px rgba(255,133,194,0.4);
+}
+.next-btn.ready:hover { opacity: 0.9; transform: translateY(-1px); }
+
+/* ── END SCREEN ── */
+#end {
+  min-height: 100vh;
+  justify-content: center;
+  padding: 2rem;
+}
+
+.end-inner {
+  width: 100%;
+  max-width: 520px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2rem;
+}
+
+.end-title {
+  text-align: center;
+}
+
+.end-emoji {
+  font-size: 3.5rem;
+  display: block;
+  margin-bottom: 12px;
+  animation: bounce 2s ease-in-out infinite;
+}
+
+.end-title h1 {
+  font-family: 'Nunito', sans-serif;
+  font-size: clamp(2.4rem, 7vw, 3.8rem);
+  font-weight: 900;
+  line-height: 1.05;
+}
+.end-title h1 em { font-style: italic; color: var(--pink-dark); }
+
+.end-title p {
+  margin-top: 8px;
+  font-size: 0.85rem;
+  color: var(--muted);
+  font-weight: 700;
+  letter-spacing: 0.06em;
+}
+
+.end-stats {
+  width: 100%;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.end-stat {
+  background: var(--surface);
+  border: 2px solid var(--border);
+  border-radius: 16px;
+  padding: 1.25rem;
+  box-shadow: 0 2px 12px rgba(255,133,194,0.08);
+}
+.end-stat.wide { grid-column: 1 / -1; }
+
+.end-stat .el { font-size: 0.62rem; font-weight: 800; letter-spacing: 0.18em; text-transform: uppercase; color: var(--muted); margin-bottom: 6px; }
+.end-stat .ev { font-family: 'DM Mono', monospace; font-size: 1.6rem; font-weight: 500; color: var(--text); }
+.end-stat .ev.pink { color: var(--pink-dark); }
+.end-stat .ev.red { color: var(--incorrect); }
+.end-stat .es { font-size: 0.75rem; color: var(--muted); margin-top: 3px; font-weight: 600; }
+
+.end-id {
+  font-family: 'DM Mono', monospace;
+  font-size: 0.7rem;
+  color: var(--muted);
+  letter-spacing: 0.12em;
+}
+
+.btn-restart {
+  width: 100%;
+  padding: 13px;
+  font-family: 'Nunito', sans-serif;
+  font-size: 0.95rem;
+  font-weight: 800;
+  cursor: pointer;
+  background: transparent;
+  color: var(--pink-dark);
+  border: 2px solid var(--border-strong);
+  border-radius: 14px;
+  transition: background 0.15s, box-shadow 0.15s;
+}
+.btn-restart:hover { background: var(--pink-soft); box-shadow: 0 2px 12px rgba(255,133,194,0.15); }
+
+/* Decorative dots */
+.deco-dots {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+.deco-dots span {
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--pink);
+  opacity: 0.4;
+}
+.deco-dots span:nth-child(2) { opacity: 0.6; width: 8px; height: 8px; }
+.deco-dots span:nth-child(3) { opacity: 0.4; }
+</style>
+</head>
+
+<body oncontextmenu="return false">
+
+<!-- ── START ── -->
+<div id="start" class="screen active">
+  <div class="start-inner">
+    <div class="brand-block">
+      <span class="brand-emoji">🌸</span>
+      <div class="brand">Write<em>For</em><br>Maple</div>
+      <div class="brand-sub">✨ Cutest Typing Trainer ✨</div>
+    </div>
+    <div class="divider"></div>
+    <div class="start-card">
+      <p>💕 How many times would you like to type Maple's tribute? 🎀</p>
+      <div style="display:flex;flex-direction:column;align-items:center;gap:8px;">
+        <label>🌷 Number of tasks</label>
+        <div class="num-input-row">
+          <button class="num-btn" onclick="adjustCount(-1)">−</button>
+          <input type="number" id="taskCount" min="1" max="999" value="5">
+          <button class="num-btn" onclick="adjustCount(1)">+</button>
+        </div>
+      </div>
+      <button class="btn-primary" onclick="startGame()">🎀 Begin Session 🎀</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── PLAY ── -->
+<div id="play" class="screen">
+
+  <div class="play-header">
+    <div class="brand" style="text-align:center;">Write<em>For</em><br>Maple</div>
+    <div class="brand-sub" style="text-align:center;margin-top:6px;">✨ Cutest Typing Trainer ✨</div>
+  </div>
+
+  <div class="progress-wrap">
+    <div class="progress-track">
+      <div class="progress-fill" id="progressFill"></div>
+      <div class="progress-label">
+        <span id="timer">00:00:00</span>
+        <span class="progress-counter" id="progressText">0 / 5</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="live-stats">
+    <div class="stat-pill">
+      <div class="slabel">WPM</div>
+      <div class="sval pink" id="liveWpm">—</div>
+    </div>
+    <div class="stat-pill">
+      <div class="slabel">Errors</div>
+      <div class="sval red" id="liveErrors">0</div>
+    </div>
+    <div class="stat-pill">
+      <div class="slabel">Characters</div>
+      <div class="sval" id="liveChars">0</div>
+    </div>
+    <div class="stat-pill">
+      <div class="slabel">Accuracy</div>
+      <div class="sval" id="liveAccuracy">—</div>
+    </div>
+  </div>
+
+  <div class="text-label" id="textLabel">—</div>
+
+  <div class="typing-area">
+    <div id="textDisplay"></div>
+  </div>
+
+  <div class="input-wrap">
+    <textarea id="inputBox" rows="3" placeholder="Start typing… 🌸" oninput="checkTyping()" onkeydown="handleKey(event)"></textarea>
+  </div>
+
+  <button class="next-btn" id="nextBtn" onclick="nextText()">Continue 🎀</button>
+
+</div>
+
+<!-- ── END ── -->
+<div id="end" class="screen">
+  <div class="end-inner">
+    <div class="end-title">
+      <span class="end-emoji">🌸</span>
+      <h1>Session<br><em>Complete!</em></h1>
+      <p id="endSubtitle">—</p>
+      <p id="endId" style="margin-top:6px;font-family:'DM Mono',monospace;font-size:0.7rem;color:var(--muted);letter-spacing:0.12em;">—</p>
+    </div>
+
+    <div class="end-stats">
+      <div class="end-stat">
+        <div class="el">Avg WPM</div>
+        <div class="ev pink" id="endWpm">—</div>
+        <div class="es">words per minute</div>
+      </div>
+      <div class="end-stat">
+        <div class="el">Total Errors</div>
+        <div class="ev red" id="endErrors">—</div>
+        <div class="es">across all tasks</div>
+      </div>
+      <div class="end-stat">
+        <div class="el">Total Time</div>
+        <div class="ev" id="endTime">—</div>
+        <div class="es">elapsed</div>
+      </div>
+      <div class="end-stat">
+        <div class="el">Tasks Typed</div>
+        <div class="ev" id="endTasks">—</div>
+        <div class="es">tributes completed 💕</div>
+      </div>
+    </div>
+
+    <div class="end-id" id="endTextList" style="text-align:center;line-height:1.8;">—</div>
+
+    <button class="btn-restart" onclick="restartGame()">🌷 Start New Session 🌷</button>
+  </div>
+</div>
+
+<script>
+window.addEventListener('paste', e => e.preventDefault());
+window.addEventListener('copy', e => e.preventDefault());
+window.addEventListener('cut', e => e.preventDefault());
+window.addEventListener('drop', e => e.preventDefault());
+
+window.addEventListener('keydown', e => {
+  const forbidden = (e.ctrlKey || e.metaKey) && ['v','c','x','a','z','y'].includes(e.key.toLowerCase());
+  if (forbidden) e.preventDefault();
+});
+
+// ── TEXTS ──
+const ALL_TEXTS = [
+  { label: "🌸 Mommy Maple 🌸", content: `Maple, oh Mommy Maple~ Your ears twitch with excitement when Your day starts~ The twinkle in Your eyes when Lady Lillith enters the server~ Oh Mommy Maple, You are the cutest switch to have ever graced my presence~ I thank thee for giving me this task as I shall always remember just how kind and sweet Mommy Maple is to subs~` },
+];
+
+// State
+let selected = [];
+let current = 0;
+let total = 1;
+let startTime;
+let taskStartTime;
+let timerInterval;
+let taskErrors = 0;
+let taskErrorCounted = {};
+let totalErrors = 0;
+let taskWpms = [];
+
+function adjustCount(delta) {
+  const el = document.getElementById('taskCount');
+  let v = parseInt(el.value) + delta;
+  if (v < 1) v = 1;
+  el.value = v;
+}
+
+function buildPool(needed) {
+  let result = [];
+  while (result.length < needed) {
+    result = result.concat(ALL_TEXTS.slice(0, Math.min(ALL_TEXTS.length, needed - result.length)));
+  }
+  return result;
+}
+
+function startGame() {
+  total = Math.max(1, parseInt(document.getElementById('taskCount').value) || 5);
+  selected = buildPool(total);
+  current = 0;
+  totalErrors = 0;
+  taskWpms = [];
+
+  startTime = Date.now();
+  startTimer();
+  switchScreen('play');
+  loadText();
+}
+
+function switchScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+}
+
+function loadText() {
+  const text = selected[current].content;
+  document.getElementById('textLabel').innerText = selected[current].label;
+  document.getElementById('progressText').innerText = current + ' / ' + total;
+
+  const words = text.split(' ');
+  document.getElementById('textDisplay').innerHTML = words.map((w, i) =>
+    `<span class="word" id="w${i}">${w}</span>`
+  ).join(' ');
+
+  document.getElementById('inputBox').value = '';
+  document.getElementById('inputBox').disabled = false;
+  document.getElementById('inputBox').focus();
+  document.getElementById('nextBtn').classList.remove('ready');
+
+  taskErrors = 0;
+  taskErrorCounted = {};
+  taskStartTime = Date.now();
+
+  document.getElementById('liveWpm').innerText = '—';
+  document.getElementById('liveErrors').innerText = '0';
+  document.getElementById('liveChars').innerText = '0';
+  document.getElementById('liveAccuracy').innerText = '—';
+  updateProgress();
+}
+
+function handleKey(e) {
+  if (e.key === 'Enter') {
+    const btn = document.getElementById('nextBtn');
+    if (btn.classList.contains('ready')) {
+      e.preventDefault();
+      nextText();
+    } else {
+      e.preventDefault();
+    }
+  }
+}
+
+function checkTyping() {
+  const input = document.getElementById('inputBox').value;
+  const typedWords = input.split(' ');
+  const spans = document.querySelectorAll('.word');
+
+  const currentWordIdx = typedWords.length - 1;
+  let allCorrect = true;
+
+  spans.forEach((span, i) => {
+    span.classList.remove('correct', 'incorrect', 'cursor-on');
+
+    if (i > currentWordIdx || typedWords[i] === undefined) {
+      allCorrect = false;
+      return;
+    }
+
+    const typed = typedWords[i];
+    const target = span.innerText;
+
+    if (i === currentWordIdx) {
+      let hasError = false;
+      for (let c = 0; c < typed.length; c++) {
+        if (typed[c] !== target[c]) {
+          hasError = true;
+          break;
+        }
+      }
+      if (hasError) {
+        span.classList.add('incorrect');
+        if (!taskErrorCounted[i]) {
+          taskErrorCounted[i] = true;
+          taskErrors++;
+        }
+      }
+
+      const isLastWord = i === spans.length - 1;
+      if (isLastWord && typed === target) {
+        span.classList.add('correct');
+      } else {
+        span.classList.add('cursor-on');
+        allCorrect = false;
+      }
+      return;
+    }
+
+    if (typed === target) {
+      span.classList.add('correct');
+    } else {
+      span.classList.add('incorrect');
+      allCorrect = false;
+      if (!taskErrorCounted[i]) {
+        taskErrorCounted[i] = true;
+        taskErrors++;
+      }
+    }
+  });
+
+  if (typedWords.length !== spans.length) allCorrect = false;
+
+  const elapsed = (Date.now() - taskStartTime) / 1000 / 60;
+  const typedChars = input.replace(/\s/g, '').length;
+  const wordsTyped = Math.max(0, typedWords.length - 1);
+  const wpm = elapsed > 0.05 ? Math.round(wordsTyped / elapsed) : 0;
+
+  document.getElementById('liveWpm').innerText = elapsed > 0.05 ? wpm : '—';
+  document.getElementById('liveErrors').innerText = taskErrors;
+  document.getElementById('liveChars').innerText = typedChars;
+
+  const committedCorrect = Array.from(spans).filter(s => s.classList.contains('correct')).length;
+  const acc = wordsTyped > 0 ? Math.round((committedCorrect / wordsTyped) * 100) : 100;
+  document.getElementById('liveAccuracy').innerText = elapsed > 0.05 ? acc + '%' : '—';
+
+  if (allCorrect) {
+    document.getElementById('nextBtn').classList.add('ready');
+  } else {
+    document.getElementById('nextBtn').classList.remove('ready');
+  }
+}
+
+function nextText() {
+  if (!document.getElementById('nextBtn').classList.contains('ready')) return;
+  const taskElapsed = (Date.now() - taskStartTime) / 1000 / 60;
+  const wordCount = selected[current].content.split(' ').length;
+  const taskWpm = taskElapsed > 0 ? Math.round(wordCount / taskElapsed) : 0;
+  taskWpms.push(taskWpm);
+  totalErrors += taskErrors;
+
+  current++;
+  updateProgress();
+
+  if (current >= total) {
+    endGame();
+  } else {
+    loadText();
+  }
+}
+
+function updateProgress() {
+  const pct = (current / total) * 100;
+  document.getElementById('progressFill').style.width = pct + '%';
+  document.getElementById('progressText').innerText = current + ' / ' + total;
+}
+
+function startTimer() {
+  timerInterval = setInterval(() => {
+    const elapsed = Math.floor((Date.now() - startTime) / 1000);
+    const h = String(Math.floor(elapsed / 3600)).padStart(2, '0');
+    const m = String(Math.floor((elapsed % 3600) / 60)).padStart(2, '0');
+    const s = String(elapsed % 60).padStart(2, '0');
+    document.getElementById('timer').innerText = `${h}:${m}:${s}`;
+  }, 1000);
+}
+
+function endGame() {
+  clearInterval(timerInterval);
+
+  const elapsed = document.getElementById('timer').innerText;
+  const avgWpm = taskWpms.length > 0 ? Math.round(taskWpms.reduce((a, b) => a + b, 0) / taskWpms.length) : 0;
+  const id = Math.floor(100000000 + Math.random() * 900000000);
+
+  document.getElementById('endTime').innerText = elapsed;
+  document.getElementById('endWpm').innerText = avgWpm;
+  document.getElementById('endErrors').innerText = totalErrors;
+  document.getElementById('endTasks').innerText = total;
+  document.getElementById('endId').innerText = 'Session ID: ' + id;
+  document.getElementById('endSubtitle').innerText = '💕 ' + total + ' tribute' + (total !== 1 ? 's' : '') + ' completed for Mommy Maple 🌸';
+  document.getElementById('endTextList').innerText = selected.map(t => t.label).join(' · ');
+
+  switchScreen('end');
+}
+
+function restartGame() {
+  document.getElementById('timer').innerText = '00:00:00';
+  updateProgress();
+  switchScreen('start');
+}
+</script>
+</body>
+</html>
