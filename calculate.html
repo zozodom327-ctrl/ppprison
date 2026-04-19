@@ -254,30 +254,29 @@ body::before {
 <!-- START SCREEN -->
 <div class="screen active" id="start-screen">
   <div class="game-title">Calculate For Perfection</div>
-  <div class="subtitle">Arithmetic lessons on the old blackboard. No excuses. No early dismissal.</div>
   
   <div class="chalk-box">
     <div class="box-title">Assignment Brief</div>
     <div class="instructions">
-      Questions will appear on the blackboard. You have <strong style="color:#e0f090">5 seconds</strong> per question.<br><br>
+      Questions will appear on the blackboard. You have <strong style="color:#e0f090">3 seconds</strong> to answer.<br><br>
       Every mistake or timeout adds <strong style="color:#ff9070">one minute</strong> to your session.<br>
-      The clock ticks. You stay until it reaches zero.
+      Have fun!
     </div>
   </div>
   
   <div class="chalk-box">
-    <div class="box-title">Session Parameters</div>
+    <div class="box-title">Settings</div>
     <div class="setting-row" style="margin-top:0.8rem;display:flex;justify-content:space-between;align-items:center;">
       <span class="setting-label">Duration (minutes)</span>
       <input class="chalk-input" type="number" id="duration-input" min="1" max="60" value="5">
     </div>
     <div class="toggle-row" style="margin-top:1rem;display:flex;justify-content:space-between;align-items:center;">
-      <span class="setting-label">Easy Mode <span style="color:#9ab070;font-size:0.8em">(1–5 only)</span></span>
+      <span class="setting-label">Easy Mode <span style="color:#9ab070;font-size:0.8em"> (1–5 only)</span></span>
       <input class="chalk-toggle" type="checkbox" id="easy-toggle">
     </div>
   </div>
   
-  <button class="btn-commence" id="btn-start" style="font-family:'Special Elite',cursive;font-size:1.7rem;letter-spacing:0.25em;border:4px solid #9ab070;color:#f0f8d0;background:#2a4a2a;padding:0.7rem 3rem;cursor:pointer;">BEGIN LESSON</button>
+  <button class="btn-commence" id="btn-start" style="font-family:'Special Elite',cursive;font-size:1.7rem;letter-spacing:0.25em;border:4px solid #9ab070;color:#f0f8d0;background:#2a4a2a;padding:0.7rem 3rem;cursor:pointer;">BEGIN</button>
 </div>
 
 <!-- GAME SCREEN -->
@@ -296,7 +295,7 @@ body::before {
         <circle class="ring-bg" cx="28" cy="28" r="24"/>
         <circle class="ring-fg" id="ring-fg" cx="28" cy="28" r="24"/>
       </svg>
-      <div id="q-timer-num">5</div>
+      <div id="q-timer-num">3</div>
     </div>
     
     <div id="board-display" style="flex:1;width:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:0;position:relative;">
@@ -444,12 +443,125 @@ function beepCorrect() {
 }
 
 // ══════════════ GAME LOGIC ══════════════
-const PRAISE = ["Well done. That was the minimum acceptable standard.","Correct. You have met the basic requirements. Do not celebrate.","Yes. That is the right answer. You needn't look so pleased.","Acceptable. Most children manage that one eventually.","Good. I would have been disappointed had you failed that one. Again.","Technically correct. The lowest bar has been cleared.","You answered correctly. This is what is expected of you.","Right. It appears some small amount of learning has occurred.","Correct. One would hope so, at this stage.","That is right. Please do not let it go to your head.","Yes, well done. A clock is right twice a day as well.","Correct. Perhaps there is hope for you yet. Perhaps.","You got it. I am not applauding. This is required behaviour.","That answer was correct. Try to maintain this standard.","Satisfactory. The bar was low, but you cleared it."];
+const PRAISE = [
+    // Theme 1: Dry, uncaring one/two-word responses
+    "Correct.",
+    "Fine.",
+    "Acceptable.",
+    "Adequate.",
+    "Passable.",
+    "Okay.",
+    "Right.",
+    "Sure.",
+    "Good enough.",
+    "Satisfactory.",
+    "Not terrible.",
+    "Wow, you got it.",
+    "Technically correct.",
+    "Barely.",
+    "Meh.",
+    "Expected.",
+    "Standard.",
+    "Proceeding.",
+    "Noted.",
+    "Moving on.",
 
-const SCOLD = ["That was wrong. Pay closer attention.","Incorrect. An additional minute has been added to your session.","No. Think before you submit an answer.","Wrong. You have only made things worse for yourself.","That is not the correct answer. You are still here, you know.","Incorrect. This is basic arithmetic. Apply yourself.","No. Another minute. You have no one to blame but yourself.","Wrong answer. The session is now longer. I hope you are satisfied.","That was a mistake. Please do not repeat it.","Incorrect. Try to focus. Your time is not decreasing.","No. I expected better. The clock did not.","Wrong. You have extended your own suffering.","That is incorrect. The penalty has been applied.","No. Basic arithmetic. Perhaps revise this before next time.","Wrong again. The numbers have not changed. You have."];
+    // Theme 2: Mocking the player for wasting time/energy
+    "Tired yet?",
+    "Enjoying yourself?",
+    "Wasting time well?",
+    "Brain hurting?",
+    "Still going?",
+    "This fun for you?",
+    "Energy levels good?",
+    "Isn't this thrilling?",
+    "Loving this?",
+    "Mental stamina holding?",
+    "Regretting this yet?",
+    "Time well spent?",
+    "How are your brain cells?",
+    "Feeling productive?",
+    "Worth it so far?",
+    "Exhausted already?",
+    "This your hobby?",
+    "Enjoy the boredom?",
+    "Still entertained?",
+    "Was this a good life choice?",
 
-const TIMEOUT = ["You failed to answer in time. An additional minute has been added.","Too slow. The clock waits for no one. A minute has been added.","No answer was provided. The session is now longer.","Silence is not a correct answer. A minute has been added.","Time expired. I trust you felt that."];
+    // Theme 3: Perfection-themed (commanding/amused by player's time waste)
+    "Perfection is amused.",
+    "Perfection demands more.",
+    "Perfection finds this funny.",
+    "Perfection likes your effort.",
+    "Perfection owns your time.",
+    "Perfection is entertained.",
+    "Perfection requires obedience.",
+    "Perfection smiles at this.",
+    "Perfection thanks you.",
+    "Perfection controls you.",
+    "Perfection approves... barely.",
+    "Perfection wastes your time.",
+    "Perfection is watching.",
+    "Perfection expects perfection.",
+    "Perfection finds this hilarious.",
+    "Perfection commands you to do more.",
+    "Perfection enjoys this.",
+    "Perfection is not impressed.",
+    "Perfection takes your energy.",
+    "Perfection laughs quietly.",
 
+    // Theme 4: Encouraging failure / taunting mistakes
+    "You'll screw up.",
+    "What are you even doing?",
+    "Why are you doing this?",
+    "Are you proud of yourself?",
+    "Don't mess up.",
+    "You will fail.",
+    "Crack under pressure.",
+    "What's 1+1 again?.",
+    "Error, game restarting?",
+    "+1 minute! (kidding)",
+    "Why are you even doing this?",
+    "Failure awaits.",
+    "Keep it together...",
+    "One mistake away.",
+    "Have regrets yet?",
+    "Are you getting broken by 4 + 9?",
+    "Ahahahahahaha",
+    "WRONG WRONG WRONG.",
+    "ERROR (jokes).",
+    "Get the next one wrong, for fun.",
+
+    // Theme 5: Sarcastic maths/calculations praise
+    "Wow, basic sums.",
+    "Proud of that?",
+    "Genius at work.",
+    "Such math skill.",
+    "Impressive calculating skills.",
+    "Einstein reborn.",
+    "Nobel for addition?",
+    "So good at easy.",
+    "Calculations master.",
+    "Brilliant basic math.",
+    "Wow. Just wow, you're so good at this.",
+    "Math prodigy here.",
+    "That was hard?",
+    "Super smart stuff.",
+    "You're a calculator.",
+    "Amazing... you should do this for a living.",
+    "Feel like a math god?.",
+    "Isn't this fun?",
+    "You're truly gifted.",
+    "Rocket scientist over here."
+];
+
+const SCOLD = [
+    "Incorrect. +1 minute"
+];
+
+const TIMEOUT = [
+    "Too slow. +1 minute"
+];
 function pick(arr) { return arr[Math.floor(Math.random()*arr.length)]; }
 
 let state = {};
@@ -502,7 +614,7 @@ function generateQuestion(easy) {
     return {display, answer};
   } 
   else {
-    // Standard mode - simpler version you requested
+    // Standard mode - simpler as requested
     const ops = ['+','-','×'];
     const op = ops[Math.floor(Math.random()*3)];
     let a, b, answer, display;
@@ -560,11 +672,11 @@ function startQuestion() {
   answerInput.disabled = false;
   state.accepting = true;
   setRing(1);
-  qTimerNum.textContent = '5';
+  qTimerNum.textContent = '3';
   answerInput.focus();
   hudStatus.textContent = 'ANSWERING';
   clearInterval(state.qTimerInterval);
-  const startTime = Date.now(), DURATION = 5000;   // 5 seconds for both modes
+  const startTime = Date.now(), DURATION = 3000;   // 3 seconds for both modes
   state.qTimerInterval = setInterval(() => {
     if(!state.running){clearInterval(state.qTimerInterval);return;}
     const elapsed = Date.now() - startTime;
