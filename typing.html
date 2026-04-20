@@ -477,7 +477,7 @@ body::before {
   <div class="live-stats">
     <div class="stat-pill">
       <div class="slabel">WPM</div>
-      <div class="sval pink" id="liveWpm">—</div>
+      <div class="sval pink" id="liveWpm">-</div>
     </div>
     <div class="stat-pill">
       <div class="slabel">Errors</div>
@@ -489,11 +489,11 @@ body::before {
     </div>
     <div class="stat-pill">
       <div class="slabel">Accuracy</div>
-      <div class="sval" id="liveAccuracy">—</div>
+      <div class="sval" id="liveAccuracy">-</div>
     </div>
   </div>
 
-  <div class="text-label" id="textLabel">—</div>
+  <div class="text-label" id="textLabel">-</div>
 
   <div class="typing-area">
     <div id="textDisplay"></div>
@@ -513,34 +513,34 @@ body::before {
   <div class="end-inner">
     <div class="end-title">
       <h1>Session<br><em>Complete.</em></h1>
-      <p id="endSubtitle">—</p>
-      <p id="endId" style="margin-top:6px;font-family:'DM Mono',monospace;font-size:0.7rem;color:var(--muted);letter-spacing:0.12em;">—</p>
+      <p id="endSubtitle">-</p>
+      <p id="endId" style="margin-top:6px;font-family:'DM Mono',monospace;font-size:0.7rem;color:var(--muted);letter-spacing:0.12em;">-</p>
     </div>
 
     <div class="end-stats">
       <div class="end-stat">
         <div class="el">Avg WPM</div>
-        <div class="ev pink" id="endWpm">—</div>
+        <div class="ev pink" id="endWpm">-</div>
         <div class="es">words per minute</div>
       </div>
       <div class="end-stat">
         <div class="el">Total Errors</div>
-        <div class="ev red" id="endErrors">—</div>
+        <div class="ev red" id="endErrors">-</div>
         <div class="es">across all tasks</div>
       </div>
       <div class="end-stat">
         <div class="el">Total Time</div>
-        <div class="ev" id="endTime">—</div>
+        <div class="ev" id="endTime">-</div>
         <div class="es">elapsed</div>
       </div>
       <div class="end-stat">
         <div class="el">Tasks Typed</div>
-        <div class="ev" id="endTasks">—</div>
+        <div class="ev" id="endTasks">-</div>
         <div class="es">texts completed</div>
       </div>
     </div>
 
-    <div class="end-id" id="endTextList" style="text-align:center;line-height:1.8;">—</div>
+    <div class="end-id" id="endTextList" style="text-align:center;line-height:1.8;">-</div>
 
     <button class="btn-restart" onclick="restartGame()">Start New Session</button>
   </div>
@@ -558,7 +558,7 @@ window.addEventListener('keydown', e => {
   if (forbidden) e.preventDefault();
 });
 
-// ── TEXTS (100 placeholders — replace with real content) ──
+// ── TEXTS (100 placeholders - replace with real content) ──
 const ALL_TEXTS = [
   { label: "Simone de Beauvoir", content: `Simone de Beauvoir was a French writer, feminist, social theorist, and existential philosopher. She is best known for her groundbreaking ideas surrounding feminism. In her 1949 book "The Second Sex", Beauvoir asserted that women are as capable of choice as men, and thus can choose to elevate themselves, moving beyond the "immanence" to which they were previously resigned and reaching "transcendence", a position in which one takes responsibility for oneself and the world, where one chooses one's freedom. She wrote, "One is not born, but rather becomes, a woman... her wings are cut and then she is blamed for not knowing how to fly."` },
   { label: "RACK", content: `RACK stands for Risk Aware Consensual Kink. Rather than prohibit injury, RACK encourages risk awareness. To be risk aware within BDSM means participants acknowledge that their sexual activities may have physical risks like bruises or burns, mental risks like stress and anguish, as well as emotional risks like humiliation. Beyond risk awareness, the C in RACK stands for consensual. For sex to be consensual, all parties involved need to enthusiastically agree, in a comfortable environment safe from coercion, to all activities that are going to take place. There should be a conversation prior to sex in which every individual establishes their boundaries and agrees upon a safeword.` },
@@ -573,7 +573,7 @@ const ALL_TEXTS = [
   { label: "Patriarchy", content: `Patriarchy is a social system in which positions of authority are primarily held by men. The term patriarchy is used in feminist theory to describe a broader social structure in which men as a group dominate society. Sociologists posit that the process of socialization is predominantly responsible for the establishment of gender roles. They contend that gender roles and gender inequity function as instruments of power and have evolved into social norms that serve to maintain control over women. Patriarchy has manifested itself throughout history in the social, legal, political, religious, and economic organization of a range of different cultures. Most contemporary societies are patriarchal in practice.` },
   { label: "Gender roles", content: `A gender role, or sex role, is a social norm deemed appropriate or desirable for individuals based on their gender or sex, and is usually centered on societal views of masculinity and femininity. Gender roles influence a wide range of human behavior, often including the clothing a person chooses to wear, the profession a person pursues, manner of approach to things, the personal relationships a person enters, and how they behave within those relationships. Although gender roles have evolved and expanded, they traditionally keep women in the "private" sphere, and men in the "public" sphere. Various groups, most notably feminist movements, have led efforts to change aspects of prevailing gender roles that they believe are oppressive, inaccurate, and sexist.` },
   { label: "Angela Davis", content: `Angela Yvonne Davis, born in 1944 in Birmingham, Alabama, is a prominent political activist, scholar, and author known for her involvement in civil rights and social justice movements. Throughout her career, Davis has remained a vocal advocate for prisoners' rights, racial justice, and feminism, founding organizations like Critical Resistance aimed at dismantling the prison-industrial complex. She has authored several influential works that examine the intersections of race, gender, and class, making her a key figure in contemporary discussions surrounding social justice. Today, Davis is respected as a human rights advocate and educator, continuing to inspire activism and scholarship.` },
-  { label: "Femdom", content: `FemDom—Female Dominance—represents one of the most popular and culturally significant kink categories, centered on women wielding power, control, and authority over submissive partners (typically male, though not exclusively). This category reverses traditional heterosexual gender dynamics: the woman gives orders and the man obeys; the woman administers punishment or pleasure as she sees fit, the woman's desires are prioritized while the man serves. FemDom exists on a spectrum from playful power reversal (a woman taking charge during sex) to elaborate domination scenes, to lifestyle Female-Led Relationships where women hold authority in all relationship aspects. The unifying element is female authority and male submission.` },
+  { label: "Femdom", content: `FemDom-Female Dominance-represents one of the most popular and culturally significant kink categories, centered on women wielding power, control, and authority over submissive partners (typically male, though not exclusively). This category reverses traditional heterosexual gender dynamics: the woman gives orders and the man obeys; the woman administers punishment or pleasure as she sees fit, the woman's desires are prioritized while the man serves. FemDom exists on a spectrum from playful power reversal (a woman taking charge during sex) to elaborate domination scenes, to lifestyle Female-Led Relationships where women hold authority in all relationship aspects. The unifying element is female authority and male submission.` },
   { label: "BDSM", content: `BDSM is a variety of often erotic practices or roleplaying involving bondage, discipline, dominance and submission, sadomasochism, and other related interpersonal dynamics. Activities and relationships in BDSM are typically characterized by the participants' taking on roles that are complementary and involve inequality of power; thus, the idea of informed consent of both the partners is essential. The terms submissive and dominant are usually used to distinguish these roles: the dominant partner ("dom") takes psychological control over the submissive ("sub").` },
   { label: "Affirmative Consent", content: `Affirmative consent (enthusiastic yes) is when both parties agree to sexual conduct, either through clear verbal communication or nonverbal cues or gestures. It involves communication and the active participation of the people involved. By definition, affirmative consent cannot be given if a person is intoxicated, unconscious, or asleep.` },
   { label: "Workplace Equality", content: `Equality in the workplace means equal job opportunities and fairness for employees and job applicants. You must not treat people unfairly because of reasons protected by discrimination law ('protected characteristics'). For example, because of sex, age or race. Diversity is the range of people in your workforce. For example, this might mean people with different ages, religions, ethnicities, people with disabilities, and both men and women. It also means valuing those differences. An inclusive workplace means everyone feels valued at work. It lets all employees feel safe to 1) come up with different ideas, 2) raise issues and suggestions to managers, knowing this is encouraged, and 3), try doing things differently to how they've been done before, with management approval.` },
@@ -587,8 +587,8 @@ const ALL_TEXTS = [
   { label: "Gloria Steinem", content: `Gloria Marie Steinem is an American journalist and social-political activist who emerged as a nationally recognized leader of second-wave feminism in the United States in the late 1960s and early 1970s. Steinem was a columnist for New York magazine and a co-founder of Ms. magazine. In 1969, Steinem published an article, "After Black Power, Women's Liberation," which brought her national attention and positioned her as a feminist leader. In 1971, she co-founded the National Women's Political Caucus which provides training and support for women who seek elected and appointed offices in government. Also in 1971, she co-founded the Women's Action Alliance which, until 1997, provided support to a network of feminist activists and worked to advance feminist causes and legislation. In the 1990s, Steinem helped establish Take Our Daughters to Work Day, an occasion for young girls to learn about future career opportunities. In 2005, Steinem, Jane Fonda, and Robin Morgan co-founded the Women's Media Center, an organization that "works to make women visible and powerful in the media."` },
   { label: "Judith Butler", content: `Judith Butler is an American feminist, queer philosopher, and gender studies scholar whose work has influenced political philosophy, ethics, psychoanalysis, and the fields of feminist and queer theory, academic freedom, and literary theory. Much of Butler's early political activism centered around queer and feminist issues, and they served, for a period of time, as the chair of the board of the International Gay and Lesbian Human Rights Commission. Over the years, Butler has been particularly active in the gay and lesbian rights, feminist, and anti-war movements.` },
   { label: "Post-structuralism", content: `Post-structuralism is a philosophical movement that questions the objectivity or stability of the various interpretive structures that are posited by structuralism and considers them to be constituted by broader systems of power. Although different post-structuralists present different critiques of structuralism, common themes include the rejection of the self-sufficiency of structuralism, as well as an interrogation of the binary oppositions that constitute its structures. Accordingly, post-structuralism discards the idea of interpreting media (or the world) within pre-established, socially constructed structures.` },
-  { label: "Postcolonialism", content: `Postcolonialism is the academic study of the cultural, political and economic consequences of colonialism and imperialism, focusing on the impact of human control and exploitation of colonized people and their lands. The field started to emerge in the 1960s, as scholars from previously colonized countries began publishing on the lingering effects of colonialism, developing an analysis of the history, culture, literature, and discourse of imperial power. In postcolonial literature, the anti-conquest narrative analyzes the identity politics that are the social and cultural perspectives of the subaltern colonial subjects—their creative resistance to the culture of the colonizer; how such cultural resistance complicated the establishment of a colonial society; how the colonizers developed their postcolonial identity; and how neocolonialism actively employs the 'us-and-them' binary social relation to view the non-Western world as inhabited by 'the other'.` },
-  { label: "Other", content: `In philosophy, the Other is a fundamental concept referring to anyone or anything perceived as distinct or different from oneself. This distinction is crucial for understanding how individuals construct their own identities, as the encounter with "otherness" helps define the boundaries of the self. The social exclusion function of Othering a person or a social group from mainstream society to the social margins—for being essentially different from the societal norm (the plural Self)—is a socio-economic function of gender. In a society wherein man-woman heterosexuality is the sexual norm, the Other refers to and identifies lesbians (women who love women) and gay men (men who love men) as people of same-sex orientation whom society has othered as "sexually deviant" from the norms of binary-gender heterosexuality. In practice, sexual Othering is realised by applying the negative denotations and connotations of the terms that describe lesbian, gay, bisexual, and transgender people, in order to diminish their personal social status and political power, and so displace their LGBT communities to the legal margin of society.` },
+  { label: "Postcolonialism", content: `Postcolonialism is the academic study of the cultural, political and economic consequences of colonialism and imperialism, focusing on the impact of human control and exploitation of colonized people and their lands. The field started to emerge in the 1960s, as scholars from previously colonized countries began publishing on the lingering effects of colonialism, developing an analysis of the history, culture, literature, and discourse of imperial power. In postcolonial literature, the anti-conquest narrative analyzes the identity politics that are the social and cultural perspectives of the subaltern colonial subjects-their creative resistance to the culture of the colonizer; how such cultural resistance complicated the establishment of a colonial society; how the colonizers developed their postcolonial identity; and how neocolonialism actively employs the 'us-and-them' binary social relation to view the non-Western world as inhabited by 'the other'.` },
+  { label: "Other", content: `In philosophy, the Other is a fundamental concept referring to anyone or anything perceived as distinct or different from oneself. This distinction is crucial for understanding how individuals construct their own identities, as the encounter with "otherness" helps define the boundaries of the self. The social exclusion function of Othering a person or a social group from mainstream society to the social margins-for being essentially different from the societal norm (the plural Self)-is a socio-economic function of gender. In a society wherein man-woman heterosexuality is the sexual norm, the Other refers to and identifies lesbians (women who love women) and gay men (men who love men) as people of same-sex orientation whom society has othered as "sexually deviant" from the norms of binary-gender heterosexuality. In practice, sexual Othering is realised by applying the negative denotations and connotations of the terms that describe lesbian, gay, bisexual, and transgender people, in order to diminish their personal social status and political power, and so displace their LGBT communities to the legal margin of society.` },
   { label: "Power", content: `Power is the ability to influence or direct the actions, beliefs, or conduct of actors, usually through law. Power does not exclusively refer to the threat or use of force (coercion) by one actor against another, but may also be exerted through diffuse means (such as institutions). Power may also take structural forms, as it orders actors in relation to one another (such as distinguishing between a master and an enslaved person, a householder and their relatives, an employer and their employees, a parent and a child, a political representative and their voters, etc.), and discursive forms, as categories and language may lend legitimacy to some behaviors and groups over others.` },
   { label: "Discrimination", content: `Discrimination is the process of making unjustified distinctions between people based on the groups, classes, or other categories to which they belong or are perceived to belong, usually in a way that it deprives them of their legal or human rights. The group may be such as race, gender, age, class, religion, disability or sexual orientation. Discrimination typically leads to groups being unfairly treated on the basis of perceived statuses of characteristics, for example ethnic, racial, gender or religious categories.` },
   { label: "Human Rights", content: `Human rights are universally recognized moral principles or norms that establish standards of human behavior and are often protected by both national and international laws. These rights are considered inherent and inalienable, meaning they belong to every individual simply by virtue of being human, regardless of characteristics like nationality, ethnicity, religion, gender, sexual orientation, disability, caste, or socioeconomic status. They encompass a broad range of civil, political, economic, social, and cultural rights, such as the right to life, freedom of speech, protection against enslavement, and right to education.` },
@@ -646,9 +646,9 @@ const ALL_TEXTS = [
   { label: "Invisible labor", content: `Invisible labor is a philosophical, sociological, and economic concept applying to work that is unseen, unvalued or undervalued, and often discounted as not important, despite its essential role in supporting the functioning of workplaces, families, teams, and organizations. The term was coined by Arlene Kaplan Daniels in the 1980s. The term has been applied to academics, scientists, interpreters, wait staff, secretaries, and women in the household, who bear most of the invisible labor in terms of cleaning, planning, and organizing. Even when women are equally employed, they still are responsible for the majority of invisible labor, including cognitive labor.` },
   { label: "Reproductive rights", content: `The World Health Organization defines reproductive rights: Reproductive rights rest on the recognition of the basic right of all couples and individuals to decide freely and responsibly the number, spacing and timing of their children and to have the information and means to do so, and the right to attain the highest standard of sexual and reproductive health. They also include the right of all to make decisions concerning reproduction free of discrimination, coercion and violence.` },
   { label: "Pink tax", content: `The pink tax refers to the tendency for products marketed specifically toward women to be more expensive than those marketed toward men. This phenomenon is often attributed to gender-based price discrimination, however research shows that the primary cause is women sorting into goods with higher marginal costs. The name stems from the observation that many of the affected products are pink.` },
-  { label: "Follicular Phase", content: `This phase begins on the day you get your period and ends at ovulation (it overlaps with the menses phase and ends when you ovulate). During this time, the level of the hormone estrogen rises, which causes the lining of your uterus (the endometrium) to grow and thicken. In addition, another hormone — follicle-stimulating hormone (FSH) — causes follicles in your ovaries to grow. During days 10 to 14, one of the developing follicles will form a fully mature egg (ovum).` },
+  { label: "Follicular Phase", content: `This phase begins on the day you get your period and ends at ovulation (it overlaps with the menses phase and ends when you ovulate). During this time, the level of the hormone estrogen rises, which causes the lining of your uterus (the endometrium) to grow and thicken. In addition, another hormone - follicle-stimulating hormone (FSH) - causes follicles in your ovaries to grow. During days 10 to 14, one of the developing follicles will form a fully mature egg (ovum).` },
   { label: "Menses Phase", content: `This phase begins on the first day of your period. It's when the lining of your uterus sheds through your vagina if pregnancy hasn't occurred. Most people bleed for three to five days, but a period lasting only three days to as many as seven days is usually not a cause for worry.` },
-  { label: "Ovulation", content: `This phase occurs roughly at about day 14 in a 28-day menstrual cycle. A sudden increase in another hormone — luteinizing hormone (LH) — causes your ovary to release its egg. This event is ovulation.` },
+  { label: "Ovulation", content: `This phase occurs roughly at about day 14 in a 28-day menstrual cycle. A sudden increase in another hormone - luteinizing hormone (LH) - causes your ovary to release its egg. This event is ovulation.` },
   { label: "Luteal phase", content: `This phase lasts from about day 15 to day 28. Your egg leaves your ovary and begins to travel through your fallopian tubes to your uterus. The level of the hormone progesterone rises to help prepare your uterine lining for pregnancy. If the egg becomes fertilized by sperm and attaches itself to your uterine wall (implantation), you become pregnant. If pregnancy doesn't occur, estrogen and progesterone levels drop and the thick lining of your uterus sheds during your period.` },
   { label: "Menstrual cycle", content: `The menstrual cycle is the monthly series of changes the body goes through to prepare for pregnancy. Each month, one of the ovaries releases an egg. This is called ovulation. Hormonal changes at this time get the uterus ready for pregnancy. If the released egg isn't fertilized during ovulation, the lining of the uterus sheds through the vagina. This is a menstrual period.` },
   { label: "Gender pay gap", content: `The gender pay gap or gender wage gap is the average difference between the remuneration for men and women who are employed. In most countries, women are paid less than men for the same work. There are two distinct measurements of the pay gap: 1) Non-adjusted pay gap is the average difference in yearly earnings between male and female workers. 2) Adjusted pay gap is the difference between how much men and women make for the same work, and it takes into account differences in hours worked, occupations chosen, education attained, and job experience.` },
@@ -737,10 +737,10 @@ function loadText() {
   taskErrorCounted = {};
   taskStartTime = Date.now();
 
-  document.getElementById('liveWpm').innerText = '—';
+  document.getElementById('liveWpm').innerText = '-';
   document.getElementById('liveErrors').innerText = '0';
   document.getElementById('liveChars').innerText = '0';
-  document.getElementById('liveAccuracy').innerText = '—';
+  document.getElementById('liveAccuracy').innerText = '-';
   updateProgress();
 }
 
@@ -777,7 +777,7 @@ function checkTyping() {
     const target = span.innerText;
 
     if (i === currentWordIdx) {
-      // Current word being typed — check character by character
+      // Current word being typed - check character by character
       let hasError = false;
       for (let c = 0; c < typed.length; c++) {
         if (typed[c] !== target[c]) {
@@ -805,7 +805,7 @@ function checkTyping() {
       return;
     }
 
-    // Committed word — compare fully
+    // Committed word - compare fully
     if (typed === target) {
       span.classList.add('correct');
     } else {
@@ -826,13 +826,13 @@ function checkTyping() {
   const wordsTyped = Math.max(0, typedWords.length - 1);
   const wpm = elapsed > 0.05 ? Math.round(wordsTyped / elapsed) : 0;
 
-  document.getElementById('liveWpm').innerText = elapsed > 0.05 ? wpm : '—';
+  document.getElementById('liveWpm').innerText = elapsed > 0.05 ? wpm : '-';
   document.getElementById('liveErrors').innerText = taskErrors;
   document.getElementById('liveChars').innerText = typedChars;
 
   const committedCorrect = Array.from(spans).filter(s => s.classList.contains('correct')).length;
   const acc = wordsTyped > 0 ? Math.round((committedCorrect / wordsTyped) * 100) : 100;
-  document.getElementById('liveAccuracy').innerText = elapsed > 0.05 ? acc + '%' : '—';
+  document.getElementById('liveAccuracy').innerText = elapsed > 0.05 ? acc + '%' : '-';
 
   if (allCorrect) {
     document.getElementById('nextBtn').classList.add('ready');
