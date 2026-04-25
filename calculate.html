@@ -271,8 +271,8 @@ body::before {
       <input class="chalk-input" type="number" id="duration-input" min="1" max="60" value="5">
     </div>
     <div class="toggle-row" style="margin-top:1rem;display:flex;justify-content:space-between;align-items:center;">
-      <span class="setting-label">Easy Mode <span style="color:#9ab070;font-size:0.8em"> (1–5 only)</span></span>
-      <input class="chalk-toggle" type="checkbox" id="easy-toggle">
+      <span class="setting-label">Slow Mode <span style="color:#9ab070;font-size:0.8em"> (5 seconds per question)</span></span>
+      <input class="chalk-toggle" type="checkbox" id="slow-toggle">
     </div>
   </div>
   
@@ -444,7 +444,6 @@ function beepCorrect() {
 
 // ══════════════ GAME LOGIC ══════════════
 const PRAISE = [
-    // Theme 1: Dry, uncaring one/two-word responses
     "Correct.",
     "Fine.",
     "Acceptable.",
@@ -465,8 +464,6 @@ const PRAISE = [
     "Proceeding.",
     "Noted.",
     "Moving on.",
-
-    // Theme 2: Mocking the player for wasting time/energy
     "Tired yet?",
     "Enjoying yourself?",
     "Wasting time well?",
@@ -487,8 +484,6 @@ const PRAISE = [
     "Enjoy the boredom?",
     "Still entertained?",
     "Was this a good life choice?",
-
-    // Theme 3: Perfection-themed (commanding/amused by player's time waste)
     "Perfection is amused.",
     "Perfection demands more.",
     "Perfection finds this funny.",
@@ -509,8 +504,6 @@ const PRAISE = [
     "Perfection is not impressed.",
     "Perfection takes your energy.",
     "Perfection laughs quietly.",
-
-    // Theme 4: Encouraging failure / taunting mistakes
     "You'll screw up.",
     "What are you even doing?",
     "Why are you doing this?",
@@ -531,8 +524,6 @@ const PRAISE = [
     "WRONG WRONG WRONG.",
     "ERROR (jokes).",
     "Get the next one wrong, for fun.",
-
-    // Theme 5: Sarcastic maths/calculations praise
     "Wow, basic sums.",
     "Proud of that?",
     "Genius at work.",
@@ -565,11 +556,11 @@ const TIMEOUT = [
 function pick(arr) { return arr[Math.floor(Math.random()*arr.length)]; }
 
 let state = {};
-function resetState(minutes, easyMode) {
+function resetState(minutes, slowMode) {
   state = {
     sessionSeconds: minutes*60,
     assignedMinutes: minutes,
-    easyMode,
+    slowMode,
     correct:0, errors:0, penalties:0, answered:0, elapsedSeconds:0,
     gameId: Math.floor(Math.random()*900000000)+100000000,
     running:false, accepting:false,
@@ -602,43 +593,30 @@ function updateHUD() {
 
 function rnd(a,b) { return Math.floor(Math.random()*(b-a+1))+a; }
 
-function generateQuestion(easy) {
-  if (easy) {
-    // Easy mode unchanged
-    const ops = ['+','-','×'];
-    const op = ops[Math.floor(Math.random()*3)];
-    let a, b, answer, display;
-    if (op === '+') { a = rnd(1,5); b = rnd(1,5); answer = a + b; display = `${a} + ${b}`; }
-    else if (op === '-') { a = rnd(2,5); b = rnd(1,a-1); answer = a - b; display = `${a} − ${b}`; }
-    else { a = rnd(1,5); b = rnd(1,5); answer = a * b; display = `${a} × ${b}`; }
-    return {display, answer};
-  } 
-  else {
-    // Standard mode - simpler as requested
-    const ops = ['+','-','×'];
-    const op = ops[Math.floor(Math.random()*3)];
-    let a, b, answer, display;
+function generateQuestion() {
+  const ops = ['+','-','×'];
+  const op = ops[Math.floor(Math.random()*3)];
+  let a, b, answer, display;
 
-    if (op === '+') {
-      a = rnd(1,9);
-      b = rnd(1,9);
-      answer = a + b;
-      display = `${a} + ${b}`;
-    } 
-    else if (op === '-') {
-      a = rnd(2,9);
-      b = rnd(1, a-1);
-      answer = a - b;
-      display = `${a} − ${b}`;
-    } 
-    else { // Multiplication: 10 times tables only
-      a = rnd(2, 12);
-      b = 10;
-      answer = a * b;
-      display = `${a} × ${b}`;
-    }
-    return {display, answer};
+  if (op === '+') {
+    a = rnd(1,9);
+    b = rnd(1,9);
+    answer = a + b;
+    display = `${a} + ${b}`;
+  } 
+  else if (op === '-') {
+    a = rnd(2,9);
+    b = rnd(1, a-1);
+    answer = a - b;
+    display = `${a} − ${b}`;
+  } 
+  else { // Multiplication: 10 times tables only
+    a = rnd(2, 12);
+    b = 10;
+    answer = a * b;
+    display = `${a} × ${b}`;
   }
+  return {display, answer};
 }
 
 const RING_CIRC = 2*Math.PI*24;
@@ -666,17 +644,19 @@ let currentQ = null;
 function startQuestion() {
   if(!state.running) return;
   hideBoardMsg();
-  currentQ = generateQuestion(state.easyMode);
+  currentQ = generateQuestion();
   questionDisplay.textContent = currentQ.display;
   answerInput.value = '';
   answerInput.disabled = false;
   state.accepting = true;
   setRing(1);
-  qTimerNum.textContent = '3';
+  const DURATION = state.slowMode ? 5000 : 3000;
+  const startSecs = Math.ceil(DURATION / 1000);
+  qTimerNum.textContent = startSecs;
   answerInput.focus();
   hudStatus.textContent = 'ANSWERING';
   clearInterval(state.qTimerInterval);
-  const startTime = Date.now(), DURATION = 3000;   // 3 seconds for both modes
+  const startTime = Date.now();
   state.qTimerInterval = setInterval(() => {
     if(!state.running){clearInterval(state.qTimerInterval);return;}
     const elapsed = Date.now() - startTime;
@@ -738,8 +718,8 @@ function tickElapsed() {
 
 function startGame() {
   const mins = Math.max(1, Math.min(60, parseInt($('duration-input').value) || 5));
-  const easy = $('easy-toggle').checked;
-  resetState(mins, easy);
+  const slow = $('slow-toggle').checked;
+  resetState(mins, slow);
   showScreen(gameScreen);
   updateSessionDisplay();
   updateHUD();
@@ -762,7 +742,7 @@ function endGame() {
   $('e-penalties').textContent = `${state.penalties} min`;
   $('e-gameid').textContent = state.gameId;
   const modeEl = $('e-mode');
-  modeEl.textContent = state.easyMode ? 'EASY MODE (1–5)' : 'STANDARD';
+  modeEl.textContent = state.slowMode ? 'SLOW MODE (5 seconds)' : 'STANDARD (3 seconds)';
   showScreen(endScreen);
   hudStatus.textContent = 'SESSION TERMINATED';
 }
