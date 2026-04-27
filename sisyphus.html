@@ -312,6 +312,36 @@
     letter-spacing: 0.12em;
   }
 
+  /* Inactivity overlay — appears briefly when the 30s timer expires. */
+  #inactivity-overlay {
+    position: absolute;
+    top: 0; left: 0; right: 0; bottom: 0;
+    display: none;
+    flex-direction: column;
+    align-items: center; justify-content: center;
+    z-index: 35;
+    pointer-events: none;
+    background: rgba(0,0,0,0.25);
+    opacity: 0;
+    transition: opacity 0.35s ease;
+  }
+  #inactivity-overlay.active { display: flex; opacity: 1; }
+  #inactivity-msg {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: clamp(1.4rem, 5vw, 3.2rem);
+    color: var(--accent);
+    letter-spacing: 0.25em;
+    text-align: center;
+    text-shadow: 0 0 24px rgba(0,0,0,0.85), 0 0 60px rgba(196,122,43,0.45);
+  }
+  #inactivity-sub {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 0.55em;
+    color: var(--text-dim);
+    margin-top: 14px;
+    letter-spacing: 0.22em;
+  }
+
   /* Click area hint */
   #click-hint {
     position: absolute;
@@ -479,6 +509,11 @@
       <div id="lockout-sub">Start Again.</div>
     </div>
 
+    <div id="inactivity-overlay">
+      <div id="inactivity-msg">INACTIVITY DETECTED</div>
+      <div id="inactivity-sub">+1 ASCENT ADDED</div>
+    </div>
+
     <div id="click-hint">CLICK THE BOULDER</div>
 
   </div>
@@ -493,6 +528,8 @@
     <div class="stat-row"><span class="stat-lbl">TOTAL CLICKS</span><span class="stat-val" id="es-clicks">—</span></div>
     <div class="stat-row"><span class="stat-lbl">SUCCESSFUL ASCENTS</span><span class="stat-val" id="es-ascents">—</span></div>
     <div class="stat-row"><span class="stat-lbl">SLOWDOWN PENALTIES</span><span class="stat-val" id="es-slowdowns">—</span></div>
+    <div class="stat-row"><span class="stat-lbl">INACTIVITY EVENTS</span><span class="stat-val" id="es-inactivity">—</span></div>
+    <div class="stat-row"><span class="stat-lbl">EXTRA ASCENTS PENALTY</span><span class="stat-val" id="es-extra">—</span></div>
     <div class="stat-row" id="es-true-row" style="display:none;"><span class="stat-lbl">TRUE SISYPHUS MODE</span><span class="stat-val">ENGAGED</span></div>
     <div class="stat-row gameid-row"><span class="stat-lbl">GAME ID</span><span class="stat-val" id="es-gameid">—</span></div>
   </div>
@@ -598,6 +635,16 @@ let lockoutTimeout = null;
 let animFrameHandle = null;
 let tauntInterval = null;
 let tauntTimeout = null;
+
+// Inactivity tracking. The 30-second timer runs whenever the player is
+// expected to act (waiting or animating phase). It resets on every click,
+// pauses during the slowdown/summit descent, and adds an extra required
+// ascent each time it expires — gently nudging the player to stay focused.
+const INACTIVITY_MS = 30000;
+const INACTIVITY_MSG_MS = 3000;
+let inactivityHandle = null;
+let inactivityMsgHandle = null;
+let inactivityCount = 0;
 
 function showScreen(id) {
   document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
@@ -750,8 +797,33 @@ function stopSkyMessageCycle() {
 
 let pendingSlowdown = false;
 
+function resetInactivityTimer() {
+  if (!gameActive) return;
+  if (phase !== 'waiting' && phase !== 'animating') return;
+  clearTimeout(inactivityHandle);
+  inactivityHandle = setTimeout(triggerInactivity, INACTIVITY_MS);
+}
+function clearInactivityTimer() {
+  clearTimeout(inactivityHandle); inactivityHandle = null;
+}
+function triggerInactivity() {
+  if (!gameActive) return;
+  inactivityCount++;
+  quota++;
+  setHudAscents();
+  const ov = document.getElementById('inactivity-overlay');
+  ov.classList.add('active');
+  clearTimeout(inactivityMsgHandle);
+  inactivityMsgHandle = setTimeout(() => ov.classList.remove('active'), INACTIVITY_MSG_MS);
+  // Player is still expected to act — keep the timer running.
+  resetInactivityTimer();
+}
+
 function handleBoulderClick() {
-  if (!gameActive || phase !== 'waiting') {
+  if (!gameActive) return;
+  // Any click during a playable phase counts as activity and resets the timer.
+  if (phase === 'waiting' || phase === 'animating') resetInactivityTimer();
+  if (phase !== 'waiting') {
     // A click during the upward animation flags a penalty, but the boulder
     // is allowed to finish reaching the next point before it begins to roll
     // back down. Avoids the awkward freeze-then-drop that happened before.
@@ -813,11 +885,12 @@ function flagPendingSlowdown() {
 // the boulder losing momentum rather than dropping.
 function startSlowdownDescent() {
   pendingSlowdown = false;
-  phase = 'descending'; clearTauntSchedule();
-  document.getElementById('lockout-overlay').classList.remove('active');
+  phase = 'descending'; clearTauntSchedule(); clearInactivityTimer();
   const fromT = HILL_POSITIONS[boulderPos];
   animateBoulderDown(fromT, 0, 6000 + fromT * 18000, () => {
-    boulderPos = 0; updateProgress(); renderBoulder(0); beginClimb();
+    boulderPos = 0; updateProgress(); renderBoulder(0);
+    document.getElementById('lockout-overlay').classList.remove('active');
+    beginClimb();
   });
 }
 
@@ -840,7 +913,7 @@ function fadeOutSummitTaunt(durationMs) {
 }
 
 function beginDescent(fromT) {
-  phase = 'descending'; clearTauntSchedule(); setHudStatus('SUMMIT');
+  phase = 'descending'; clearTauntSchedule(); clearInactivityTimer(); setHudStatus('SUMMIT');
   // The ascent counts the moment the boulder reaches the summit (position 29),
   // not after the descent. If this was the last required ascent, the player
   // wins immediately — no pointless rollback.
@@ -862,6 +935,7 @@ function beginClimb() {
   boulderPos = 0; phase = 'waiting'; updateProgress(); renderBoulder(0);
   setHudStatus('CLIMBING'); document.getElementById('click-hint').style.opacity = '0.5';
   clearTauntSchedule();
+  resetInactivityTimer();
 }
 
 function startGame() {
@@ -872,18 +946,21 @@ function startGame() {
   } else {
     quota = parseInt(document.getElementById('quota-input').value) || 10;
   }
-  totalClicks = 0; totalAscents = 0; totalSlowdowns = 0; boulderPos = 0; phase = 'waiting'; gameActive = true;
+  totalClicks = 0; totalAscents = 0; totalSlowdowns = 0; inactivityCount = 0; boulderPos = 0; phase = 'waiting'; gameActive = true;
   setHudAscents();
   showScreen('game-screen'); renderBoulder(0); updateProgress(); startElapsedTimer();
   setHudStatus('CLIMBING'); startSkyMessageCycle();
+  resetInactivityTimer();
 }
 
 function endGame() {
-  phase = 'done'; gameActive = false; clearInterval(timerInterval); clearTauntSchedule(); stopSkyMessageCycle();
+  phase = 'done'; gameActive = false; clearInterval(timerInterval); clearTauntSchedule(); clearInactivityTimer(); stopSkyMessageCycle();
   document.getElementById('es-time').textContent = getElapsed();
   document.getElementById('es-clicks').textContent = totalClicks;
   document.getElementById('es-ascents').textContent = totalAscents;
   document.getElementById('es-slowdowns').textContent = totalSlowdowns;
+  document.getElementById('es-inactivity').textContent = inactivityCount;
+  document.getElementById('es-extra').textContent = `+${inactivityCount}`;
   document.getElementById('es-true-row').style.display = trueSisyphusMode ? 'flex' : 'none';
   document.getElementById('es-gameid').textContent = Math.floor(Math.random() * 900000000) + 100000000;
   setTimeout(() => showScreen('end-screen'), 1200);
