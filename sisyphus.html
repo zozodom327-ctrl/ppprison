@@ -873,6 +873,15 @@ function triggerInactivity() {
   resetInactivityTimer();
 }
 
+function getRollDuration() {
+  const r = Math.random();
+  if (r < 0.10) return 3500;
+  if (r < 0.20) return 4000;
+  if (r < 0.80) return 5000;
+  if (r < 0.90) return 6000;
+  return 6500;
+}
+
 function handleBoulderClick() {
   if (!gameActive) return;
   // Any click during a playable phase counts as activity and resets the timer.
@@ -888,7 +897,8 @@ function handleBoulderClick() {
   document.getElementById('click-hint').style.opacity = '0';
   const fromPos = boulderPos, toPos = boulderPos + 1;
   phase = 'animating';
-  animateBoulderBetween(fromPos, toPos, 5000, () => {
+const rollDuration = getRollDuration();
+animateBoulderBetween(fromPos, toPos, rollDuration, () => {
     boulderPos = toPos; updateProgress();
     if (pendingSlowdown) { startSlowdownDescent(); return; }
     if (boulderPos >= NUM_POSITIONS - 1) beginDescent(HILL_POSITIONS[NUM_POSITIONS - 1]);
