@@ -3,6 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="screen-orientation" content="landscape">
 <title>SISYPHUS</title>
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Share+Tech+Mono&family=Crimson+Text:ital@0;1&display=swap" rel="stylesheet">
 <style>
@@ -993,7 +994,7 @@ function startGame() {
   // True Sisyphus mode: pick a secret quota between 10 and 30 inclusive,
   // never shown to the player. Otherwise, take it from the input.
   if (trueSisyphusMode) {
-    quota = Math.floor(Math.random() * 31) + 10;
+    quota = Math.floor(Math.random() * 21) + 10;
   } else {
     quota = parseInt(document.getElementById('quota-input').value) || 10;
   }
