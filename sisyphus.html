@@ -360,7 +360,7 @@
   /* Slowly cycling atmospheric message in the dark sky area. */
 #sky-message {
   position: absolute;
-  top: calc(25% - 100px);
+  top: max(56px, calc(25% - 60px));
   left: 20%;
   right: 5%;
   max-width: 520px;
@@ -517,8 +517,7 @@
     </div>
 
     <div id="inactivity-overlay">
-      <div id="inactivity-msg">INACTIVITY DETECTED</div>
-      <div id="inactivity-sub">+1 ASCENT ADDED</div>
+      <div id="inactivity-msg">INACTIVITY DETECTED<br>+1 ASCENT ADDED</div>
     </div>
 
     <div id="click-hint">CLICK THE BOULDER</div>
@@ -834,12 +833,22 @@ function startIdleCountdown() {
   val.style.display = '';
   idleCountdownStart = Date.now();
   if (idleCountdownInterval) clearInterval(idleCountdownInterval);
-  idleCountdownInterval = setInterval(() => {
-    const elapsed = Date.now() - idleCountdownStart;
-    const remaining = Math.max(0, Math.ceil((INACTIVITY_MS - elapsed) / 1000));
-    val.textContent = remaining;
+idleCountdownInterval = setInterval(() => {
+  const elapsed = Date.now() - idleCountdownStart;
+  const remaining = Math.ceil((INACTIVITY_MS - elapsed) / 1000);
+  const val = document.getElementById('hud-idle');
+
+  if (remaining > 20) {
+    val.textContent = '30~';
+    val.style.color = 'var(--text-bright)';
+  } else if (remaining > 10) {
+    val.textContent = '20~';
+    val.style.color = 'var(--text-bright)';
+  } else {
+    val.textContent = Math.max(0, remaining);
     val.style.color = remaining <= 5 ? 'var(--error)' : 'var(--text-bright)';
-  }, 200);
+  }
+}, 200);
 }
 function stopIdleCountdown() {
   if (idleCountdownInterval) { clearInterval(idleCountdownInterval); idleCountdownInterval = null; }
