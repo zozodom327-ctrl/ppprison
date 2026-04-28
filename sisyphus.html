@@ -357,22 +357,24 @@
   }
 
   /* Slowly cycling atmospheric message in the dark sky area. */
-  #sky-message {
-    position: absolute;
-    top: calc(25% - 100px); left: calc(30% - 200px);
-    max-width: 520px;
-    font-family: 'Crimson Text', serif;
-    font-style: italic;
-    font-size: clamp(2.1rem, 3.6vw, 3.3rem);
-    color: #d4c4a4;
-    line-height: 1.4;
-    letter-spacing: 0.02em;
-    opacity: 0;
-    transition: opacity 5s ease;
-    pointer-events: none;
-    z-index: 15;
-    text-shadow: 0 0 28px rgba(0,0,0,0.95), 0 2px 12px rgba(0,0,0,0.9);
-  }
+#sky-message {
+  position: absolute;
+  top: calc(25% - 100px);
+  left: 20%;
+  right: 5%;
+  max-width: 520px;
+  font-family: 'Crimson Text', serif;
+  font-style: italic;
+  font-size: clamp(1.3rem, 3.6vw, 3.3rem);
+  color: #d4c4a4;
+  line-height: 1.4;
+  letter-spacing: 0.02em;
+  opacity: 0;
+  transition: opacity 5s ease;
+  pointer-events: none;
+  z-index: 15;
+  text-shadow: 0 0 28px rgba(0,0,0,0.95), 0 2px 12px rgba(0,0,0,0.9);
+}
   #sky-message.visible { opacity: 0.9; }
 
   /* ── END SCREEN ── */
@@ -991,7 +993,7 @@ function startGame() {
   // True Sisyphus mode: pick a secret quota between 10 and 30 inclusive,
   // never shown to the player. Otherwise, take it from the input.
   if (trueSisyphusMode) {
-    quota = Math.floor(Math.random() * 21) + 10;
+    quota = Math.floor(Math.random() * 31) + 10;
   } else {
     quota = parseInt(document.getElementById('quota-input').value) || 10;
   }
