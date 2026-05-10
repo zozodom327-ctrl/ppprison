@@ -1006,7 +1006,7 @@ function startGame() {
   // True Sisyphus mode: pick a secret quota between 10 and 30 inclusive,
   // never shown to the player. Otherwise, take it from the input.
   if (trueSisyphusMode) {
-    quota = Math.floor(Math.random() * 21) + 10;
+    quota = Math.floor(Math.random() * 41) + 10;
   } else {
     quota = parseInt(document.getElementById('quota-input').value) || 10;
   }
