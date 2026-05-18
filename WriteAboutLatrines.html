@@ -1,0 +1,917 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>WriteAboutLatrines</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Share+Tech+Mono&family=Russo+One&display=swap" rel="stylesheet">
+<style>
+:root {
+  --olive: #4a5c2a;
+  --olive-dim: #3a4820;
+  --olive-bright: #6b8a35;
+  --khaki: #8b7355;
+  --tan: #c4a96e;
+  --mud: #5c4a30;
+  --bg: #0e0d0a;
+  --surface: #141208;
+  --surface2: #1c1a10;
+  --border: rgba(74,92,42,0.35);
+  --border-strong: rgba(74,92,42,0.65);
+  --text: #d4cba8;
+  --muted: #6a6248;
+  --correct: #6b8a35;
+  --incorrect: #8a3535;
+  --untyped: #5a5440;
+  --cursor: #c4a96e;
+  --camo1: #3d4a1e;
+  --camo2: #2a3315;
+  --camo3: #1e2510;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: 'Share Tech Mono', monospace;
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background:
+    radial-gradient(ellipse 120% 60% at 20% 80%, rgba(74,92,42,0.06) 0%, transparent 60%),
+    radial-gradient(ellipse 80% 40% at 80% 20%, rgba(42,51,21,0.08) 0%, transparent 50%),
+    repeating-linear-gradient(
+      45deg,
+      transparent,
+      transparent 40px,
+      rgba(42,51,21,0.03) 40px,
+      rgba(42,51,21,0.03) 80px
+    );
+  pointer-events: none;
+  z-index: 0;
+}
+
+.screen { display: none; position: relative; z-index: 1; }
+.screen.active { display: flex; flex-direction: column; align-items: center; }
+
+/* ── BRAND ── */
+.brand {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: clamp(2.8rem, 7vw, 5rem);
+  font-weight: 400;
+  letter-spacing: 0.06em;
+  color: var(--text);
+  line-height: 1;
+  text-shadow: 0 0 40px rgba(74,92,42,0.4);
+}
+
+.brand em {
+  font-style: normal;
+  color: var(--olive-bright);
+}
+
+.brand-sub {
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 0.7rem;
+  letter-spacing: 0.3em;
+  color: var(--muted);
+  text-transform: uppercase;
+  margin-top: 4px;
+  border-top: 1px solid var(--border);
+  padding-top: 6px;
+}
+
+/* ── START SCREEN ── */
+#start {
+  min-height: 100vh;
+  justify-content: center;
+  padding: 2rem;
+  gap: 0;
+}
+
+.start-inner {
+  width: 100%;
+  max-width: 500px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1.75rem;
+}
+
+.brand-block { text-align: center; }
+
+.divider {
+  width: 100%;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--border-strong), transparent);
+}
+
+.start-card {
+  width: 100%;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-top: 2px solid var(--olive);
+  padding: 1.75rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  position: relative;
+}
+
+.start-card::before {
+  content: 'FM 21-10 TYPING PROTOCOL';
+  position: absolute;
+  top: -1px;
+  left: 16px;
+  font-size: 0.55rem;
+  letter-spacing: 0.2em;
+  background: var(--olive);
+  color: var(--bg);
+  padding: 1px 8px;
+  font-family: 'Share Tech Mono', monospace;
+}
+
+.start-card label {
+  font-size: 0.7rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.start-card p {
+  font-size: 0.9rem;
+  color: var(--text);
+  opacity: 0.75;
+  line-height: 1.6;
+}
+
+.num-input-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.num-btn {
+  width: 36px; height: 36px;
+  border: 1px solid var(--border-strong);
+  background: transparent;
+  color: var(--olive-bright);
+  font-size: 1.2rem;
+  cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  transition: background 0.15s;
+  flex-shrink: 0;
+  font-family: 'Share Tech Mono', monospace;
+}
+.num-btn:hover { background: rgba(74,92,42,0.2); }
+
+#taskCount {
+  width: 80px;
+  background: var(--surface2);
+  border: 1px solid var(--border-strong);
+  color: var(--tan);
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 1.2rem;
+  text-align: center;
+  padding: 6px;
+  -moz-appearance: textfield;
+}
+#taskCount::-webkit-outer-spin-button,
+#taskCount::-webkit-inner-spin-button { -webkit-appearance: none; }
+
+.btn-primary {
+  width: 100%;
+  padding: 13px 24px;
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 1.1rem;
+  letter-spacing: 0.15em;
+  cursor: pointer;
+  background: var(--olive);
+  color: var(--bg);
+  border: none;
+  transition: opacity 0.15s, transform 0.1s;
+}
+.btn-primary:hover { opacity: 0.88; }
+.btn-primary:active { transform: scale(0.98); }
+
+/* ── PLAY SCREEN ── */
+#play {
+  min-height: 100vh;
+  padding: 1.5rem 1rem;
+  justify-content: flex-start;
+  gap: 1.1rem;
+}
+
+.play-header {
+  width: 100%;
+  max-width: 820px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding-top: 0.5rem;
+}
+
+/* Progress bar */
+.progress-wrap {
+  width: 100%;
+  max-width: 820px;
+}
+
+.progress-track {
+  position: relative;
+  width: 100%;
+  height: 34px;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-left: 3px solid var(--olive);
+  overflow: hidden;
+}
+
+.progress-fill {
+  position: absolute;
+  left: 0; top: 0; bottom: 0;
+  width: 0%;
+  background: linear-gradient(90deg, var(--olive-dim), var(--olive));
+  transition: width 0.5s cubic-bezier(0.4,0,0.2,1);
+}
+
+.progress-label {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 0.72rem;
+  letter-spacing: 0.15em;
+  color: var(--text);
+  z-index: 2;
+  pointer-events: none;
+  gap: 16px;
+}
+
+.progress-counter { color: var(--muted); }
+
+/* Live stats */
+.live-stats {
+  width: 100%;
+  max-width: 820px;
+  display: flex;
+  gap: 8px;
+}
+
+.stat-pill {
+  flex: 1;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-top: 2px solid var(--border-strong);
+  padding: 8px 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.stat-pill .slabel {
+  font-size: 0.58rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.stat-pill .sval {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 1.3rem;
+  letter-spacing: 0.05em;
+  color: var(--text);
+}
+
+.stat-pill .sval.olive { color: var(--olive-bright); }
+.stat-pill .sval.red { color: #8a4040; }
+
+/* Text label */
+.text-label {
+  width: 100%;
+  max-width: 820px;
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 0.65rem;
+  letter-spacing: 0.25em;
+  text-transform: uppercase;
+  color: var(--muted);
+  padding-left: 2px;
+}
+
+/* Typing display */
+.typing-area {
+  width: 100%;
+  max-width: 820px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-left: 3px solid var(--olive-dim);
+  padding: 1.5rem 1.75rem;
+}
+
+#textDisplay {
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 1rem;
+  line-height: 1.9;
+  letter-spacing: 0.02em;
+  word-break: break-word;
+}
+
+.word { color: var(--untyped); transition: color 0.08s; }
+.word.correct { color: var(--correct); }
+.word.incorrect { color: var(--incorrect); }
+.word.cursor-on { border-bottom: 2px solid var(--cursor); }
+
+/* Input */
+.input-wrap {
+  width: 100%;
+  max-width: 820px;
+  position: relative;
+}
+
+#inputBox {
+  width: 100%;
+  padding: 12px 16px;
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 0.95rem;
+  background: var(--surface2);
+  color: var(--text);
+  border: 1px solid var(--border-strong);
+  border-left: 3px solid var(--khaki);
+  resize: none;
+  outline: none;
+  transition: border-color 0.15s;
+  line-height: 1.5;
+}
+#inputBox:focus { border-color: var(--olive-bright); border-left-color: var(--olive-bright); }
+
+.next-btn {
+  width: 100%;
+  max-width: 820px;
+  padding: 12px;
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 1rem;
+  letter-spacing: 0.15em;
+  cursor: not-allowed;
+  background: var(--surface2);
+  color: var(--muted);
+  border: 1px solid var(--border);
+  transition: background 0.2s, color 0.2s, border-color 0.2s;
+}
+.next-btn.ready {
+  cursor: pointer;
+  background: var(--olive-dim);
+  color: var(--tan);
+  border-color: var(--olive);
+}
+.next-btn.ready:hover { background: var(--olive); color: var(--bg); }
+
+/* ── END SCREEN ── */
+#end {
+  min-height: 100vh;
+  justify-content: center;
+  padding: 2rem;
+}
+
+.end-inner {
+  width: 100%;
+  max-width: 540px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1.75rem;
+}
+
+.end-title { text-align: center; }
+
+.end-title h1 {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: clamp(2.5rem, 7vw, 4.5rem);
+  font-weight: 400;
+  letter-spacing: 0.08em;
+  line-height: 1.05;
+  color: var(--text);
+}
+.end-title h1 em { font-style: normal; color: var(--olive-bright); }
+
+.end-title p {
+  margin-top: 6px;
+  font-size: 0.7rem;
+  color: var(--muted);
+  font-family: 'Share Tech Mono', monospace;
+  letter-spacing: 0.12em;
+}
+
+.end-stats {
+  width: 100%;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+.end-stat {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-top: 2px solid var(--olive-dim);
+  padding: 1.1rem 1.25rem;
+}
+.end-stat.wide { grid-column: 1 / -1; }
+
+.end-stat .el { font-size: 0.6rem; letter-spacing: 0.2em; text-transform: uppercase; color: var(--muted); margin-bottom: 4px; }
+.end-stat .ev { font-family: 'Bebas Neue', sans-serif; font-size: 1.8rem; letter-spacing: 0.05em; color: var(--text); }
+.end-stat .ev.olive { color: var(--olive-bright); }
+.end-stat .ev.red { color: #8a4040; }
+.end-stat .es { font-size: 0.65rem; color: var(--muted); margin-top: 2px; }
+
+.end-id {
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 0.65rem;
+  color: var(--muted);
+  letter-spacing: 0.15em;
+}
+
+.btn-restart {
+  width: 100%;
+  padding: 12px;
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 1rem;
+  letter-spacing: 0.15em;
+  cursor: pointer;
+  background: transparent;
+  color: var(--olive-bright);
+  border: 1px solid var(--border-strong);
+  transition: background 0.15s;
+}
+.btn-restart:hover { background: rgba(74,92,42,0.2); }
+
+</style>
+</head>
+
+<body oncontextmenu="return false">
+
+<!-- ── START ── -->
+<div id="start" class="screen active">
+  <div class="start-inner">
+    <div class="brand-block">
+      <div class="brand">Write<em>About</em>Latrines</div>
+      <div class="brand-sub">Field Sanitation Typing Protocol &bull; FM 21-10</div>
+    </div>
+    <div class="divider"></div>
+    <div class="start-card">
+      <p>How many field sanitation passages has your commanding officer assigned you?</p>
+      <div style="display:flex;flex-direction:column;align-items:center;gap:8px;">
+        <label>Number of tasks</label>
+        <div class="num-input-row">
+          <button class="num-btn" onclick="adjustCount(-1)">-</button>
+          <input type="number" id="taskCount" min="1" max="999" value="5">
+          <button class="num-btn" onclick="adjustCount(1)">+</button>
+        </div>
+      </div>
+      <button class="btn-primary" onclick="startGame()">COMMENCE PROCESSING</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── PLAY ── -->
+<div id="play" class="screen">
+
+  <div class="play-header">
+    <div class="brand" style="text-align:center;">Write<em>About</em>Latrines</div>
+    <div class="brand-sub" style="text-align:center;margin-top:4px;">Field Sanitation Typing Protocol &bull; FM 21-10</div>
+  </div>
+
+  <div class="progress-wrap">
+    <div class="progress-track">
+      <div class="progress-fill" id="progressFill"></div>
+      <div class="progress-label">
+        <span id="timer">00:00:00</span>
+        <span class="progress-counter" id="progressText">0 / 5</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="live-stats">
+    <div class="stat-pill">
+      <div class="slabel">WPM</div>
+      <div class="sval olive" id="liveWpm">-</div>
+    </div>
+    <div class="stat-pill">
+      <div class="slabel">Errors</div>
+      <div class="sval red" id="liveErrors">0</div>
+    </div>
+    <div class="stat-pill">
+      <div class="slabel">Characters</div>
+      <div class="sval" id="liveChars">0</div>
+    </div>
+    <div class="stat-pill">
+      <div class="slabel">Accuracy</div>
+      <div class="sval" id="liveAccuracy">-</div>
+    </div>
+  </div>
+
+  <div class="text-label" id="textLabel">-</div>
+
+  <div class="typing-area">
+    <div id="textDisplay"></div>
+  </div>
+
+  <div class="input-wrap">
+    <textarea id="inputBox" rows="3" placeholder="Begin typing..." oninput="checkTyping()" onkeydown="handleKey(event)"></textarea>
+  </div>
+
+  <button class="next-btn" id="nextBtn" onclick="nextText()">ADVANCE TO NEXT PASSAGE &rarr;</button>
+
+</div>
+
+<!-- ── END ── -->
+<div id="end" class="screen">
+  <div class="end-inner">
+    <div class="end-title">
+      <h1>Session<br><em>Complete.</em></h1>
+      <p id="endSubtitle">-</p>
+      <p id="endId" style="margin-top:4px;font-family:'Share Tech Mono',monospace;font-size:0.65rem;color:var(--muted);letter-spacing:0.15em;">-</p>
+    </div>
+
+    <div class="end-stats">
+      <div class="end-stat">
+        <div class="el">Avg WPM</div>
+        <div class="ev olive" id="endWpm">-</div>
+        <div class="es">words per minute</div>
+      </div>
+      <div class="end-stat">
+        <div class="el">Total Errors</div>
+        <div class="ev red" id="endErrors">-</div>
+        <div class="es">across all tasks</div>
+      </div>
+      <div class="end-stat">
+        <div class="el">Total Time</div>
+        <div class="ev" id="endTime">-</div>
+        <div class="es">elapsed</div>
+      </div>
+      <div class="end-stat">
+        <div class="el">Tasks Typed</div>
+        <div class="ev" id="endTasks">-</div>
+        <div class="es">passages completed</div>
+      </div>
+    </div>
+
+    <div class="end-id" id="endTextList" style="text-align:center;line-height:1.8;">-</div>
+
+    <button class="btn-restart" onclick="restartGame()">START NEW SESSION</button>
+  </div>
+</div>
+
+<script>
+window.addEventListener('paste', e => e.preventDefault());
+window.addEventListener('copy', e => e.preventDefault());
+window.addEventListener('cut', e => e.preventDefault());
+window.addEventListener('drop', e => e.preventDefault());
+
+window.addEventListener('keydown', e => {
+  const forbidden = (e.ctrlKey || e.metaKey) && ['v','c','x','a','z','y'].includes(e.key.toLowerCase());
+  if (forbidden) e.preventDefault();
+});
+
+// ── TEXTS: 25 passages from FM 21-10 Field Sanitation ──
+const ALL_TEXTS = [
+  {
+    label: "Purpose of Military Sanitation",
+    content: "This manual provides information and instruction in the use of established, practical measures designed to preserve health and prevent disease in the Army. It explains the fundamentals and principles of sanitation and their application under garrison and field conditions. It points out the responsibilities of command and of the individual soldier for knowing and observing the rules of sanitation and hygiene, especially as they apply to living conditions and circumstances peculiar to the military service."
+  },
+  {
+    label: "Importance of Sanitation",
+    content: "Manpower is our most valuable asset. Everything possible must be done to conserve this asset. In recent wars more deaths have resulted from enemy action than from disease, but disease still causes the greatest loss of Army manpower through disability and time lost from duty. Success in battle demands that troops be maintained in a constant state of combat readiness. Military sanitation contributes to this effort by employing all of the measures designed to protect and improve the health of the Army."
+  },
+  {
+    label: "The Individual Soldier",
+    content: "The preservation of the health of the Army is the responsibility of every individual member of the Army. Even one soldier's ignorance of or indifference to the practices of military sanitation can counteract much of the combined effort of the many services working for his welfare. For his own sake, as well as for the sake of his comrades, it is imperative that every soldier know and observe the rules of hygiene and sanitation and adhere to the principles of good health and good living."
+  },
+  {
+    label: "The 5 F's of Disease",
+    content: "The most common means of transmission of intestinal diseases are often referred to as the 5 F's: feces, fingers, flies, food, and fluids. The principal source of infection is the feces of man. Food may be contaminated by infected food handlers who are careless or dirty in their personal habits, or by the housefly which carries germs directly from the latrine to the mess hall or the kitchen. Natural sources of water such as lakes and streams are often polluted by drainage from latrines and sewers."
+  },
+  {
+    label: "Human Waste Control Principles",
+    content: "The basic principles in the control of filth-borne diseases are: prompt, thorough, and permanent disposal of urine and feces; observance of the practices of personal hygiene, giving particular attention to cleanliness in finger habits, cleanliness of clothing, and cleanliness of hands and body; prevention of the contamination of food, water, beverages, and eating utensils by fingers or by flies and other vermin; and disinfection by boiling, or by chemical means, of eating utensils, food and water which may have become contaminated."
+  },
+  {
+    label: "Methods of Field Waste Disposal",
+    content: "On the march, the cat hole latrine is used. The individual digs a hole about a foot deep, then replaces the earth over the feces. In bivouacs and in overnight camps, urine and feces are disposed of by the use of straddle trenches. In temporary camps, usually deep pit latrines and urine soakage pits are constructed. Until the construction of deep pit latrines has been completed, straddle trench latrines may be used. Whatever the type used, the unit is responsible for its own latrine construction, maintenance, and closure."
+  },
+  {
+    label: "General Rules for Latrine Construction",
+    content: "To make sure that food and water will be protected from contamination, latrines should be built at least 100 yards from the unit mess and the nearest water source. Also, the latrine should not be dug below the water level in the ground nor in a place where it may drain into a water source. Usually, latrines are built at least 30 yards from the end of the unit area but within a reasonable distance for easy access. At night, if the military situation permits, they should be lighted."
+  },
+  {
+    label: "Latrine Screens and Handwashing",
+    content: "A canvas or brush screen should be placed around each latrine, or the latrine may be enclosed within a tent. In cold climates this shelter should be heated. The screen or the tent should have a drainage ditch dug around its edges to prevent water from flowing over the ground into the latrine. For fly control, these shelters should be sprayed twice weekly with an approved insecticide. On the outside of each latrine enclosure a simple hand-washing device should be installed. This device should always be kept filled with water and should be easy to operate."
+  },
+  {
+    label: "Closing a Latrine",
+    content: "When a latrine has been filled to within one foot of the surface, or when it is to be abandoned, it should be closed in the following manner: the contents of the pit, the side walls, and the ground surface to a distance of two feet from the side walls should be sprayed with a DDT residual solution or other insecticide. Then the pit should be filled to the ground surface with successive 3-inch layers of earth. Each layer is packed down and its surface is sprayed with insecticide before the next layer is added. Then the latrine pit is mounded over with at least one foot of dirt."
+  },
+  {
+    label: "Straddle Trench Latrine",
+    content: "A straddle trench latrine is dug 1 foot wide, 2 and a half feet deep, and 4 feet long. This will accommodate two men at the same time. The number of trenches provided should be sufficient to serve at least 8 percent of the unit strength at one time. Thus, for a unit of 100 men, at least 16 feet of trench, or 4 straddle trench latrines, are needed. The trenches should be at least two feet apart. There are no seats in this type of latrine, but boards may be placed along both sides of the trench to provide better footing."
+  },
+  {
+    label: "Straddle Trench Cover Procedure",
+    content: "Toilet paper should be placed on suitable holders and protected from bad weather by a tin can or other covering. The earth removed in digging is piled at the end of the trenches and a shovel or paddle is provided. This is done so that each man can promptly cover his excreta and toilet paper. When the unit leaves the area, or when the straddle trenches are filled to within one foot of the surface, the trenches should be closed in the manner described for all latrines."
+  },
+  {
+    label: "Deep Pit Latrine Construction",
+    content: "The deep pit latrine is used with a latrine box. The standard type box provides four seats and is 8 feet long and 2 and a half feet wide at the base. A unit of 100 men requires 16 feet of latrine space, or two latrine boxes. The holes should be covered with flyproof, self-closing lids. All cracks should be flyproofed with strips of wood or tin nailed over them. A metal deflector should be placed inside the front of the box to prevent urine from soaking into the wood."
+  },
+  {
+    label: "Deep Pit Dimensions",
+    content: "The pit is dug 2 feet wide and 7 and a half feet long. This will give the latrine box 3 inches of support on all sides. The depth of the pit will depend on the estimated length of time the latrine is to be used. As a rough guide, a depth of one foot is allowed for each week of estimated use, plus one foot of depth for the dirt cover. Generally, it is not desirable to dig the pit more than six feet deep because of danger that the walls may cave in. Earth should be packed tightly around the bottom edges of the box so as to seal any openings through which flies might gain entrance."
+  },
+  {
+    label: "Deep Pit Fly Control",
+    content: "In order to prevent flybreeding in the pit and to reduce odors, it is necessary to keep the latrine box clean, the seat lids closed, and the cracks sealed; also, a good fly control program must be maintained in the area. The use of lime in the pit, or the burning out of the pit contents, is not effective for fly or odor control and is not recommended. For fly control, the interior of the box and the contents of the pit should be sprayed twice weekly with a residual fly spray. The box and the seats of the latrine should be scrubbed daily with soap and water."
+  },
+  {
+    label: "Mound Latrine",
+    content: "The mound latrine may be used when a high ground water level, or a rock formation near the ground surface, prevents the digging of a deep pit. A dirt mound makes it possible to build a deep pit latrine and still not have the pit extending into the water or the rock. A mound of earth having a top at least 6 feet wide and 12 feet long should be constructed so that a 4-hole latrine box may be placed on its top. The mound should be high enough to meet the pit requirement for depth, allowing one foot from the base of the pit to the water or the rock level."
+  },
+  {
+    label: "Bored-Hole Latrine",
+    content: "The bored-hole latrine consists of a hole, about 18 inches in diameter and from 6 to 20 feet deep, covered by a one-hole latrine box. A converted metal drum may be sunk into the ground for use as a box. Both ends of the drum are removed and a flyproof seat cover, with a self-closing lid, is made to fit the top of the drum. This type of latrine is satisfactory for small units, provided the necessary mechanical equipment for boring the hole is available."
+  },
+  {
+    label: "Pail Latrine",
+    content: "A pail latrine may be built when conditions such as populated areas, rocky soil, or marshes are such that a dug latrine cannot be used. A standard type latrine box may be converted for use as a pail latrine by placing hinged doors on the rear of the box, adding a floor, and placing a pail under each seat. The seats and rear doors should be self-closing and the entire box made flyproof. The floor of the box should be made of an impervious material and should slope enough toward the rear to facilitate rapid drainage of washing water."
+  },
+  {
+    label: "Pail Latrine Maintenance",
+    content: "Pails should be cleaned at least once daily; oftener, if necessary. The contents may be buried, burned, or disposed of by other sanitary methods. After having been cleaned, when the pails are replaced they should contain one inch of Quartermaster disinfectant. Urine disposal facilities should be provided for at least five percent of the command. This means that for a unit of 100 men, five pipe urinals are needed. When trough urinals are used, 10 feet of length should be allowed for every 100 men."
+  },
+  {
+    label: "Urine Soakage Pit",
+    content: "The best device for urine disposal in the field is the urine soakage pit. This pit is dug 4 feet square and 4 feet deep; it is then filled with rocks, flattened tin cans, broken bottles, or other coarse contact material. Depending on the materials available, either pipe urinals or a trough urinal may be used with this pit. Pipe urinals should be at least one inch in diameter. They should be placed at each corner of the pit and, if needed, on the sides halfway between the corners."
+  },
+  {
+    label: "Urine Soakage Pit Operation",
+    content: "Use the trough or the pipes and do not urinate on the surface of the pit. Change straw or grass daily and burn or bury the old material. Wash funnels or trough daily with soap and water. Do not let oil or grease get into the pit as this may cause the pit to become clogged and thus necessitate the digging of a new one. When a urine soakage pit is to be abandoned or has become clogged, it should be sprayed with a residual insecticide and mounded over with a 2-foot covering of compacted earth. Then the site should be marked with a sign labeled CLOSED SOAKAGE PIT."
+  },
+  {
+    label: "Kitchen Waste Soakage",
+    content: "Liquid wastes from mess operations contain particles of food, grease, and soap. Consequently, this liquid requires some kind of treatment before it is allowed to drain into a sewer or is disposed of by other means. In temporary camps a soakage pit, constructed like a urine soakage pit, normally will dispose of liquid kitchen wastes for a total of 200 men. If the camp is to last for several weeks, two kitchen waste soakage pits should be constructed, each pit to be used only on alternate days since a rest period will help to prevent clogging."
+  },
+  {
+    label: "Garbage Burial in the Field",
+    content: "On the march, in bivouac, or in camps of less than one week's duration, garbage probably will be buried in pits. For this purpose, a pit 4 feet square and 4 feet deep is suitable for one day for a unit of 100 men. At the end of the day, or when filled to within about 1 foot of the surface, the pit should be filled in with earth and mounded over with an additional foot of compacted earth. Sometimes, a trench 2 feet wide and 4 feet deep may be used for the burial of garbage, the length of the trench depending on the length of time it is to be used."
+  },
+  {
+    label: "Waste Disposal Responsibilities",
+    content: "Unit commanders are responsible for the disposal of waste from their unit areas. When waste disposal facilities are not otherwise provided, the commanding officer must arrange for the construction and operation of such facilities. The Army Medical Service inspects waste disposal facilities and operations and recommends such changes as will aid in protecting the health and welfare of the troops. The Corps of Engineers constructs and operates waste disposal facilities at permanent and semipermanent camps. In the field, the provision of these facilities is the responsibility of the unit commanders."
+  },
+  {
+    label: "Intestinal Disease Control",
+    content: "The most effective method of preventing intestinal diseases is to control the source and agencies which transmit them. Continuing and unrelaxing attention to the following measures is mandatory: good mess sanitation including the careful selection and daily inspection of food handlers; personal cleanliness and particularly washing the hands after each visit to the latrine and before eating or otherwise handling foods; careful selection and protection of food supplies; sanitary disposal of human and other wastes; and effective fly and rodent control and the protection of foods against contamination."
+  },
+  {
+    label: "World War II Sanitation Record",
+    content: "Filth-borne diseases such as dysentery, typhoid, paratyphoid, cholera, plague, and others might become prevalent if waste is not removed promptly and thoroughly. Flies, rats, and other vermin would increase and add to the individual's discomfort as well as endanger his health. Even with the relatively good sanitation maintained in the American Army camps of World War II, records show a total of nearly 1,000,000 hospital admissions for filth-borne diseases during that period. These figures demonstrate why proper waste disposal remains a primary military obligation."
+  }
+];
+
+// State
+let selected = [];
+let current = 0;
+let total = 1;
+let startTime;
+let taskStartTime;
+let timerInterval;
+let taskErrors = 0;
+let taskErrorCounted = {};
+let totalErrors = 0;
+let taskWpms = [];
+
+function adjustCount(delta) {
+  const el = document.getElementById('taskCount');
+  let v = parseInt(el.value) + delta;
+  if (v < 1) v = 1;
+  el.value = v;
+}
+
+function shuffleArray(arr) {
+  const a = [...arr];
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+function buildPool(needed) {
+  let result = [];
+  while (result.length < needed) {
+    const shuffled = shuffleArray(ALL_TEXTS);
+    result = result.concat(shuffled.slice(0, Math.min(shuffled.length, needed - result.length)));
+  }
+  return result;
+}
+
+function startGame() {
+  total = Math.max(1, parseInt(document.getElementById('taskCount').value) || 5);
+  selected = buildPool(total);
+  current = 0;
+  totalErrors = 0;
+  taskWpms = [];
+
+  startTime = Date.now();
+  startTimer();
+  switchScreen('play');
+  loadText();
+}
+
+function switchScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+}
+
+function loadText() {
+  const text = selected[current].content;
+  document.getElementById('textLabel').innerText = selected[current].label;
+  document.getElementById('progressText').innerText = current + ' / ' + total;
+
+  const words = text.split(' ');
+  document.getElementById('textDisplay').innerHTML = words.map((w, i) =>
+    `<span class="word" id="w${i}">${w}</span>`
+  ).join(' ');
+
+  document.getElementById('inputBox').value = '';
+  document.getElementById('inputBox').disabled = false;
+  document.getElementById('inputBox').focus();
+  document.getElementById('nextBtn').classList.remove('ready');
+
+  taskErrors = 0;
+  taskErrorCounted = {};
+  taskStartTime = Date.now();
+
+  document.getElementById('liveWpm').innerText = '-';
+  document.getElementById('liveErrors').innerText = '0';
+  document.getElementById('liveChars').innerText = '0';
+  document.getElementById('liveAccuracy').innerText = '-';
+  updateProgress();
+}
+
+function handleKey(e) {
+  if (e.key === 'Enter') {
+    const btn = document.getElementById('nextBtn');
+    if (btn.classList.contains('ready')) {
+      e.preventDefault();
+      nextText();
+    } else {
+      e.preventDefault();
+    }
+  }
+}
+
+function checkTyping() {
+  const input = document.getElementById('inputBox').value;
+  const typedWords = input.split(' ');
+  const spans = document.querySelectorAll('.word');
+
+  const currentWordIdx = typedWords.length - 1;
+  let allCorrect = true;
+
+  spans.forEach((span, i) => {
+    span.classList.remove('correct', 'incorrect', 'cursor-on');
+
+    if (i > currentWordIdx || typedWords[i] === undefined) {
+      allCorrect = false;
+      return;
+    }
+
+    const typed = typedWords[i];
+    const target = span.innerText;
+
+    if (i === currentWordIdx) {
+      let hasError = false;
+      for (let c = 0; c < typed.length; c++) {
+        if (typed[c] !== target[c]) {
+          hasError = true;
+          break;
+        }
+      }
+      if (hasError) {
+        span.classList.add('incorrect');
+        if (!taskErrorCounted[i]) {
+          taskErrorCounted[i] = true;
+          taskErrors++;
+        }
+      }
+
+      const isLastWord = i === spans.length - 1;
+      if (isLastWord && typed === target) {
+        span.classList.add('correct');
+      } else {
+        span.classList.add('cursor-on');
+        allCorrect = false;
+      }
+      return;
+    }
+
+    if (typed === target) {
+      span.classList.add('correct');
+    } else {
+      span.classList.add('incorrect');
+      allCorrect = false;
+      if (!taskErrorCounted[i]) {
+        taskErrorCounted[i] = true;
+        taskErrors++;
+      }
+    }
+  });
+
+  if (typedWords.length !== spans.length) allCorrect = false;
+
+  const elapsed = (Date.now() - taskStartTime) / 1000 / 60;
+  const typedChars = input.replace(/\s/g, '').length;
+  const wordsTyped = Math.max(0, typedWords.length - 1);
+  const wpm = elapsed > 0.05 ? Math.round(wordsTyped / elapsed) : 0;
+
+  document.getElementById('liveWpm').innerText = elapsed > 0.05 ? wpm : '-';
+  document.getElementById('liveErrors').innerText = taskErrors;
+  document.getElementById('liveChars').innerText = typedChars;
+
+  const committedCorrect = Array.from(spans).filter(s => s.classList.contains('correct')).length;
+  const acc = wordsTyped > 0 ? Math.round((committedCorrect / wordsTyped) * 100) : 100;
+  document.getElementById('liveAccuracy').innerText = elapsed > 0.05 ? acc + '%' : '-';
+
+  if (allCorrect) {
+    document.getElementById('nextBtn').classList.add('ready');
+  } else {
+    document.getElementById('nextBtn').classList.remove('ready');
+  }
+}
+
+function nextText() {
+  if (!document.getElementById('nextBtn').classList.contains('ready')) return;
+  const taskElapsed = (Date.now() - taskStartTime) / 1000 / 60;
+  const wordCount = selected[current].content.split(' ').length;
+  const taskWpm = taskElapsed > 0 ? Math.round(wordCount / taskElapsed) : 0;
+  taskWpms.push(taskWpm);
+  totalErrors += taskErrors;
+
+  current++;
+  updateProgress();
+
+  if (current >= total) {
+    endGame();
+  } else {
+    loadText();
+  }
+}
+
+function updateProgress() {
+  const pct = (current / total) * 100;
+  document.getElementById('progressFill').style.width = pct + '%';
+  document.getElementById('progressText').innerText = current + ' / ' + total;
+}
+
+function startTimer() {
+  timerInterval = setInterval(() => {
+    const elapsed = Math.floor((Date.now() - startTime) / 1000);
+    const h = String(Math.floor(elapsed / 3600)).padStart(2, '0');
+    const m = String(Math.floor((elapsed % 3600) / 60)).padStart(2, '0');
+    const s = String(elapsed % 60).padStart(2, '0');
+    document.getElementById('timer').innerText = `${h}:${m}:${s}`;
+  }, 1000);
+}
+
+function endGame() {
+  clearInterval(timerInterval);
+
+  const elapsed = document.getElementById('timer').innerText;
+  const avgWpm = taskWpms.length > 0 ? Math.round(taskWpms.reduce((a, b) => a + b, 0) / taskWpms.length) : 0;
+  const id = Math.floor(100000000 + Math.random() * 900000000);
+
+  document.getElementById('endTime').innerText = elapsed;
+  document.getElementById('endWpm').innerText = avgWpm;
+  document.getElementById('endErrors').innerText = totalErrors;
+  document.getElementById('endTasks').innerText = total;
+  document.getElementById('endId').innerText = 'SESSION ID: ' + id;
+  document.getElementById('endSubtitle').innerText = total + ' passage' + (total !== 1 ? 's' : '') + ' completed';
+  document.getElementById('endTextList').innerText = selected.map(t => t.label).join(' · ');
+
+  switchScreen('end');
+}
+
+function restartGame() {
+  clearInterval(timerInterval);
+  document.getElementById('timer').innerText = '00:00:00';
+  updateProgress();
+  switchScreen('start');
+}
+</script>
+</body>
+</html>
