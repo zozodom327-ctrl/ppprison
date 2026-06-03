@@ -362,19 +362,15 @@
 </head>
 <body>
 
-<!-- Floating shape background -->
 <div id="shapeBg"></div>
 
-<!-- Fixed top HUD -->
 <div id="topBar">
     <span class="hud-title">PERFECTION'S SHAPES</span>
     <span id="timer" class="hud-timer">00:00:00</span>
 </div>
 
-<!-- Page wrap -->
 <div id="pageWrap">
 
-<!-- START SCREEN -->
 <div class="container" id="startScreen">
     <h2>I HAVE BEEN ASSIGNED TO IDENTIFY</h2>
     <br>
@@ -384,10 +380,9 @@
     <br>
     <button onclick="startGame()">BEGIN ASSIGNMENT</button>
     <div id="startError"></div>
-    <div class="shape-hint">circle · square · triangle · rectangle · oval · pentagon · hexagon · octagon · star · diamond · arrow · crescent · heart · cross · parallelogram · trapezoid · rhombus · heptagon · semicircle · kite</div>
+    <div class="shape-hint">circle · square · triangle · rectangle · oval · pentagon · hexagon · octagon · star · diamond · arrow · crescent · heart · cross · parallelogram · trapezoid · heptagon · semicircle · kite</div>
 </div>
 
-<!-- GAME SCREEN -->
 <div class="container" id="gameScreen" style="display:none;">
     <div id="progress">IDENTIFIED: 0 / 0</div>
 
@@ -399,19 +394,16 @@
     <button id="submitButton" onclick="submitAnswer()">SUBMIT</button>
     <div id="feedback"></div>
 
-    <div class="shape-hint">circle · square · triangle · rectangle · oval · pentagon · hexagon · octagon · star · diamond · arrow · crescent · heart · cross · parallelogram · trapezoid · rhombus · heptagon · semicircle · kite</div>
+    <div class="shape-hint">circle · square · triangle · rectangle · oval · pentagon · hexagon · octagon · star · diamond · arrow · crescent · heart · cross · parallelogram · trapezoid · heptagon · semicircle · kite</div>
 </div>
 
-<!-- END SCREEN -->
 <div class="container" id="endScreen" style="display:none;">
     <h1>ASSIGNMENT<br>COMPLETE</h1>
     <div id="stats"></div>
     <button onclick="location.reload()">NEW ASSIGNMENT</button>
 </div>
 
-</div><!-- /pageWrap -->
-
-<audio id="buzzSound" src="https://actions.google.com/sounds/v1/alarms/buzzer.ogg"></audio>
+</div><audio id="buzzSound" src="https://actions.google.com/sounds/v1/alarms/buzzer.ogg"></audio>
 
 <script>
 // ── FONT LOAD: reveal body only after fonts are ready ─────────────────────────
@@ -479,7 +471,6 @@ const shapes = [
     { name: "cross",         path: `<polygon points="65,10 135,10 135,65 190,65 190,135 135,135 135,190 65,190 65,135 10,135 10,65 65,65"/>` },
     { name: "parallelogram", path: `<polygon points="50,55 190,55 150,145 10,145"/>` },
     { name: "trapezoid",     path: `<polygon points="40,55 160,55 190,145 10,145"/>` },
-    { name: "rhombus",       path: `<polygon points="100,15 175,100 100,185 25,100"/>` },
     { name: "heptagon",      path: `<polygon points="100,10 168,38 190,112 157,178 43,178 10,112 32,38"/>` },
     { name: "semicircle",    path: `<path d="M10,110 A90,90 0 0,1 190,110 Z"/><line x1="10" y1="110" x2="190" y2="110" stroke-width="3"/>` },
     { name: "kite",          path: `<polygon points="100,10 170,90 100,190 30,90"/>` },
