@@ -492,7 +492,7 @@ let timerInterval;
 let currentShape;
 let isLocked = false;
 
-const THROTTLE_MS = 3000;
+const THROTTLE_MS = 5000;
 let lastKeyTime = 0;
 let throttleRafId = null;
 
@@ -575,9 +575,16 @@ answerInput.addEventListener("keydown", function(e) {
     const ready = lastKeyTime === 0 || (now - lastKeyTime) >= THROTTLE_MS;
 
     if (!ready) {
+        // Prevent input
         e.preventDefault();
+        
+        // Visual penalty flash
         answerInput.style.borderColor = "#9a4040";
         setTimeout(() => answerInput.style.borderColor = "", 300);
+        
+        // ANTI-SPAM: Reset the timer to the current moment
+        lastKeyTime = now;
+        updateThrottleBar();
     } else {
         lastKeyTime = now;
         updateThrottleBar();
