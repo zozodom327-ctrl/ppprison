@@ -2,62 +2,176 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Perfection's Shape Palace</title>
-<link href="https://fonts.googleapis.com/css2?family=Luckiest+Guy&family=Fredoka:wght@500;700&display=swap" rel="stylesheet">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Perfection's Shapes</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Share+Tech+Mono&family=Barlow+Condensed:wght@400;600;700&display=swap" rel="stylesheet">
 <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
 
+    html, body {
+        width: 100%;
+        height: 100%;
+        overflow: hidden;
+    }
+
+    /* ── NEON PALETTE ── */
+    :root {
+        --neon-pink:   #ff2d78;
+        --neon-cyan:   #00f5ff;
+        --neon-yellow: #f7ff00;
+        --neon-green:  #39ff14;
+        --neon-purple: #bf00ff;
+        --neon-orange: #ff6a00;
+        --neon-lime:   #ccff00;
+        --neon-magenta:#ff00cc;
+    }
+
+    /* Hide everything until fonts load — prevents flash */
     body {
-        font-family: 'Fredoka', sans-serif;
-        background: #3a86ff;
-        color: white;
+        font-family: 'Barlow Condensed', 'Arial Narrow', Arial, sans-serif;
+        background: #000000;
+        color: #e0e0e0;
         display: flex;
         flex-direction: column;
         align-items: center;
         justify-content: flex-start;
         min-height: 100vh;
-        padding-top: 30px;
-        transition: background-color 4s ease-in-out;
-        font-size: clamp(16px, 2.5vw, 20px);
         user-select: none;
+        position: relative;
+        opacity: 0;
+        transition: opacity 0.2s ease;
     }
 
-    .container {
-        width: 90%;
-        max-width: 560px;
-        text-align: center;
-        background: rgba(255,255,255,0.18);
-        padding: 30px;
-        border-radius: 25px;
-        box-shadow: 0 0 40px rgba(0,0,0,0.3);
-        margin-top: 80px;
-        border: 6px solid white;
-        backdrop-filter: blur(6px);
+    body.fonts-ready { opacity: 1; }
+
+    /* ── FLOATING SHAPE BACKGROUND ── */
+    #shapeBg {
+        position: fixed;
+        inset: 0;
+        pointer-events: none;
+        z-index: 0;
+        overflow: hidden;
+        background: #000;
     }
 
-    h1, h2, h3 {
-        font-family: 'Luckiest Guy', cursive;
-        letter-spacing: 2px;
-        text-shadow: 3px 3px 0px rgba(0,0,0,0.4);
+    .bg-shape {
+        position: absolute;
+        animation: floatShape linear infinite;
+        will-change: transform;
     }
 
-    #timer {
-        font-size: 32px;
-        color: #fff700;
-        text-shadow: 2px 2px 0px #000;
-        margin-bottom: 15px;
+    @keyframes floatShape {
+        0%   { transform: translateY(110vh) rotate(0deg); opacity: 0; }
+        8%   { opacity: 1; }
+        92%  { opacity: 1; }
+        100% { transform: translateY(-10vh) rotate(360deg); opacity: 0; }
     }
 
-    /* SVG shape display */
-    #shapeDisplay {
-        width: 200px;
-        height: 200px;
-        margin: 10px auto 18px;
+    /* ── HUD BAR ── */
+    #topBar {
+        position: fixed;
+        top: 0; left: 0; right: 0;
+        height: 44px;
+        background: #000;
+        border-bottom: 2px solid var(--neon-cyan);
+        box-shadow: 0 0 18px var(--neon-cyan), 0 2px 40px rgba(0,245,255,0.15);
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 0 20px;
+        z-index: 100;
+        font-family: 'Share Tech Mono', 'Courier New', monospace;
+        font-size: 12px;
+        letter-spacing: 1px;
+    }
+
+    #topBar .hud-title {
+        font-family: 'Bebas Neue', 'Arial Narrow', Arial, cursive;
+        font-size: 17px;
+        letter-spacing: 4px;
+        color: var(--neon-pink);
+        text-shadow: 0 0 8px var(--neon-pink), 0 0 20px var(--neon-pink);
+    }
+
+    #topBar .hud-timer {
+        color: var(--neon-cyan);
+        font-family: 'Share Tech Mono', 'Courier New', monospace;
+        text-shadow: 0 0 8px var(--neon-cyan);
+    }
+
+    /* ── PAGE WRAPPER ── */
+    #pageWrap {
+        position: absolute;
+        top: 44px; left: 0; right: 0; bottom: 0;
         display: flex;
         align-items: center;
         justify-content: center;
-        filter: drop-shadow(0 4px 16px rgba(0,0,0,0.35));
+        z-index: 10;
+        padding: 12px;
+        overflow-y: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    /* ── CONTAINERS ── */
+    .container {
+        width: 100%;
+        max-width: 480px;
+        text-align: center;
+        background: rgba(0, 0, 0, 0.88);
+        padding: 28px 28px 24px;
+        border-radius: 4px;
+        border: 2px solid var(--neon-cyan);
+        box-shadow:
+            0 0 12px var(--neon-cyan),
+            0 0 40px rgba(0,245,255,0.2),
+            inset 0 0 30px rgba(0,0,0,0.6);
+        max-height: calc(100vh - 68px);
+        overflow-y: auto;
+    }
+
+    h1 {
+        font-family: 'Bebas Neue', 'Arial Narrow', Arial, cursive;
+        letter-spacing: 6px;
+        font-size: clamp(28px, 7vw, 48px);
+        color: var(--neon-yellow);
+        text-shadow: 0 0 10px var(--neon-yellow), 0 0 30px var(--neon-yellow), 0 0 60px rgba(247,255,0,0.4);
+        text-transform: uppercase;
+        margin-bottom: 6px;
+        line-height: 1;
+    }
+
+    h2 {
+        font-family: 'Bebas Neue', 'Arial Narrow', Arial, cursive;
+        letter-spacing: 4px;
+        font-size: clamp(16px, 4vw, 24px);
+        color: var(--neon-magenta);
+        text-shadow: 0 0 8px var(--neon-magenta), 0 0 20px rgba(255,0,204,0.5);
+        text-transform: uppercase;
+    }
+
+    /* ── PROGRESS ── */
+    #progress {
+        font-family: 'Share Tech Mono', 'Courier New', monospace;
+        font-size: clamp(16px, 4vw, 22px);
+        color: var(--neon-green);
+        text-shadow: 0 0 8px var(--neon-green), 0 0 20px rgba(57,255,20,0.5);
+        letter-spacing: 3px;
+        margin-bottom: 10px;
+    }
+
+    /* ── SHAPE DISPLAY ── */
+    #shapeDisplay {
+        width: clamp(130px, 38vw, 175px);
+        height: clamp(130px, 38vw, 175px);
+        margin: 10px auto 14px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border: 1px solid rgba(0,245,255,0.2);
+        background: rgba(0,0,0,0.5);
+        flex-shrink: 0;
     }
 
     #shapeDisplay svg {
@@ -65,291 +179,320 @@
         height: 100%;
     }
 
-    /* Answer input */
+    /* ── INPUT ── */
     #answerInput {
-        padding: 12px;
-        margin: 10px 0;
-        width: 85%;
-        font-size: 22px;
-        border-radius: 15px;
-        border: 3px solid white;
+        padding: 10px 14px;
+        margin: 6px 0;
+        width: 88%;
+        border-radius: 2px;
+        border: 2px solid var(--neon-cyan);
         text-align: center;
-        font-weight: bold;
-        background: white;
-        color: #222;
-        font-family: 'Fredoka', sans-serif;
+        font-weight: 600;
+        background: #000;
+        color: var(--neon-cyan);
+        font-family: 'Share Tech Mono', 'Courier New', monospace;
         letter-spacing: 3px;
+        outline: none;
+        transition: box-shadow 0.15s, border-color 0.15s;
+        font-size: max(16px, clamp(16px, 4vw, 20px));
+        -webkit-appearance: none;
+        box-shadow: 0 0 8px var(--neon-cyan), inset 0 0 8px rgba(0,245,255,0.05);
+        caret-color: var(--neon-cyan);
     }
 
+    #answerInput:focus {
+        box-shadow: 0 0 16px var(--neon-cyan), 0 0 40px rgba(0,245,255,0.3), inset 0 0 10px rgba(0,245,255,0.08);
+    }
     #answerInput:disabled {
-        background: #ddd;
-        color: #999;
+        background: #050505;
+        color: #333;
+        border-color: #222;
+        box-shadow: none;
     }
 
-    /* Throttle indicator */
+    /* ── THROTTLE BAR ── */
     #throttleBar {
-        width: 85%;
-        height: 10px;
-        background: rgba(255,255,255,0.3);
-        border-radius: 10px;
-        margin: 4px auto 10px;
+        width: 88%;
+        height: 4px;
+        background: rgba(255,255,255,0.04);
+        margin: 2px auto 8px;
         overflow: hidden;
-        border: 2px solid white;
     }
 
     #throttleFill {
         height: 100%;
         width: 100%;
-        background: #fff700;
-        border-radius: 8px;
+        background: var(--neon-pink);
+        box-shadow: 0 0 8px var(--neon-pink);
         transition: width 0.05s linear;
     }
 
-
+    /* ── BUTTON ── */
     button {
-        padding: 12px 25px;
-        font-size: 20px;
-        background: #fff700;
-        color: black;
-        border: none;
-        border-radius: 20px;
+        padding: 10px 28px;
+        font-size: clamp(14px, 3.5vw, 15px);
+        background: transparent;
+        color: var(--neon-yellow);
+        border: 2px solid var(--neon-yellow);
+        border-radius: 2px;
         cursor: pointer;
-        font-weight: bold;
-        box-shadow: 0 6px 0 #d4c200;
+        font-family: 'Bebas Neue', 'Arial Narrow', Arial, cursive;
+        letter-spacing: 4px;
         transition: all 0.15s ease;
-        font-family: 'Fredoka', sans-serif;
+        margin-top: 4px;
+        min-height: 44px;
+        touch-action: manipulation;
+        text-shadow: 0 0 8px var(--neon-yellow);
+        box-shadow: 0 0 10px rgba(247,255,0,0.3);
     }
 
-    button:hover { transform: translateY(-3px); box-shadow: 0 9px 0 #d4c200; }
-    button:active { transform: translateY(3px); box-shadow: 0 3px 0 #d4c200; }
-    button:disabled { background: #aaa; box-shadow: none; transform: none; cursor: not-allowed; }
+    button:hover {
+        background: rgba(247,255,0,0.08);
+        box-shadow: 0 0 18px var(--neon-yellow), 0 0 40px rgba(247,255,0,0.2);
+        text-shadow: 0 0 12px var(--neon-yellow);
+    }
+    button:active { background: rgba(247,255,0,0.15); }
+    button:disabled { opacity: 0.2; cursor: not-allowed; box-shadow: none; text-shadow: none; }
 
+    /* ── FEEDBACK ── */
     #feedback {
-        font-weight: bold;
-        font-size: 20px;
-        margin-top: 10px;
-        min-height: 28px;
-        text-shadow: 1px 1px 0 rgba(0,0,0,0.4);
-    }
-
-    #loadingMessage {
-        font-weight: bold;
-        font-size: 18px;
-        margin-top: 15px;
-        min-height: 24px;
-    }
-
-    #progress {
-        font-size: 17px;
-        margin-bottom: 8px;
-        opacity: 0.9;
-        letter-spacing: 1px;
-    }
-
-    /* Rainbow title */
-    .rainbow-title {
-        text-align: center;
-        font-family: 'Luckiest Guy', cursive;
-        font-size: clamp(30px, 6vw, 48px);
-        pointer-events: none;
-        margin-bottom: 10px;
-        line-height: 1.3;
-    }
-
-    .rainbow-title span {
-        display: inline-block;
-        transform-origin: bottom center;
-        -webkit-text-stroke: 3px white;
-        text-shadow: 2px 2px 0 white, -2px 2px 0 white, 2px -2px 0 white, -2px -2px 0 white;
-    }
-
-    .rainbow-title span:nth-child(1)  { transform: rotate(-24deg) translateY(30px); color: #ff006e; }
-    .rainbow-title span:nth-child(2)  { transform: rotate(-21deg) translateY(24px); color: #ff9f1c; }
-    .rainbow-title span:nth-child(3)  { transform: rotate(-18deg) translateY(18px); color: #ffbe0b; }
-    .rainbow-title span:nth-child(4)  { transform: rotate(-15deg) translateY(13px); color: #06d6a0; }
-    .rainbow-title span:nth-child(5)  { transform: rotate(-12deg) translateY(9px);  color: #3a86ff; }
-    .rainbow-title span:nth-child(6)  { transform: rotate(-9deg)  translateY(6px);  color: #8338ec; }
-    .rainbow-title span:nth-child(7)  { transform: rotate(-6deg)  translateY(3px);  color: #ff4d6d; }
-    .rainbow-title span:nth-child(8)  { transform: rotate(-3deg)  translateY(1px);  color: #2ec4b6; }
-    .rainbow-title span:nth-child(9)  { transform: rotate(0deg)   translateY(0px);  color: #ff006e; }
-    .rainbow-title span:nth-child(10) { transform: rotate(0deg)   translateY(0px);  color: #ff9f1c; }
-    .rainbow-title span:nth-child(11) { transform: rotate(0deg)   translateY(0px);  color: #ffbe0b; }
-    .rainbow-title span:nth-child(12) { transform: rotate(0deg)   translateY(0px);  color: #06d6a0; }
-    .rainbow-title span:nth-child(13) { transform: rotate(0deg)   translateY(0px);  color: #3a86ff; }
-    .rainbow-title span:nth-child(14) { transform: rotate(3deg)   translateY(1px);  color: #8338ec; }
-    .rainbow-title span:nth-child(15) { transform: rotate(6deg)   translateY(3px);  color: #ff4d6d; }
-    .rainbow-title span:nth-child(16) { transform: rotate(9deg)   translateY(6px);  color: #2ec4b6; }
-    .rainbow-title span:nth-child(17) { transform: rotate(12deg)  translateY(9px);  color: #ff006e; }
-    .rainbow-title span:nth-child(18) { transform: rotate(15deg)  translateY(13px); color: #ff9f1c; }
-    .rainbow-title span:nth-child(19) { transform: rotate(18deg)  translateY(18px); color: #ffbe0b; }
-    .rainbow-title span:nth-child(20) { transform: rotate(21deg)  translateY(24px); color: #06d6a0; }
-    .rainbow-title span:nth-child(21) { transform: rotate(24deg)  translateY(30px); color: #3a86ff; }
-    .rainbow-title span:nth-child(22) { transform: rotate(27deg)  translateY(36px); color: #8338ec; }
-    .rainbow-title span:nth-child(23) { transform: rotate(30deg)  translateY(42px); color: #ff4d6d; }
-    .rainbow-title span:nth-child(24) { transform: rotate(33deg)  translateY(48px); color: #2ec4b6; }
-    .rainbow-title span:nth-child(25) { transform: rotate(36deg)  translateY(54px); color: #ff006e; }
-
-    /* end screen stats */
-    #endScreen #stats {
-        font-size: 20px;
-        font-weight: bold;
-        margin: 20px 0;
-        line-height: 1.8;
-        text-shadow: 1px 1px 0 rgba(0,0,0,0.3);
-    }
-
-    #startError { color: #fff700; font-weight: bold; margin-top: 8px; }
-
-    .hint-text {
+        font-family: 'Share Tech Mono', 'Courier New', monospace;
         font-size: 13px;
-        opacity: 0.8;
-        margin-top: 14px;
-        line-height: 1.5;
+        letter-spacing: 2px;
+        margin-top: 8px;
+        min-height: 20px;
+        color: var(--neon-green);
+        text-shadow: 0 0 8px var(--neon-green);
     }
 
-    #questionText {
-        font-size: 22px;
-        margin-bottom: 6px;
+    #feedback.error {
+        color: var(--neon-pink);
+        text-shadow: 0 0 8px var(--neon-pink);
+    }
+
+    /* ── SHAPE HINT LIST ── */
+    .shape-hint {
+        font-family: 'Share Tech Mono', 'Courier New', monospace;
+        font-size: 10px;
+        color: #2a3a2a;
         letter-spacing: 1px;
+        margin-top: 16px;
+        line-height: 1.8;
+    }
+
+    /* ── NUMBER INPUT (start screen) ── */
+    #quantityInput {
+        padding: 10px;
+        width: 88%;
+        border-radius: 2px;
+        border: 2px solid var(--neon-cyan);
+        text-align: center;
+        font-weight: 600;
+        background: #000;
+        color: var(--neon-cyan);
+        font-family: 'Share Tech Mono', 'Courier New', monospace;
+        font-size: max(16px, 18px);
+        outline: none;
+        transition: box-shadow 0.15s;
+        -webkit-appearance: none;
+        min-height: 44px;
+        box-shadow: 0 0 8px var(--neon-cyan), inset 0 0 8px rgba(0,245,255,0.05);
+        caret-color: var(--neon-cyan);
+    }
+
+    #quantityInput:focus {
+        box-shadow: 0 0 16px var(--neon-cyan), 0 0 40px rgba(0,245,255,0.3);
+    }
+
+    #startError {
+        font-family: 'Share Tech Mono', 'Courier New', monospace;
+        font-size: 12px;
+        color: var(--neon-pink);
+        text-shadow: 0 0 6px var(--neon-pink);
+        margin-top: 10px;
+        letter-spacing: 1px;
+    }
+
+    /* ── END SCREEN STATS ── */
+    #stats {
+        font-family: 'Share Tech Mono', 'Courier New', monospace;
+        font-size: 13px;
+        color: #557055;
+        letter-spacing: 1px;
+        margin: 20px 0;
+        line-height: 2;
+        text-align: left;
+        border-top: 1px solid rgba(0,245,255,0.2);
+        border-bottom: 1px solid rgba(0,245,255,0.2);
+        padding: 16px 0;
+    }
+
+    #stats .stat-row {
+        display: flex;
+        justify-content: space-between;
+        gap: 16px;
+    }
+
+    #stats .stat-val {
+        color: var(--neon-cyan);
+        text-shadow: 0 0 6px var(--neon-cyan);
+    }
+
+    #stats .stat-gameid {
+        margin-top: 10px;
+        font-size: 11px;
+        color: #1a2a1a;
+    }
+
+    /* ── MOBILE: when keyboard opens, allow scroll ── */
+    @media (max-height: 500px) {
+        #pageWrap {
+            align-items: flex-start;
+            padding-top: 8px;
+        }
+        .container {
+            padding: 16px 20px;
+        }
+        #shapeDisplay {
+            width: 110px;
+            height: 110px;
+        }
     }
 </style>
 </head>
 <body>
 
-<div class="rainbow-title" style="font-size: clamp(22px, 4.5vw, 40px);">
-  <span>P</span><span>e</span><span>r</span><span>f</span><span>e</span><span>c</span><span>t</span><span>i</span><span>o</span><span>n</span><span>'</span><span>s</span><span>&nbsp;</span><span>S</span><span>h</span><span>a</span><span>p</span><span>e</span><span>&nbsp;</span><span>P</span><span>a</span><span>l</span><span>a</span><span>c</span><span>e</span><span>!</span>
+<!-- Floating shape background -->
+<div id="shapeBg"></div>
+
+<!-- Fixed top HUD -->
+<div id="topBar">
+    <span class="hud-title">PERFECTION'S SHAPES</span>
+    <span id="timer" class="hud-timer">00:00:00</span>
 </div>
+
+<!-- Page wrap -->
+<div id="pageWrap">
 
 <!-- START SCREEN -->
 <div class="container" id="startScreen">
     <h2>I HAVE BEEN ASSIGNED TO IDENTIFY</h2>
     <br>
-    <input type="number" id="quantityInput" style="padding:12px;width:85%;font-size:22px;border-radius:15px;border:3px solid white;text-align:center;font-weight:bold;background:white;color:#222;font-family:'Fredoka',sans-serif;" min="1" max="1000" placeholder="ENTER NUMBER (1–1000)">
+    <input type="number" id="quantityInput" inputmode="numeric" min="1" max="1000" placeholder="ENTER NUMBER (1–1000)">
     <br><br>
     <h2>SHAPES.</h2>
     <br>
     <button onclick="startGame()">BEGIN ASSIGNMENT</button>
-    <br>
-    <p class="hint-text">
-    </p>
-    <p class="hint-text"><i>circle / square / triangle / rectangle / oval / pentagon / hexagon / octagon / star / diamond / arrow / crescent / heart / cross / parallelogram / trapezoid / rhombus / heptagon / semicircle / kite</i></p>
     <div id="startError"></div>
+    <div class="shape-hint">circle · square · triangle · rectangle · oval · pentagon · hexagon · octagon · star · diamond · arrow · crescent · heart · cross · parallelogram · trapezoid · rhombus · heptagon · semicircle · kite</div>
 </div>
 
 <!-- GAME SCREEN -->
 <div class="container" id="gameScreen" style="display:none;">
-    <div id="timer">TIME: 00:00:00</div>
     <div id="progress">IDENTIFIED: 0 / 0</div>
-    <div id="questionText">WHAT SHAPE IS THIS?</div>
 
     <div id="shapeDisplay"></div>
 
-    <input type="text" id="answerInput" placeholder="TYPE THE SHAPE" autocomplete="off" autocorrect="off" spellcheck="false">
+    <input type="text" id="answerInput" inputmode="text" placeholder="TYPE SHAPE NAME" autocomplete="off" autocorrect="off" autocapitalize="none" spellcheck="false">
     <div id="throttleBar"><div id="throttleFill"></div></div>
 
     <button id="submitButton" onclick="submitAnswer()">SUBMIT</button>
     <div id="feedback"></div>
-    <div id="loadingMessage"></div>
+
+    <div class="shape-hint">circle · square · triangle · rectangle · oval · pentagon · hexagon · octagon · star · diamond · arrow · crescent · heart · cross · parallelogram · trapezoid · rhombus · heptagon · semicircle · kite</div>
 </div>
 
 <!-- END SCREEN -->
 <div class="container" id="endScreen" style="display:none;">
     <h1>ASSIGNMENT<br>COMPLETE</h1>
     <div id="stats"></div>
-    <button onclick="location.reload()">RESTART</button>
+    <button onclick="location.reload()">NEW ASSIGNMENT</button>
 </div>
+
+</div><!-- /pageWrap -->
 
 <audio id="buzzSound" src="https://actions.google.com/sounds/v1/alarms/buzzer.ogg"></audio>
 
 <script>
-// ─── SHAPES ───────────────────────────────────────────────────────────────────
-const shapes = [
-    {
-        name: "circle",
-        svg: `<svg viewBox="0 0 200 200"><circle cx="100" cy="100" r="85" fill="white" stroke="rgba(0,0,0,0.2)" stroke-width="4"/></svg>`
-    },
-    {
-        name: "square",
-        svg: `<svg viewBox="0 0 200 200"><rect x="20" y="20" width="160" height="160" fill="white" stroke="rgba(0,0,0,0.2)" stroke-width="4"/></svg>`
-    },
-    {
-        name: "triangle",
-        svg: `<svg viewBox="0 0 200 200"><polygon points="100,15 190,185 10,185" fill="white" stroke="rgba(0,0,0,0.2)" stroke-width="4"/></svg>`
-    },
-    {
-        name: "rectangle",
-        svg: `<svg viewBox="0 0 200 200"><rect x="10" y="55" width="180" height="90" fill="white" stroke="rgba(0,0,0,0.2)" stroke-width="4"/></svg>`
-    },
-    {
-        name: "oval",
-        svg: `<svg viewBox="0 0 200 200"><ellipse cx="100" cy="100" rx="90" ry="55" fill="white" stroke="rgba(0,0,0,0.2)" stroke-width="4"/></svg>`
-    },
-    {
-        name: "pentagon",
-        svg: `<svg viewBox="0 0 200 200"><polygon points="100,12 188,72 155,178 45,178 12,72" fill="white" stroke="rgba(0,0,0,0.2)" stroke-width="4"/></svg>`
-    },
-    {
-        name: "hexagon",
-        svg: `<svg viewBox="0 0 200 200"><polygon points="100,10 185,55 185,145 100,190 15,145 15,55" fill="white" stroke="rgba(0,0,0,0.2)" stroke-width="4"/></svg>`
-    },
-    {
-        name: "octagon",
-        svg: `<svg viewBox="0 0 200 200"><polygon points="65,10 135,10 190,65 190,135 135,190 65,190 10,135 10,65" fill="white" stroke="rgba(0,0,0,0.2)" stroke-width="4"/></svg>`
-    },
-    {
-        name: "star",
-        svg: `<svg viewBox="0 0 200 200"><polygon points="100,10 122,72 188,72 135,113 157,178 100,140 43,178 65,113 12,72 78,72" fill="white" stroke="rgba(0,0,0,0.2)" stroke-width="4"/></svg>`
-    },
-    {
-        name: "diamond",
-        svg: `<svg viewBox="0 0 200 200"><polygon points="100,10 190,100 100,190 10,100" fill="white" stroke="rgba(0,0,0,0.2)" stroke-width="4"/></svg>`
-    },
-    {
-        name: "arrow",
-        svg: `<svg viewBox="0 0 200 200"><polygon points="10,75 120,75 120,30 190,100 120,170 120,125 10,125" fill="white" stroke="rgba(0,0,0,0.2)" stroke-width="4"/></svg>`
-    },
-    {
-        name: "crescent",
-        svg: `<svg viewBox="0 0 200 200"><path d="M100,15 A85,85 0 1,1 100,185 A55,55 0 1,0 100,15 Z" fill="white" stroke="rgba(0,0,0,0.2)" stroke-width="4"/></svg>`
-    },
-    {
-        name: "heart",
-        svg: `<svg viewBox="0 0 200 200"><path d="M100,170 C40,130 10,95 10,65 A45,45 0 0,1 100,48 A45,45 0 0,1 190,65 C190,95 160,130 100,170 Z" fill="white" stroke="rgba(0,0,0,0.2)" stroke-width="4"/></svg>`
-    },
-    {
-        name: "cross",
-        svg: `<svg viewBox="0 0 200 200"><polygon points="65,10 135,10 135,65 190,65 190,135 135,135 135,190 65,190 65,135 10,135 10,65 65,65" fill="white" stroke="rgba(0,0,0,0.2)" stroke-width="4"/></svg>`
-    },
-    {
-        name: "parallelogram",
-        svg: `<svg viewBox="0 0 200 200"><polygon points="50,55 190,55 150,145 10,145" fill="white" stroke="rgba(0,0,0,0.2)" stroke-width="4"/></svg>`
-    },
-    {
-        name: "trapezoid",
-        svg: `<svg viewBox="0 0 200 200"><polygon points="40,55 160,55 190,145 10,145" fill="white" stroke="rgba(0,0,0,0.2)" stroke-width="4"/></svg>`
-    },
-    {
-        name: "rhombus",
-        svg: `<svg viewBox="0 0 200 200"><polygon points="100,15 175,100 100,185 25,100" fill="white" stroke="rgba(0,0,0,0.2)" stroke-width="4"/></svg>`
-    },
-    {
-        name: "heptagon",
-        svg: `<svg viewBox="0 0 200 200"><polygon points="100,10 168,38 190,112 157,178 43,178 10,112 32,38" fill="white" stroke="rgba(0,0,0,0.2)" stroke-width="4"/></svg>`
-    },
-    {
-        name: "semicircle",
-        svg: `<svg viewBox="0 0 200 200"><path d="M10,110 A90,90 0 0,1 190,110 Z" fill="white" stroke="rgba(0,0,0,0.2)" stroke-width="4"/><line x1="10" y1="110" x2="190" y2="110" stroke="rgba(0,0,0,0.2)" stroke-width="4"/></svg>`
-    },
-    {
-        name: "kite",
-        svg: `<svg viewBox="0 0 200 200"><polygon points="100,10 170,90 100,190 30,90" fill="white" stroke="rgba(0,0,0,0.2)" stroke-width="4"/></svg>`
-    }
+// ── FONT LOAD: reveal body only after fonts are ready ─────────────────────────
+if (document.fonts && document.fonts.ready) {
+    document.fonts.ready.then(() => {
+        document.body.classList.add('fonts-ready');
+    });
+} else {
+    // Fallback for browsers without Font Loading API
+    window.addEventListener('load', () => document.body.classList.add('fonts-ready'));
+}
+
+// ── NEON COLOURS ──────────────────────────────────────────────────────────────
+const neonColors = ['#ff2d78','#00f5ff','#f7ff00','#39ff14','#bf00ff','#ff6a00','#ccff00','#ff00cc'];
+
+function randNeon() { return neonColors[Math.floor(Math.random() * neonColors.length)]; }
+
+// ── FLOATING BACKGROUND SHAPES ────────────────────────────────────────────────
+const bgShapeTemplates = [
+    c => `<svg viewBox="0 0 40 40" xmlns="http://www.w3.org/2000/svg"><defs><filter id="g${c.slice(1)}"><feGaussianBlur stdDeviation="2" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter></defs><circle cx="20" cy="20" r="15" fill="none" stroke="${c}" stroke-width="2" filter="url(#g${c.slice(1)})"/></svg>`,
+    c => `<svg viewBox="0 0 40 40" xmlns="http://www.w3.org/2000/svg"><defs><filter id="g${c.slice(1)}"><feGaussianBlur stdDeviation="2" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter></defs><rect x="5" y="5" width="30" height="30" fill="none" stroke="${c}" stroke-width="2" filter="url(#g${c.slice(1)})"/></svg>`,
+    c => `<svg viewBox="0 0 40 40" xmlns="http://www.w3.org/2000/svg"><defs><filter id="g${c.slice(1)}"><feGaussianBlur stdDeviation="2" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter></defs><polygon points="20,4 36,36 4,36" fill="none" stroke="${c}" stroke-width="2" filter="url(#g${c.slice(1)})"/></svg>`,
+    c => `<svg viewBox="0 0 40 40" xmlns="http://www.w3.org/2000/svg"><defs><filter id="g${c.slice(1)}"><feGaussianBlur stdDeviation="2" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter></defs><polygon points="20,3 37,20 20,37 3,20" fill="none" stroke="${c}" stroke-width="2" filter="url(#g${c.slice(1)})"/></svg>`,
+    c => `<svg viewBox="0 0 40 40" xmlns="http://www.w3.org/2000/svg"><defs><filter id="g${c.slice(1)}"><feGaussianBlur stdDeviation="2" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter></defs><polygon points="20,3 35,11.5 35,28.5 20,37 5,28.5 5,11.5" fill="none" stroke="${c}" stroke-width="2" filter="url(#g${c.slice(1)})"/></svg>`,
+    c => `<svg viewBox="0 0 40 40" xmlns="http://www.w3.org/2000/svg"><defs><filter id="g${c.slice(1)}"><feGaussianBlur stdDeviation="2" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter></defs><polygon points="20,3 24,15 37,15 27,23 31,36 20,28 9,36 13,23 3,15 16,15" fill="none" stroke="${c}" stroke-width="1.8" filter="url(#g${c.slice(1)})"/></svg>`,
+    c => `<svg viewBox="0 0 40 40" xmlns="http://www.w3.org/2000/svg"><defs><filter id="g${c.slice(1)}"><feGaussianBlur stdDeviation="2" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter></defs><polygon points="13,2 27,2 38,13 38,27 27,38 13,38 2,27 2,13" fill="none" stroke="${c}" stroke-width="2" filter="url(#g${c.slice(1)})"/></svg>`,
+    c => `<svg viewBox="0 0 40 40" xmlns="http://www.w3.org/2000/svg"><defs><filter id="g${c.slice(1)}"><feGaussianBlur stdDeviation="2" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter></defs><ellipse cx="20" cy="20" rx="17" ry="10" fill="none" stroke="${c}" stroke-width="2" filter="url(#g${c.slice(1)})"/></svg>`,
 ];
 
-// ─── BACKGROUND COLOURS ────────────────────────────────────────────────────────
-const backgroundColors = ["#ff4d6d","#ff9f1c","#2ec4b6","#3a86ff","#ff006e","#8338ec","#ffbe0b","#06d6a0"];
+const bgContainer = document.getElementById('shapeBg');
 
-// ─── STATE ─────────────────────────────────────────────────────────────────────
+function spawnBgShape() {
+    const el = document.createElement('div');
+    el.className = 'bg-shape';
+    const size = 18 + Math.random() * 38;
+    el.style.width = size + 'px';
+    el.style.height = size + 'px';
+    el.style.left = (Math.random() * 100) + 'vw';
+    const color = randNeon();
+    const tmpl = bgShapeTemplates[Math.floor(Math.random() * bgShapeTemplates.length)];
+    el.innerHTML = tmpl(color);
+    const dur = 18 + Math.random() * 28;
+    el.style.animationDuration = dur + 's';
+    el.style.animationDelay = -(Math.random() * dur) + 's';
+    bgContainer.appendChild(el);
+}
+
+for (let i = 0; i < 30; i++) spawnBgShape();
+
+// ── SHAPES ────────────────────────────────────────────────────────────────────
+const shapes = [
+    { name: "circle",        path: `<circle cx="100" cy="100" r="85"/>` },
+    { name: "square",        path: `<rect x="20" y="20" width="160" height="160"/>` },
+    { name: "triangle",      path: `<polygon points="100,15 190,185 10,185"/>` },
+    { name: "rectangle",     path: `<rect x="10" y="55" width="180" height="90"/>` },
+    { name: "oval",          path: `<ellipse cx="100" cy="100" rx="90" ry="55"/>` },
+    { name: "pentagon",      path: `<polygon points="100,12 188,72 155,178 45,178 12,72"/>` },
+    { name: "hexagon",       path: `<polygon points="100,10 185,55 185,145 100,190 15,145 15,55"/>` },
+    { name: "octagon",       path: `<polygon points="65,10 135,10 190,65 190,135 135,190 65,190 10,135 10,65"/>` },
+    { name: "star",          path: `<polygon points="100,10 122,72 188,72 135,113 157,178 100,140 43,178 65,113 12,72 78,72"/>` },
+    { name: "diamond",       path: `<polygon points="100,10 190,100 100,190 10,100"/>` },
+    { name: "arrow",         path: `<polygon points="10,75 120,75 120,30 190,100 120,170 120,125 10,125"/>` },
+    { name: "crescent",      path: `<path fill-rule="evenodd" d="M100,15 a85,85 0 1,0 0,170 a60,60 0 1,1 0,-170 Z"/>` },
+    { name: "heart",         path: `<path d="M100,170 C40,130 10,95 10,65 A45,45 0 0,1 100,48 A45,45 0 0,1 190,65 C190,95 160,130 100,170 Z"/>` },
+    { name: "cross",         path: `<polygon points="65,10 135,10 135,65 190,65 190,135 135,135 135,190 65,190 65,135 10,135 10,65 65,65"/>` },
+    { name: "parallelogram", path: `<polygon points="50,55 190,55 150,145 10,145"/>` },
+    { name: "trapezoid",     path: `<polygon points="40,55 160,55 190,145 10,145"/>` },
+    { name: "rhombus",       path: `<polygon points="100,15 175,100 100,185 25,100"/>` },
+    { name: "heptagon",      path: `<polygon points="100,10 168,38 190,112 157,178 43,178 10,112 32,38"/>` },
+    { name: "semicircle",    path: `<path d="M10,110 A90,90 0 0,1 190,110 Z"/><line x1="10" y1="110" x2="190" y2="110" stroke-width="3"/>` },
+    { name: "kite",          path: `<polygon points="100,10 170,90 100,190 30,90"/>` },
+];
+
+function makeShapeSVG(shape) {
+    const c = randNeon();
+    return `<svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+        <g fill="${c}" stroke="${c}" stroke-width="2" opacity="0.95">${shape.path}</g>
+    </svg>`;
+}
+
+// ── STATE ──────────────────────────────────────────────────────────────────────
 let totalRequired = 0;
 let correctCount = 0;
 let errorCount = 0;
@@ -358,12 +501,11 @@ let timerInterval;
 let currentShape;
 let isLocked = false;
 
-// Throttle state
 const THROTTLE_MS = 3000;
-let lastKeyTime = 0;        // timestamp of last accepted keystroke
-let throttleRafId = null;   // requestAnimationFrame id for bar animation
+let lastKeyTime = 0;
+let throttleRafId = null;
 
-// ─── START ─────────────────────────────────────────────────────────────────────
+// ── START ──────────────────────────────────────────────────────────────────────
 function startGame() {
     const val = parseInt(document.getElementById("quantityInput").value);
     const err = document.getElementById("startError");
@@ -381,17 +523,16 @@ function startGame() {
     nextQuestion();
 }
 
-// ─── TIMER ─────────────────────────────────────────────────────────────────────
+// ── TIMER ──────────────────────────────────────────────────────────────────────
 function updateTimer() {
     const total = Math.floor((Date.now() - startTime) / 1000);
     const h = Math.floor(total / 3600), m = Math.floor((total % 3600) / 60), s = total % 60;
-    document.getElementById("timer").textContent =
-        "TIME: " + pad(h) + ":" + pad(m) + ":" + pad(s);
+    document.getElementById("timer").textContent = pad(h) + ":" + pad(m) + ":" + pad(s);
 }
 
 function pad(n) { return String(n).padStart(2, "0"); }
 
-// ─── NEXT QUESTION ─────────────────────────────────────────────────────────────
+// ── NEXT QUESTION ──────────────────────────────────────────────────────────────
 function nextQuestion() {
     if (correctCount >= totalRequired) { endGame(); return; }
 
@@ -399,15 +540,16 @@ function nextQuestion() {
 
     document.getElementById("progress").textContent =
         "IDENTIFIED: " + correctCount + " / " + totalRequired;
-
-    document.getElementById("shapeDisplay").innerHTML = currentShape.svg;
+    document.getElementById("shapeDisplay").innerHTML = makeShapeSVG(currentShape);
     document.getElementById("answerInput").value = "";
-    document.getElementById("feedback").textContent = "";
-    document.getElementById("loadingMessage").textContent = "";
+
+    const fb = document.getElementById("feedback");
+    fb.textContent = "";
+    fb.className = "";
+
     document.getElementById("answerInput").disabled = false;
     document.getElementById("submitButton").disabled = false;
 
-    // Reset throttle — first letter is free
     lastKeyTime = 0;
     updateThrottleBar();
 
@@ -415,40 +557,27 @@ function nextQuestion() {
     isLocked = false;
 }
 
-// ─── THROTTLE BAR ──────────────────────────────────────────────────────────────
+// ── THROTTLE BAR ───────────────────────────────────────────────────────────────
 function updateThrottleBar() {
     cancelAnimationFrame(throttleRafId);
-
-    const fill   = document.getElementById("throttleFill");
-    
+    const fill = document.getElementById("throttleFill");
 
     function tick() {
-        const now     = Date.now();
-        const elapsed = now - lastKeyTime;
-        const ratio   = lastKeyTime === 0 ? 1 : Math.min(elapsed / THROTTLE_MS, 1);
-
+        const elapsed = Date.now() - lastKeyTime;
+        const ratio = lastKeyTime === 0 ? 1 : Math.min(elapsed / THROTTLE_MS, 1);
         fill.style.width = (ratio * 100) + "%";
-
-        if (ratio < 1) {
-        } else {
-        }
-
-        if (ratio < 1) {
-            throttleRafId = requestAnimationFrame(tick);
-        }
+        if (ratio < 1) throttleRafId = requestAnimationFrame(tick);
     }
 
     throttleRafId = requestAnimationFrame(tick);
 }
 
-// ─── INPUT THROTTLING ──────────────────────────────────────────────────────────
-document.getElementById("answerInput").addEventListener("keydown", function(e) {
+// ── INPUT THROTTLING ───────────────────────────────────────────────────────────
+const answerInput = document.getElementById("answerInput");
+
+answerInput.addEventListener("keydown", function(e) {
     if (e.key === "Enter") { submitAnswer(); return; }
-
-    // Allow non-character keys freely (backspace, arrows, etc.)
     if (e.key.length !== 1) return;
-
-    // Block paste shortcut
     if (e.ctrlKey || e.metaKey) { e.preventDefault(); return; }
 
     const now = Date.now();
@@ -456,87 +585,80 @@ document.getElementById("answerInput").addEventListener("keydown", function(e) {
 
     if (!ready) {
         e.preventDefault();
-        // Shake the input briefly
-        const inp = document.getElementById("answerInput");
-        inp.style.outline = "4px solid #ff006e";
-        setTimeout(() => inp.style.outline = "", 300);
+        answerInput.style.borderColor = "#9a4040";
+        setTimeout(() => answerInput.style.borderColor = "", 300);
     } else {
         lastKeyTime = now;
         updateThrottleBar();
     }
 });
 
-// Block paste
-document.getElementById("answerInput").addEventListener("paste", e => e.preventDefault());
-document.getElementById("answerInput").addEventListener("contextmenu", e => e.preventDefault());
+// Block paste / drop
+answerInput.addEventListener("paste", e => e.preventDefault());
+answerInput.addEventListener("drop", e => e.preventDefault());
+answerInput.addEventListener("contextmenu", e => e.preventDefault());
 
-// ─── SUBMIT ────────────────────────────────────────────────────────────────────
+// Track last committed value to detect non-keyboard insertions (mobile autocomplete, etc.)
+answerInput.addEventListener("input", function(e) {
+    const type = e.inputType || "";
+    const isTyping = type === "insertText" || type === "deleteContentBackward" || type === "deleteContentForward";
+    if (!isTyping) {
+        this.value = this._lastVal || "";
+    } else {
+        this._lastVal = this.value;
+    }
+});
+
+// ── SUBMIT ─────────────────────────────────────────────────────────────────────
 function submitAnswer() {
     if (isLocked) return;
 
-    const userAnswer = document.getElementById("answerInput").value.trim().toLowerCase();
+    const userAnswer = answerInput.value.trim().toLowerCase();
+    const fb = document.getElementById("feedback");
 
     if (userAnswer === currentShape.name) {
         correctCount++;
-        lockAndDelay();
+        isLocked = true;
+        cancelAnimationFrame(throttleRafId);
+        answerInput.disabled = true;
+        document.getElementById("submitButton").disabled = true;
+        document.getElementById("throttleFill").style.width = "100%";
+        fb.textContent = "✓ CORRECT";
+        fb.className = "";
+        nextQuestion();
     } else {
         errorCount++;
-        document.getElementById("feedback").textContent = "INCORRECT. TRY AGAIN.";
+        fb.textContent = "✗ INCORRECT — TRY AGAIN";
+        fb.className = "error";
         document.getElementById("buzzSound").play();
-        // Clear and allow retry
-        document.getElementById("answerInput").value = "";
+        answerInput.value = "";
+        answerInput._lastVal = "";
         lastKeyTime = 0;
         updateThrottleBar();
-        document.getElementById("answerInput").focus();
+        answerInput.focus();
     }
 }
 
-// ─── LOCK & DELAY ──────────────────────────────────────────────────────────────
-function lockAndDelay() {
-    isLocked = true;
-    cancelAnimationFrame(throttleRafId);
-    document.getElementById("answerInput").disabled = true;
-    document.getElementById("submitButton").disabled = true;
-    document.getElementById("feedback").textContent = "✓ CORRECT!";
-    document.getElementById("throttleFill").style.width = "100%";
-
-    // Change bg
-    document.body.style.backgroundColor =
-        backgroundColors[Math.floor(Math.random() * backgroundColors.length)];
-
-    let countdown = 5;
-    const msg = document.getElementById("loadingMessage");
-    msg.textContent = "PROCESSING NEXT SHAPE... " + countdown;
-
-    const iv = setInterval(() => {
-        countdown--;
-        msg.textContent = "PROCESSING NEXT SHAPE... " + countdown;
-        if (countdown <= 0) { clearInterval(iv); nextQuestion(); }
-    }, 1000);
-}
-
-// ─── END GAME ──────────────────────────────────────────────────────────────────
+// ── END GAME ───────────────────────────────────────────────────────────────────
 function endGame() {
     clearInterval(timerInterval);
     cancelAnimationFrame(throttleRafId);
 
     const total = Math.floor((Date.now() - startTime) / 1000);
     const h = Math.floor(total / 3600), m = Math.floor((total % 3600) / 60), s = total % 60;
-    const formattedTime = pad(h) + ":" + pad(m) + ":" + pad(s);
-
     const gameId = Math.floor(Math.random() * 900000000) + 100000000;
 
     document.getElementById("gameScreen").style.display = "none";
     document.getElementById("endScreen").style.display = "block";
 
     document.getElementById("stats").innerHTML =
-        "SHAPES IDENTIFIED: " + totalRequired +
-        "<br>TOTAL TIME: " + formattedTime +
-        "<br>ERRORS MADE: " + errorCount +
-        "<br><br>GAME ID: " + gameId;
+        `<div class="stat-row"><span>SHAPES IDENTIFIED</span><span class="stat-val">${totalRequired}</span></div>` +
+        `<div class="stat-row"><span>TOTAL TIME</span><span class="stat-val">${pad(h)}:${pad(m)}:${pad(s)}</span></div>` +
+        `<div class="stat-row"><span>ERRORS MADE</span><span class="stat-val">${errorCount}</span></div>` +
+        `<div class="stat-gameid">GAME ID: ${gameId}</div>`;
 }
 
-// Enter key on start screen
+// Enter on start screen
 document.getElementById("quantityInput").addEventListener("keydown", e => {
     if (e.key === "Enter") startGame();
 });
