@@ -270,6 +270,29 @@
         text-shadow: 0 0 8px var(--neon-pink);
     }
 
+    /* ── INACTIVITY FLASH ── */
+    #inactivityFlash {
+        display: none;
+        position: fixed;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        font-family: 'Bebas Neue', 'Arial Narrow', Arial, cursive;
+        font-size: clamp(28px, 8vw, 52px);
+        letter-spacing: 4px;
+        color: #ff0000;
+        text-shadow: 0 0 16px #ff0000, 0 0 40px rgba(255,0,0,0.6);
+        z-index: 200;
+        pointer-events: none;
+        white-space: nowrap;
+        animation: inactivityPulse 0.3s ease-in-out infinite alternate;
+    }
+
+    @keyframes inactivityPulse {
+        from { opacity: 0.8; text-shadow: 0 0 16px #ff0000, 0 0 40px rgba(255,0,0,0.6); }
+        to   { opacity: 1;   text-shadow: 0 0 30px #ff0000, 0 0 70px rgba(255,0,0,0.9); }
+    }
+
     /* ── SHAPE HINT LIST ── */
     .shape-hint {
         font-family: 'Share Tech Mono', 'Courier New', monospace;
@@ -369,6 +392,8 @@
     <span id="timer" class="hud-timer">00:00:00</span>
 </div>
 
+<div id="inactivityFlash">INACTIVE: +1 TASK ADDED</div>
+
 <div id="pageWrap">
 
 <div class="container" id="startScreen">
@@ -412,7 +437,6 @@ if (document.fonts && document.fonts.ready) {
         document.body.classList.add('fonts-ready');
     });
 } else {
-    // Fallback for browsers without Font Loading API
     window.addEventListener('load', () => document.body.classList.add('fonts-ready'));
 }
 
@@ -487,6 +511,7 @@ function makeShapeSVG(shape) {
 let totalRequired = 0;
 let correctCount = 0;
 let errorCount = 0;
+let inactivityPenalties = 0;
 let startTime;
 let timerInterval;
 let currentShape;
@@ -495,6 +520,43 @@ let isLocked = false;
 const THROTTLE_MS = 7000;
 let lastKeyTime = 0;
 let throttleRafId = null;
+
+// ── INACTIVITY TIMER ──────────────────────────────────────────────────────────
+const INACTIVITY_MS = 10000;
+let inactivityTimeout = null;
+let lastActivityTime = 0;
+const inactivityFlash = document.getElementById('inactivityFlash');
+let inactivityFlashTimeout = null;
+
+function resetInactivityTimer() {
+    clearTimeout(inactivityTimeout);
+    if (isLocked) return;
+    lastActivityTime = Date.now();
+    inactivityTimeout = setTimeout(onInactive, INACTIVITY_MS);
+}
+
+function stopInactivityTimer() {
+    clearTimeout(inactivityTimeout);
+    inactivityTimeout = null;
+}
+
+function onInactive() {
+    if (isLocked) return;
+    inactivityPenalties++;
+    totalRequired++;
+    document.getElementById("progress").textContent =
+        "IDENTIFIED: " + correctCount + " / " + totalRequired;
+
+    // Show flash
+    clearTimeout(inactivityFlashTimeout);
+    inactivityFlash.style.display = 'block';
+    inactivityFlashTimeout = setTimeout(() => {
+        inactivityFlash.style.display = 'none';
+    }, 2500);
+
+    // Restart timer — will keep firing if player stays inactive
+    resetInactivityTimer();
+}
 
 // ── START ──────────────────────────────────────────────────────────────────────
 function startGame() {
@@ -505,6 +567,7 @@ function startGame() {
     totalRequired = val;
     correctCount = 0;
     errorCount = 0;
+    inactivityPenalties = 0;
     startTime = Date.now();
 
     document.getElementById("startScreen").style.display = "none";
@@ -546,6 +609,8 @@ function nextQuestion() {
 
     document.getElementById("answerInput").focus();
     isLocked = false;
+
+    resetInactivityTimer();
 }
 
 // ── THROTTLE BAR ───────────────────────────────────────────────────────────────
@@ -575,19 +640,16 @@ answerInput.addEventListener("keydown", function(e) {
     const ready = lastKeyTime === 0 || (now - lastKeyTime) >= THROTTLE_MS;
 
     if (!ready) {
-        // Prevent input
         e.preventDefault();
-        
-        // Visual penalty flash
         answerInput.style.borderColor = "#9a4040";
         setTimeout(() => answerInput.style.borderColor = "", 300);
-        
-        // ANTI-SPAM: Reset the timer to the current moment
         lastKeyTime = now;
         updateThrottleBar();
     } else {
         lastKeyTime = now;
         updateThrottleBar();
+        // Any valid keypress resets the inactivity timer
+        resetInactivityTimer();
     }
 });
 
@@ -596,7 +658,6 @@ answerInput.addEventListener("paste", e => e.preventDefault());
 answerInput.addEventListener("drop", e => e.preventDefault());
 answerInput.addEventListener("contextmenu", e => e.preventDefault());
 
-// Track last committed value to detect non-keyboard insertions (mobile autocomplete, etc.)
 answerInput.addEventListener("input", function(e) {
     const type = e.inputType || "";
     const isTyping = type === "insertText" || type === "deleteContentBackward" || type === "deleteContentForward";
@@ -604,6 +665,7 @@ answerInput.addEventListener("input", function(e) {
         this.value = this._lastVal || "";
     } else {
         this._lastVal = this.value;
+        resetInactivityTimer();
     }
 });
 
@@ -617,6 +679,7 @@ function submitAnswer() {
     if (userAnswer === currentShape.name) {
         correctCount++;
         isLocked = true;
+        stopInactivityTimer();
         cancelAnimationFrame(throttleRafId);
         answerInput.disabled = true;
         document.getElementById("submitButton").disabled = true;
@@ -634,6 +697,7 @@ function submitAnswer() {
         lastKeyTime = 0;
         updateThrottleBar();
         answerInput.focus();
+        resetInactivityTimer();
     }
 }
 
@@ -641,6 +705,7 @@ function submitAnswer() {
 function endGame() {
     clearInterval(timerInterval);
     cancelAnimationFrame(throttleRafId);
+    stopInactivityTimer();
 
     const total = Math.floor((Date.now() - startTime) / 1000);
     const h = Math.floor(total / 3600), m = Math.floor((total % 3600) / 60), s = total % 60;
@@ -653,6 +718,7 @@ function endGame() {
         `<div class="stat-row"><span>SHAPES IDENTIFIED</span><span class="stat-val">${totalRequired}</span></div>` +
         `<div class="stat-row"><span>TOTAL TIME</span><span class="stat-val">${pad(h)}:${pad(m)}:${pad(s)}</span></div>` +
         `<div class="stat-row"><span>ERRORS MADE</span><span class="stat-val">${errorCount}</span></div>` +
+        `<div class="stat-row"><span>INACTIVITY PENALTIES</span><span class="stat-val">${inactivityPenalties}</span></div>` +
         `<div class="stat-gameid">GAME ID: ${gameId}</div>`;
 }
 
