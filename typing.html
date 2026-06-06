@@ -45,7 +45,6 @@ body::before {
 .screen { display: none; position: relative; z-index: 1; }
 .screen.active { display: flex; flex-direction: column; align-items: center; }
 
-/* ── TITLE ── */
 .brand {
   font-family: 'Playfair Display', serif;
   font-size: clamp(3rem, 8vw, 5.5rem);
@@ -54,11 +53,7 @@ body::before {
   color: var(--text);
   line-height: 1;
 }
-
-.brand em {
-  font-style: italic;
-  color: var(--pink);
-}
+.brand em { font-style: italic; color: var(--pink); }
 
 .brand-sub {
   font-family: 'DM Mono', monospace;
@@ -69,12 +64,11 @@ body::before {
   margin-top: 6px;
 }
 
-/* ── START SCREEN ── */
+/* START SCREEN */
 #start {
   min-height: 100vh;
   justify-content: center;
   padding: 2rem;
-  gap: 0;
 }
 
 .start-inner {
@@ -154,6 +148,123 @@ body::before {
 #taskCount::-webkit-outer-spin-button,
 #taskCount::-webkit-inner-spin-button { -webkit-appearance: none; }
 
+/* MODES */
+.modes-section {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.modes-label {
+  font-size: 0.8rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.mode-option {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 14px;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  cursor: pointer;
+  transition: border-color 0.15s, background 0.15s;
+  user-select: none;
+}
+.mode-option:hover {
+  border-color: var(--border-strong);
+  background: rgba(255,77,166,0.05);
+}
+.mode-option.selected {
+  border-color: var(--pink);
+  background: var(--pink-glow);
+}
+
+.mode-checkbox {
+  width: 18px;
+  height: 18px;
+  border: 1.5px solid var(--border-strong);
+  border-radius: 4px;
+  flex-shrink: 0;
+  margin-top: 1px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.15s, border-color 0.15s;
+}
+.mode-option.selected .mode-checkbox {
+  background: var(--pink);
+  border-color: var(--pink);
+}
+.mode-checkbox::after {
+  content: '';
+  width: 5px;
+  height: 9px;
+  border: 2px solid #000;
+  border-top: none;
+  border-left: none;
+  transform: rotate(45deg) translate(-1px, -1px);
+  opacity: 0;
+  transition: opacity 0.1s;
+}
+.mode-option.selected .mode-checkbox::after { opacity: 1; }
+
+.mode-text { display: flex; flex-direction: column; gap: 3px; }
+.mode-name-row { display: flex; align-items: center; gap: 6px; }
+.mode-name { font-size: 0.9rem; font-weight: 500; color: var(--text); }
+.mode-option.selected .mode-name { color: var(--pink); }
+
+/* Tooltip ? button */
+.mode-hint {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  border: 1px solid var(--muted);
+  color: var(--muted);
+  font-size: 0.65rem;
+  font-family: 'DM Mono', monospace;
+  cursor: default;
+  flex-shrink: 0;
+  transition: border-color 0.15s, color 0.15s;
+}
+.mode-hint:hover { border-color: var(--pink); color: var(--pink); }
+
+.mode-hint-bubble {
+  display: none;
+  position: absolute;
+  bottom: calc(100% + 8px);
+  left: 50%;
+  transform: translateX(-50%);
+  background: #1e1b24;
+  border: 1px solid var(--border-strong);
+  border-radius: 8px;
+  padding: 9px 12px;
+  width: 220px;
+  font-size: 0.75rem;
+  color: var(--text);
+  line-height: 1.5;
+  pointer-events: none;
+  z-index: 100;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+}
+.mode-hint-bubble::after {
+  content: '';
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  border: 5px solid transparent;
+  border-top-color: var(--border-strong);
+}
+.mode-hint:hover .mode-hint-bubble { display: block; }
+
 .btn-primary {
   width: 100%;
   padding: 13px 24px;
@@ -171,7 +282,7 @@ body::before {
 .btn-primary:hover { opacity: 0.88; }
 .btn-primary:active { transform: scale(0.98); }
 
-/* ── PLAY SCREEN ── */
+/* PLAY SCREEN */
 #play {
   min-height: 100vh;
   padding: 1.5rem 1rem;
@@ -188,11 +299,7 @@ body::before {
   padding-top: 0.5rem;
 }
 
-/* Progress + Timer bar */
-.progress-wrap {
-  width: 100%;
-  max-width: 800px;
-}
+.progress-wrap { width: 100%; max-width: 800px; }
 
 .progress-track {
   position: relative;
@@ -226,12 +333,9 @@ body::before {
   z-index: 2;
   pointer-events: none;
   gap: 10px;
-  mix-blend-mode: normal;
 }
-
 .progress-counter { color: var(--muted); }
 
-/* Live stats bar */
 .live-stats {
   width: 100%;
   max-width: 800px;
@@ -249,25 +353,21 @@ body::before {
   flex-direction: column;
   gap: 2px;
 }
-
 .stat-pill .slabel {
   font-size: 0.65rem;
   letter-spacing: 0.12em;
   text-transform: uppercase;
   color: var(--muted);
 }
-
 .stat-pill .sval {
   font-family: 'DM Mono', monospace;
   font-size: 1rem;
   font-weight: 500;
   color: var(--text);
 }
-
 .stat-pill .sval.pink { color: var(--pink); }
 .stat-pill .sval.red { color: var(--incorrect); }
 
-/* Text label */
 .text-label {
   width: 100%;
   max-width: 800px;
@@ -279,7 +379,6 @@ body::before {
   padding-left: 2px;
 }
 
-/* Typing display */
 .typing-area {
   width: 100%;
   max-width: 800px;
@@ -302,12 +401,7 @@ body::before {
 .word.incorrect { color: var(--incorrect); }
 .word.cursor-on { border-bottom: 2px solid var(--cursor); }
 
-/* Input */
-.input-wrap {
-  width: 100%;
-  max-width: 800px;
-  position: relative;
-}
+.input-wrap { width: 100%; max-width: 800px; position: relative; }
 
 #inputBox {
   width: 100%;
@@ -338,7 +432,7 @@ body::before {
   color: var(--muted);
   border: 1px solid var(--border);
   border-radius: 10px;
-  transition: background 0.2s, color 0.2s, border-color 0.2s, cursor 0.2s;
+  transition: background 0.2s, color 0.2s, border-color 0.2s;
 }
 .next-btn.ready {
   cursor: pointer;
@@ -348,14 +442,68 @@ body::before {
 }
 .next-btn.ready:hover { opacity: 0.85; }
 
+/* PUNISHMENT ERROR FLASH */
+#errorFlash {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+  opacity: 0;
+}
+#errorFlash.show {
+  animation: flashAnim 0.8s ease-out forwards;
+}
+@keyframes flashAnim {
+  0%   { opacity: 0; transform: scale(0.92); }
+  12%  { opacity: 1; transform: scale(1.03); }
+  25%  { opacity: 1; transform: scale(1); }
+  75%  { opacity: 1; transform: scale(1); }
+  100% { opacity: 0; transform: scale(1); }
+}
+.error-flash-bg {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(ellipse 60% 40% at 50% 50%, rgba(255,51,85,0.2) 0%, transparent 70%);
+}
+.error-flash-text {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+}
+.error-flash-word {
+  font-family: 'Playfair Display', serif;
+  font-style: italic;
+  font-size: clamp(5rem, 18vw, 11rem);
+  font-weight: 700;
+  color: var(--incorrect);
+  letter-spacing: -0.02em;
+  text-shadow:
+    0 0 40px rgba(255,51,85,0.9),
+    0 0 80px rgba(255,51,85,0.5),
+    0 0 140px rgba(255,51,85,0.25);
+  user-select: none;
+  line-height: 1;
+}
+.error-flash-sub {
+  font-family: 'DM Mono', monospace;
+  font-size: 0.85rem;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: rgba(255,51,85,0.75);
+  user-select: none;
+}
 
-/* ── END SCREEN ── */
+/* END SCREEN */
 #end {
   min-height: 100vh;
   justify-content: center;
   padding: 2rem;
 }
-
 .end-inner {
   width: 100%;
   max-width: 520px;
@@ -364,11 +512,7 @@ body::before {
   align-items: center;
   gap: 2rem;
 }
-
-.end-title {
-  text-align: center;
-}
-
+.end-title { text-align: center; }
 .end-title h1 {
   font-family: 'Playfair Display', serif;
   font-size: clamp(2.5rem, 7vw, 4rem);
@@ -376,7 +520,6 @@ body::before {
   line-height: 1.05;
 }
 .end-title h1 em { font-style: italic; color: var(--pink); }
-
 .end-title p {
   margin-top: 8px;
   font-size: 0.85rem;
@@ -391,7 +534,6 @@ body::before {
   grid-template-columns: 1fr 1fr;
   gap: 10px;
 }
-
 .end-stat {
   background: var(--surface);
   border: 1px solid var(--border);
@@ -399,12 +541,119 @@ body::before {
   padding: 1.25rem;
 }
 .end-stat.wide { grid-column: 1 / -1; }
-
 .end-stat .el { font-size: 0.65rem; letter-spacing: 0.18em; text-transform: uppercase; color: var(--muted); margin-bottom: 6px; }
 .end-stat .ev { font-family: 'DM Mono', monospace; font-size: 1.6rem; font-weight: 500; color: var(--text); }
 .end-stat .ev.pink { color: var(--pink); }
 .end-stat .ev.red { color: var(--incorrect); }
 .end-stat .es { font-size: 0.75rem; color: var(--muted); margin-top: 3px; }
+
+.end-modes {
+  width: 100%;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 1rem 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.end-modes-label {
+  font-size: 0.65rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.end-modes-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.mode-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 12px;
+  border-radius: 20px;
+  font-family: 'DM Mono', monospace;
+  font-size: 0.75rem;
+  letter-spacing: 0.06em;
+}
+.mode-badge.punishment {
+  background: rgba(255,51,85,0.15);
+  border: 1px solid rgba(255,51,85,0.4);
+  color: var(--incorrect);
+}
+.mode-badge.slow {
+  background: rgba(77,166,255,0.12);
+  border: 1px solid rgba(77,166,255,0.35);
+  color: #4da6ff;
+}
+.mode-badge.nobreaks {
+  background: rgba(255,165,0,0.12);
+  border: 1px solid rgba(255,165,0,0.35);
+  color: #ffaa33;
+}
+.mode-badge.standard {
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  color: var(--muted);
+}
+
+/* NO BREAKS inactivity flash */
+#inactivityFlash {
+  position: fixed;
+  inset: 0;
+  z-index: 9998;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+  opacity: 0;
+}
+#inactivityFlash.show {
+  animation: flashAnim 0.8s ease-out forwards;
+}
+.inactivity-flash-bg {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(ellipse 60% 40% at 50% 50%, rgba(255,165,0,0.18) 0%, transparent 70%);
+}
+.inactivity-flash-text {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+}
+.inactivity-flash-word {
+  font-family: 'Playfair Display', serif;
+  font-style: italic;
+  font-size: clamp(2.8rem, 10vw, 6.5rem);
+  font-weight: 700;
+  color: #ffaa33;
+  letter-spacing: -0.02em;
+  text-shadow:
+    0 0 40px rgba(255,165,0,0.9),
+    0 0 80px rgba(255,165,0,0.5),
+    0 0 140px rgba(255,165,0,0.2);
+  user-select: none;
+  line-height: 1.1;
+  text-align: center;
+}
+.inactivity-flash-sub {
+  font-family: 'DM Mono', monospace;
+  font-size: 0.85rem;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: rgba(255,165,0,0.75);
+  user-select: none;
+}
+.mode-badge-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: currentColor;
+}
 
 .end-id {
   font-family: 'DM Mono', monospace;
@@ -427,13 +676,30 @@ body::before {
   transition: background 0.15s;
 }
 .btn-restart:hover { background: var(--pink-glow); }
-
 </style>
 </head>
 
 <body oncontextmenu="return false">
 
-<!-- ── START ── -->
+<!-- PUNISHMENT ERROR FLASH OVERLAY -->
+<div id="errorFlash">
+  <div class="error-flash-bg"></div>
+  <div class="error-flash-text">
+    <div class="error-flash-word">ERROR</div>
+    <div class="error-flash-sub">Task Reset</div>
+  </div>
+</div>
+
+<!-- NO BREAKS INACTIVITY FLASH OVERLAY -->
+<div id="inactivityFlash">
+  <div class="inactivity-flash-bg"></div>
+  <div class="inactivity-flash-text">
+    <div class="inactivity-flash-word">Inactivity<br>Detected</div>
+    <div class="inactivity-flash-sub">+1 Task Added</div>
+  </div>
+</div>
+
+<!-- START -->
 <div id="start" class="screen active">
   <div class="start-inner">
     <div class="brand-block">
@@ -451,14 +717,45 @@ body::before {
           <button class="num-btn" onclick="adjustCount(1)">+</button>
         </div>
       </div>
+
+      <div class="modes-section">
+        <div class="modes-label">Modes</div>
+        <div class="mode-option" id="modePunishment" onclick="toggleMode('punishment')">
+          <div class="mode-checkbox"></div>
+          <div class="mode-text">
+            <div class="mode-name-row">
+              <div class="mode-name">Punishments</div>
+              <span class="mode-hint" onclick="event.stopPropagation()">?<div class="mode-hint-bubble">Typing errors cause the task to reset.</div></span>
+            </div>
+          </div>
+        </div>
+        <div class="mode-option" id="modeSlow" onclick="toggleMode('slow')">
+          <div class="mode-checkbox"></div>
+          <div class="mode-text">
+            <div class="mode-name-row">
+              <div class="mode-name">Slow Mode</div>
+              <span class="mode-hint" onclick="event.stopPropagation()">?<div class="mode-hint-bubble">Key inputs are limited to one per second. Type slowly and deliberately.</div></span>
+            </div>
+          </div>
+        </div>
+        <div class="mode-option" id="modeNobreaks" onclick="toggleMode('nobreaks')">
+          <div class="mode-checkbox"></div>
+          <div class="mode-text">
+            <div class="mode-name-row">
+              <div class="mode-name">No Breaks</div>
+              <span class="mode-hint" onclick="event.stopPropagation()">?<div class="mode-hint-bubble">No breaks of longer than 5 seconds are permitted.</div></span>
+            </div>
+          </div>
+        </div>
+      </div>
+
       <button class="btn-primary" onclick="startGame()">Begin Session</button>
     </div>
   </div>
 </div>
 
-<!-- ── PLAY ── -->
+<!-- PLAY -->
 <div id="play" class="screen">
-
   <div class="play-header">
     <div class="brand" style="text-align:center;">Write<em>For</em><br>Perfection</div>
     <div class="brand-sub" style="text-align:center;margin-top:6px;">Feminist Typing Trainer</div>
@@ -500,15 +797,13 @@ body::before {
   </div>
 
   <div class="input-wrap">
-    <textarea id="inputBox" rows="3" placeholder="Start typing…" oninput="checkTyping()" onkeydown="handleKey(event)"></textarea>
+    <textarea id="inputBox" rows="3" placeholder="Start typing…" oninput="checkTyping(event)" onkeydown="handleKey(event)"></textarea>
   </div>
 
   <button class="next-btn" id="nextBtn" onclick="nextText()">Continue →</button>
-
-
 </div>
 
-<!-- ── END ── -->
+<!-- END -->
 <div id="end" class="screen">
   <div class="end-inner">
     <div class="end-title">
@@ -540,6 +835,11 @@ body::before {
       </div>
     </div>
 
+    <div class="end-modes">
+      <div class="end-modes-label">Modes Active</div>
+      <div class="end-modes-list" id="endModesList"></div>
+    </div>
+
     <div class="end-id" id="endTextList" style="text-align:center;line-height:1.8;">-</div>
 
     <button class="btn-restart" onclick="restartGame()">Start New Session</button>
@@ -551,14 +851,12 @@ window.addEventListener('paste', e => e.preventDefault());
 window.addEventListener('copy', e => e.preventDefault());
 window.addEventListener('cut', e => e.preventDefault());
 window.addEventListener('drop', e => e.preventDefault());
-
-// Block common keyboard shortcuts that could be used to paste
 window.addEventListener('keydown', e => {
   const forbidden = (e.ctrlKey || e.metaKey) && ['v','c','x','a','z','y'].includes(e.key.toLowerCase());
   if (forbidden) e.preventDefault();
 });
 
-// ── TEXTS (100 placeholders - replace with real content) ──
+// ── TEXTS (replace with real content) ──
 const ALL_TEXTS = [
   { label: "Simone de Beauvoir", content: `Simone de Beauvoir was a French writer, feminist, social theorist, and existential philosopher. She is best known for her groundbreaking ideas surrounding feminism. In her 1949 book "The Second Sex", Beauvoir asserted that women are as capable of choice as men, and thus can choose to elevate themselves, moving beyond the "immanence" to which they were previously resigned and reaching "transcendence", a position in which one takes responsibility for oneself and the world, where one chooses one's freedom. She wrote, "One is not born, but rather becomes, a woman... her wings are cut and then she is blamed for not knowing how to fly."` },
   { label: "RACK", content: `RACK stands for Risk Aware Consensual Kink. Rather than prohibit injury, RACK encourages risk awareness. To be risk aware within BDSM means participants acknowledge that their sexual activities may have physical risks like bruises or burns, mental risks like stress and anguish, as well as emotional risks like humiliation. Beyond risk awareness, the C in RACK stands for consensual. For sex to be consensual, all parties involved need to enthusiastically agree, in a comfortable environment safe from coercion, to all activities that are going to take place. There should be a conversation prior to sex in which every individual establishes their boundaries and agrees upon a safeword.` },
@@ -662,7 +960,16 @@ const ALL_TEXTS = [
   { label: "Malala Yousafzai", content: `Malala Yousafzai is a Pakistani female education activist, and producer of film and television. She is the youngest Nobel Prize laureate in history, receiving the Peace Prize in 2014 at age 17, and is the second Pakistani and the only Pashtun to receive a Nobel Prize. Yousafzai is a human rights advocate for the education of women and children in her native district, Swat, where the Pakistani Taliban had at times banned girls from attending school. Her advocacy has grown into an international movement, and according to former prime minister Shahid Khaqan Abbasi, she has become Pakistan's "most prominent citizen".` },
 ];
 
-// State
+// ── MODES ──
+const modes = { punishment: false, slow: false, nobreaks: false };
+
+function toggleMode(name) {
+  modes[name] = !modes[name];
+  const key = 'mode' + name.charAt(0).toUpperCase() + name.slice(1);
+  document.getElementById(key).classList.toggle('selected', modes[name]);
+}
+
+// ── STATE ──
 let selected = [];
 let current = 0;
 let total = 1;
@@ -673,7 +980,17 @@ let taskErrors = 0;
 let taskErrorCounted = {};
 let totalErrors = 0;
 let taskWpms = [];
-let pool = [];
+
+// Punishment state
+let totalPunishments = 0;
+let prevInputLength = 0;
+
+// Slow mode state
+let slowLastKeyTime = 0;
+
+// No Breaks state
+let noBreaksTimer = null;
+let totalInactivityPenalties = 0;
 
 function adjustCount(delta) {
   const el = document.getElementById('taskCount');
@@ -705,7 +1022,12 @@ function startGame() {
   selected = buildPool(total);
   current = 0;
   totalErrors = 0;
+  totalPunishments = 0;
   taskWpms = [];
+  slowLastKeyTime = 0;
+  totalInactivityPenalties = 0;
+  if (noBreaksTimer) clearTimeout(noBreaksTimer);
+  noBreaksTimer = null;
 
   startTime = Date.now();
   startTimer();
@@ -736,6 +1058,10 @@ function loadText() {
   taskErrors = 0;
   taskErrorCounted = {};
   taskStartTime = Date.now();
+  prevInputLength = 0;
+  slowLastKeyTime = 0;
+
+  if (modes.nobreaks) resetNoBreaksTimer();
 
   document.getElementById('liveWpm').innerText = '-';
   document.getElementById('liveErrors').innerText = '0';
@@ -745,6 +1071,22 @@ function loadText() {
 }
 
 function handleKey(e) {
+  // Any keypress counts as activity for No Breaks
+  if (modes.nobreaks) resetNoBreaksTimer();
+
+  // Slow mode: block any key that would add/remove a character if fired too soon
+  if (modes.slow) {
+    const isCharKey = e.key.length === 1 || e.key === 'Backspace' || e.key === 'Delete';
+    if (isCharKey && e.key !== 'Enter') {
+      const now = Date.now();
+      if (now - slowLastKeyTime < 1000) {
+        e.preventDefault();
+        return;
+      }
+      slowLastKeyTime = now;
+    }
+  }
+
   if (e.key === 'Enter') {
     const btn = document.getElementById('nextBtn');
     if (btn.classList.contains('ready')) {
@@ -756,14 +1098,20 @@ function handleKey(e) {
   }
 }
 
-function checkTyping() {
+function checkTyping(e) {
   const input = document.getElementById('inputBox').value;
+
+  // Detect typing vs deleting: only penalise when length increases
+  const isTyping = input.length > prevInputLength;
+  prevInputLength = input.length;
+
   const typedWords = input.split(' ');
   const spans = document.querySelectorAll('.word');
-
   const currentWordIdx = typedWords.length - 1;
 
   let allCorrect = true;
+  let newErrorThisCheck = false;  // for error counter (deduped per word)
+  let currentWordIsWrong = false; // for punishment (re-fires on every wrong keypress)
 
   spans.forEach((span, i) => {
     span.classList.remove('correct', 'incorrect', 'cursor-on');
@@ -777,27 +1125,22 @@ function checkTyping() {
     const target = span.innerText;
 
     if (i === currentWordIdx) {
-      // Current word being typed - check character by character
       let hasError = false;
       for (let c = 0; c < typed.length; c++) {
-        if (typed[c] !== target[c]) {
-          hasError = true;
-          break;
-        }
+        if (typed[c] !== target[c]) { hasError = true; break; }
       }
       if (hasError) {
         span.classList.add('incorrect');
+        currentWordIsWrong = true;
         if (!taskErrorCounted[i]) {
           taskErrorCounted[i] = true;
           taskErrors++;
+          newErrorThisCheck = true;
         }
       }
-
-      // If this is the last word and it matches exactly, mark complete
       const isLastWord = i === spans.length - 1;
       if (isLastWord && typed === target) {
         span.classList.add('correct');
-        // allCorrect stays true if everything before was correct
       } else {
         span.classList.add('cursor-on');
         allCorrect = false;
@@ -805,7 +1148,6 @@ function checkTyping() {
       return;
     }
 
-    // Committed word - compare fully
     if (typed === target) {
       span.classList.add('correct');
     } else {
@@ -814,13 +1156,20 @@ function checkTyping() {
       if (!taskErrorCounted[i]) {
         taskErrorCounted[i] = true;
         taskErrors++;
+        newErrorThisCheck = true;
       }
     }
   });
 
   if (typedWords.length !== spans.length) allCorrect = false;
 
-  // live stats
+  // Punishment: fire whenever user types a character onto a wrong word, not in cooldown.
+  // Uses currentWordIsWrong so duplicate characters (e.g. 'ww' in 'wizard') still trigger.
+  if (modes.punishment && isTyping && currentWordIsWrong) {
+    triggerPunishment();
+  }
+
+  // Live stats
   const elapsed = (Date.now() - taskStartTime) / 1000 / 60;
   const typedChars = input.replace(/\s/g, '').length;
   const wordsTyped = Math.max(0, typedWords.length - 1);
@@ -836,13 +1185,64 @@ function checkTyping() {
 
   if (allCorrect) {
     document.getElementById('nextBtn').classList.add('ready');
+    const inputEl = document.getElementById('inputBox');
+    inputEl.disabled = true;
+    inputEl.style.opacity = '0.5';
+    inputEl.style.cursor = 'default';
   } else {
     document.getElementById('nextBtn').classList.remove('ready');
   }
 }
 
+function triggerPunishment() {
+  totalPunishments++;
+
+  // Flash the ERROR overlay
+  const flash = document.getElementById('errorFlash');
+  flash.classList.remove('show');
+  void flash.offsetWidth;
+  flash.classList.add('show');
+
+  // Lock the input immediately
+  const inputEl = document.getElementById('inputBox');
+  inputEl.disabled = true;
+  inputEl.style.opacity = '0.5';
+  inputEl.style.cursor = 'default';
+
+  // After 1 second: reset the task and re-enable input
+  setTimeout(() => {
+    loadText();
+  }, 1000);
+}
+
+function resetNoBreaksTimer() {
+  if (noBreaksTimer) clearTimeout(noBreaksTimer);
+  noBreaksTimer = setTimeout(triggerInactivity, 5000);
+}
+
+function triggerInactivity() {
+  // Add a task
+  const extra = buildPool(1);
+  selected.push(...extra);
+  total++;
+  totalInactivityPenalties++;
+  updateProgress();
+
+  // Flash the inactivity overlay
+  const flash = document.getElementById('inactivityFlash');
+  flash.classList.remove('show');
+  void flash.offsetWidth;
+  flash.classList.add('show');
+
+  // Restart the timer immediately — no rest
+  resetNoBreaksTimer();
+}
+
 function nextText() {
   if (!document.getElementById('nextBtn').classList.contains('ready')) return;
+
+  // Clicking continue resets the inactivity timer
+  if (modes.nobreaks) resetNoBreaksTimer();
   const taskElapsed = (Date.now() - taskStartTime) / 1000 / 60;
   const wordCount = selected[current].content.split(' ').length;
   const taskWpm = taskElapsed > 0 ? Math.round(wordCount / taskElapsed) : 0;
@@ -877,6 +1277,7 @@ function startTimer() {
 
 function endGame() {
   clearInterval(timerInterval);
+  if (noBreaksTimer) { clearTimeout(noBreaksTimer); noBreaksTimer = null; }
 
   const elapsed = document.getElementById('timer').innerText;
   const avgWpm = taskWpms.length > 0 ? Math.round(taskWpms.reduce((a, b) => a + b, 0) / taskWpms.length) : 0;
@@ -887,8 +1288,41 @@ function endGame() {
   document.getElementById('endErrors').innerText = totalErrors;
   document.getElementById('endTasks').innerText = total;
   document.getElementById('endId').innerText = 'Session ID: ' + id;
-  document.getElementById('endSubtitle').innerText = total + ' text' + (total !== 1 ? 's' : '') + ' completed';
+
+  let subtitle = total + ' text' + (total !== 1 ? 's' : '') + ' completed';
+  if (modes.punishment && totalPunishments > 0) {
+    subtitle += ' · ' + totalPunishments + ' reset' + (totalPunishments !== 1 ? 's' : '') + ' triggered';
+  }
+  if (modes.nobreaks && totalInactivityPenalties > 0) {
+    subtitle += ' · ' + totalInactivityPenalties + ' inactivity penalt' + (totalInactivityPenalties !== 1 ? 'ies' : 'y') + ' added';
+  }
+  document.getElementById('endSubtitle').innerText = subtitle;
   document.getElementById('endTextList').innerText = selected.map(t => t.label).join(' · ');
+
+  // Modes badges
+  const modesList = document.getElementById('endModesList');
+  modesList.innerHTML = '';
+  const activeModes = Object.entries(modes).filter(([, v]) => v);
+  if (activeModes.length === 0) {
+    modesList.innerHTML = '<span class="mode-badge standard"><span class="mode-badge-dot"></span>Standard</span>';
+  } else {
+    activeModes.forEach(([name]) => {
+      const badge = document.createElement('span');
+      badge.className = 'mode-badge ' + name;
+      let label = name.charAt(0).toUpperCase() + name.slice(1) + ' Mode';
+      if (name === 'punishment' && totalPunishments > 0) {
+        label += ' · ' + totalPunishments + ' reset' + (totalPunishments !== 1 ? 's' : '');
+      }
+      if (name === 'slow') {
+        label = 'Slow Mode · 1 key/sec';
+      }
+      if (name === 'nobreaks') {
+        label = 'No Breaks' + (totalInactivityPenalties > 0 ? ' · +' + totalInactivityPenalties + ' task' + (totalInactivityPenalties !== 1 ? 's' : '') : '');
+      }
+      badge.innerHTML = `<span class="mode-badge-dot"></span>${label}`;
+      modesList.appendChild(badge);
+    });
+  }
 
   switchScreen('end');
 }
