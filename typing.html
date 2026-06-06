@@ -421,6 +421,18 @@ body::before {
   word-break: break-word;
 }
 
+/* ── Mobile: fixed-height text box that auto-scrolls as you type ── */
+@media (max-width: 600px) {
+  .typing-area {
+    --line-h: calc(1.05rem * 1.85);
+    height: calc(var(--line-h) * 3 + 1.75rem * 2);
+    overflow-y: auto;   /* Scrollbar enabled */
+  }
+  #textDisplay {
+    position: relative; /* Anchors the scroll calculations to the text block */
+  }
+}
+
 .word { color: var(--untyped); transition: color 0.08s; }
 .word.correct { color: var(--correct); }
 .word.incorrect { color: var(--incorrect); }
@@ -714,7 +726,6 @@ body::before {
 
 <body oncontextmenu="return false">
 
-<!-- PUNISHMENT ERROR FLASH OVERLAY -->
 <div id="errorFlash">
   <div class="error-flash-bg"></div>
   <div class="error-flash-text">
@@ -723,7 +734,6 @@ body::before {
   </div>
 </div>
 
-<!-- NO BREAKS INACTIVITY FLASH OVERLAY -->
 <div id="inactivityFlash">
   <div class="inactivity-flash-bg"></div>
   <div class="inactivity-flash-text">
@@ -732,7 +742,6 @@ body::before {
   </div>
 </div>
 
-<!-- START -->
 <div id="start" class="screen active">
   <div class="start-inner">
     <div class="brand-block">
@@ -787,7 +796,6 @@ body::before {
   </div>
 </div>
 
-<!-- PLAY -->
 <div id="play" class="screen">
   <div class="play-header">
     <div class="brand" style="text-align:center;">Write<em>For</em><br>Perfection</div>
@@ -830,12 +838,6 @@ body::before {
   </div>
 
   <div class="input-wrap">
-    <!--
-      autocomplete="off" autocorrect="off" autocapitalize="none" spellcheck="false":
-        Disables keyboard suggestions, autocorrect, and auto-capitalisation on mobile.
-      inputmode="text": Keeps the standard keyboard but without suggestion bar influence.
-      data-lpignore / data-form-type: Tells password managers to leave this field alone.
-    -->
     <textarea
       id="inputBox"
       rows="3"
@@ -854,7 +856,6 @@ body::before {
   <button class="next-btn" id="nextBtn" onclick="nextText()">Continue →</button>
 </div>
 
-<!-- END -->
 <div id="end" class="screen">
   <div class="end-inner">
     <div class="end-title">
@@ -1123,13 +1124,13 @@ function loadText() {
   document.getElementById('liveChars').innerText = '0';
   document.getElementById('liveAccuracy').innerText = '-';
   updateProgress();
+
+  scrollToCurrentWord();
 }
 
 function handleKey(e) {
-  // Any keypress counts as activity for No Breaks
   if (modes.nobreaks) resetNoBreaksTimer();
 
-  // Slow mode: block any key that would add/remove a character if fired too soon
   if (modes.slow) {
     const isCharKey = e.key.length === 1 || e.key === 'Backspace' || e.key === 'Delete';
     if (isCharKey && e.key !== 'Enter') {
@@ -1153,47 +1154,39 @@ function handleKey(e) {
   }
 }
 
-/*
- * normalise — collapses typographic variants of punctuation to their plain ASCII
- * equivalents before comparison, so mobile smart-punctuation never causes false errors.
- *
- * Covered:
- *   Apostrophes / single quotes  ' ' ‛ ʼ  →  '
- *   Double quotes                " " „ ‟  →  "
- *   Dashes / hyphens             – — ‐ ‑  →  -
- *   Ellipsis                     …        →  ...
- */
-function normalise(str) {
-  return str
-    .replace(/[\u2018\u2019\u201B\u02BC]/g, "'")   // curly/modifier apostrophes
-    .replace(/[\u201C\u201D\u201E\u201F]/g, '"')   // curly double quotes
-    .replace(/[\u2013\u2014\u2010\u2011]/g, '-')   // en-dash, em-dash, hyphens
-    .replace(/\u2026/g, '...');                     // ellipsis character
+function scrollToCurrentWord() {
+  const container = document.querySelector('.typing-area');
+  
+  // Desktop remains entirely unaffected
+  if (window.innerWidth > 600) { container.scrollTop = 0; return; }
+
+  const active = document.querySelector('.word.cursor-on')
+               || document.querySelector('.word.incorrect')
+               || null;
+  if (!active) return;
+
+  // Scrolls the container exactly to the top of the currently active word
+  container.scrollTo({ top: active.offsetTop, behavior: 'smooth' });
 }
 
-/*
- * checkTyping — also handles the slow mode enforcement for mobile suggestion taps.
- *
- * On mobile, tapping a suggestion word fires an `input` event (not `keydown`),
- * so handleKey never sees it. We detect a suggestion tap by measuring how many
- * characters were added in a single `input` event: if more than 1 character
- * arrived at once and slow mode is active, we revert to the value before the
- * event and bail out early.
- */
+function normalise(str) {
+  return str
+    .replace(/[\u2018\u2019\u201B\u02BC]/g, "'")
+    .replace(/[\u201C\u201D\u201E\u201F]/g, '"')
+    .replace(/[\u2013\u2014\u2010\u2011]/g, '-')
+    .replace(/\u2026/g, '...');
+}
+
 function checkTyping(e) {
   const inputEl = document.getElementById('inputBox');
   const input = inputEl.value;
 
-  // ── Slow mode: block multi-character insertions (suggestion taps) ──
   if (modes.slow) {
     const charsAdded = input.length - prevInputLength;
     if (charsAdded > 1) {
-      // A suggestion was tapped — revert to the previous value
       inputEl.value = inputEl.value.slice(0, prevInputLength);
-      return; // do not update prevInputLength; treat as if nothing happened
+      return;
     }
-    // Single-character input: enforce the 1-per-second rate.
-    // (deletions are always allowed so the player can correct themselves)
     if (charsAdded === 1) {
       const now = Date.now();
       if (now - slowLastKeyTime < 1000) {
@@ -1204,7 +1197,6 @@ function checkTyping(e) {
     }
   }
 
-  // Detect typing vs deleting: only penalise when length increases
   const isTyping = input.length > prevInputLength;
   prevInputLength = input.length;
 
@@ -1263,12 +1255,10 @@ function checkTyping(e) {
 
   if (typedWords.length !== spans.length) allCorrect = false;
 
-  // Punishment: fire whenever user types a character onto a wrong word
   if (modes.punishment && isTyping && currentWordIsWrong) {
     triggerPunishment();
   }
 
-  // Live stats
   const elapsed = (Date.now() - taskStartTime) / 1000 / 60;
   const typedChars = input.replace(/\s/g, '').length;
   const wordsTyped = Math.max(0, typedWords.length - 1);
@@ -1290,6 +1280,8 @@ function checkTyping(e) {
   } else {
     document.getElementById('nextBtn').classList.remove('ready');
   }
+
+  scrollToCurrentWord();
 }
 
 function triggerPunishment() {
