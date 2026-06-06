@@ -2,6 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, maximum-scale=1.0, user-scalable=no">
 <title>WriteForPerfection</title>
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=DM+Mono:wght@400;500&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
 <style>
@@ -25,12 +26,22 @@
 
 * { box-sizing: border-box; margin: 0; padding: 0; }
 
+html {
+  /* Prevent font size adjustment on orientation change */
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
+
 body {
   font-family: 'DM Sans', sans-serif;
   background: var(--bg);
   color: var(--text);
+  /* dvh falls back to vh on older browsers */
   min-height: 100vh;
+  min-height: 100dvh;
   overflow-x: hidden;
+  /* Prevent pull-to-refresh interfering */
+  overscroll-behavior: none;
 }
 
 body::before {
@@ -67,6 +78,7 @@ body::before {
 /* START SCREEN */
 #start {
   min-height: 100vh;
+  min-height: 100dvh;
   justify-content: center;
   padding: 2rem;
 }
@@ -120,7 +132,7 @@ body::before {
 }
 
 .num-btn {
-  width: 36px; height: 36px;
+  width: 44px; height: 44px; /* larger tap target on mobile */
   border-radius: 8px;
   border: 1px solid var(--border-strong);
   background: transparent;
@@ -130,6 +142,7 @@ body::before {
   display: flex; align-items: center; justify-content: center;
   transition: background 0.15s;
   flex-shrink: 0;
+  touch-action: manipulation; /* prevent double-tap zoom */
 }
 .num-btn:hover { background: var(--pink-glow); }
 
@@ -173,6 +186,7 @@ body::before {
   cursor: pointer;
   transition: border-color 0.15s, background 0.15s;
   user-select: none;
+  touch-action: manipulation;
 }
 .mode-option:hover {
   border-color: var(--border-strong);
@@ -278,6 +292,9 @@ body::before {
   border: none;
   border-radius: 10px;
   transition: opacity 0.15s, transform 0.1s;
+  touch-action: manipulation;
+  /* Prevent zoom on tap (iOS requires ≥16px font) */
+  min-height: 44px;
 }
 .btn-primary:hover { opacity: 0.88; }
 .btn-primary:active { transform: scale(0.98); }
@@ -285,7 +302,10 @@ body::before {
 /* PLAY SCREEN */
 #play {
   min-height: 100vh;
+  min-height: 100dvh;
   padding: 1.5rem 1rem;
+  /* On mobile, add safe-area insets for notched phones */
+  padding-bottom: max(1.5rem, env(safe-area-inset-bottom));
   justify-content: flex-start;
   gap: 1.25rem;
 }
@@ -352,16 +372,21 @@ body::before {
   display: flex;
   flex-direction: column;
   gap: 2px;
+  /* Prevent overflow on very small screens */
+  min-width: 0;
 }
 .stat-pill .slabel {
   font-size: 0.65rem;
   letter-spacing: 0.12em;
   text-transform: uppercase;
   color: var(--muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 .stat-pill .sval {
   font-family: 'DM Mono', monospace;
-  font-size: 1rem;
+  font-size: clamp(0.8rem, 3vw, 1rem);
   font-weight: 500;
   color: var(--text);
 }
@@ -407,7 +432,8 @@ body::before {
   width: 100%;
   padding: 14px 18px;
   font-family: 'DM Mono', monospace;
-  font-size: 1rem;
+  /* 16px minimum to prevent iOS auto-zoom on focus */
+  font-size: 16px;
   background: var(--surface2);
   color: var(--text);
   border: 1px solid var(--border-strong);
@@ -416,6 +442,8 @@ body::before {
   outline: none;
   transition: border-color 0.15s;
   line-height: 1.5;
+  /* Prevent the entire page from resizing when keyboard opens */
+  touch-action: manipulation;
 }
 #inputBox:focus { border-color: var(--pink); }
 
@@ -433,6 +461,8 @@ body::before {
   border: 1px solid var(--border);
   border-radius: 10px;
   transition: background 0.2s, color 0.2s, border-color 0.2s;
+  touch-action: manipulation;
+  min-height: 44px;
 }
 .next-btn.ready {
   cursor: pointer;
@@ -501,6 +531,7 @@ body::before {
 /* END SCREEN */
 #end {
   min-height: 100vh;
+  min-height: 100dvh;
   justify-content: center;
   padding: 2rem;
 }
@@ -674,6 +705,8 @@ body::before {
   border: 1px solid var(--border-strong);
   border-radius: 10px;
   transition: background 0.15s;
+  touch-action: manipulation;
+  min-height: 44px;
 }
 .btn-restart:hover { background: var(--pink-glow); }
 </style>
@@ -797,7 +830,25 @@ body::before {
   </div>
 
   <div class="input-wrap">
-    <textarea id="inputBox" rows="3" placeholder="Start typing…" oninput="checkTyping(event)" onkeydown="handleKey(event)"></textarea>
+    <!--
+      autocomplete="off" autocorrect="off" autocapitalize="none" spellcheck="false":
+        Disables keyboard suggestions, autocorrect, and auto-capitalisation on mobile.
+      inputmode="text": Keeps the standard keyboard but without suggestion bar influence.
+      data-lpignore / data-form-type: Tells password managers to leave this field alone.
+    -->
+    <textarea
+      id="inputBox"
+      rows="3"
+      placeholder="Start typing…"
+      autocomplete="off"
+      autocorrect="off"
+      autocapitalize="none"
+      spellcheck="false"
+      data-lpignore="true"
+      data-form-type="other"
+      oninput="checkTyping(event)"
+      onkeydown="handleKey(event)"
+    ></textarea>
   </div>
 
   <button class="next-btn" id="nextBtn" onclick="nextText()">Continue →</button>
@@ -856,7 +907,7 @@ window.addEventListener('keydown', e => {
   if (forbidden) e.preventDefault();
 });
 
-// ── TEXTS (replace with real content) ──
+// ── TEXTS (10 short placeholders for testing) ──
 const ALL_TEXTS = [
   { label: "Simone de Beauvoir", content: `Simone de Beauvoir was a French writer, feminist, social theorist, and existential philosopher. She is best known for her groundbreaking ideas surrounding feminism. In her 1949 book "The Second Sex", Beauvoir asserted that women are as capable of choice as men, and thus can choose to elevate themselves, moving beyond the "immanence" to which they were previously resigned and reaching "transcendence", a position in which one takes responsibility for oneself and the world, where one chooses one's freedom. She wrote, "One is not born, but rather becomes, a woman... her wings are cut and then she is blamed for not knowing how to fly."` },
   { label: "RACK", content: `RACK stands for Risk Aware Consensual Kink. Rather than prohibit injury, RACK encourages risk awareness. To be risk aware within BDSM means participants acknowledge that their sexual activities may have physical risks like bruises or burns, mental risks like stress and anguish, as well as emotional risks like humiliation. Beyond risk awareness, the C in RACK stands for consensual. For sex to be consensual, all parties involved need to enthusiastically agree, in a comfortable environment safe from coercion, to all activities that are going to take place. There should be a conversation prior to sex in which every individual establishes their boundaries and agrees upon a safeword.` },
@@ -960,6 +1011,7 @@ const ALL_TEXTS = [
   { label: "Malala Yousafzai", content: `Malala Yousafzai is a Pakistani female education activist, and producer of film and television. She is the youngest Nobel Prize laureate in history, receiving the Peace Prize in 2014 at age 17, and is the second Pakistani and the only Pashtun to receive a Nobel Prize. Yousafzai is a human rights advocate for the education of women and children in her native district, Swat, where the Pakistani Taliban had at times banned girls from attending school. Her advocacy has grown into an international movement, and according to former prime minister Shahid Khaqan Abbasi, she has become Pakistan's "most prominent citizen".` },
 ];
 
+
 // ── MODES ──
 const modes = { punishment: false, slow: false, nobreaks: false };
 
@@ -1050,9 +1102,12 @@ function loadText() {
     `<span class="word" id="w${i}">${w}</span>`
   ).join(' ');
 
-  document.getElementById('inputBox').value = '';
-  document.getElementById('inputBox').disabled = false;
-  document.getElementById('inputBox').focus();
+  const inputEl = document.getElementById('inputBox');
+  inputEl.value = '';
+  inputEl.disabled = false;
+  inputEl.style.opacity = '';
+  inputEl.style.cursor = '';
+  inputEl.focus();
   document.getElementById('nextBtn').classList.remove('ready');
 
   taskErrors = 0;
@@ -1098,8 +1153,56 @@ function handleKey(e) {
   }
 }
 
+/*
+ * normalise — collapses typographic variants of punctuation to their plain ASCII
+ * equivalents before comparison, so mobile smart-punctuation never causes false errors.
+ *
+ * Covered:
+ *   Apostrophes / single quotes  ' ' ‛ ʼ  →  '
+ *   Double quotes                " " „ ‟  →  "
+ *   Dashes / hyphens             – — ‐ ‑  →  -
+ *   Ellipsis                     …        →  ...
+ */
+function normalise(str) {
+  return str
+    .replace(/[\u2018\u2019\u201B\u02BC]/g, "'")   // curly/modifier apostrophes
+    .replace(/[\u201C\u201D\u201E\u201F]/g, '"')   // curly double quotes
+    .replace(/[\u2013\u2014\u2010\u2011]/g, '-')   // en-dash, em-dash, hyphens
+    .replace(/\u2026/g, '...');                     // ellipsis character
+}
+
+/*
+ * checkTyping — also handles the slow mode enforcement for mobile suggestion taps.
+ *
+ * On mobile, tapping a suggestion word fires an `input` event (not `keydown`),
+ * so handleKey never sees it. We detect a suggestion tap by measuring how many
+ * characters were added in a single `input` event: if more than 1 character
+ * arrived at once and slow mode is active, we revert to the value before the
+ * event and bail out early.
+ */
 function checkTyping(e) {
-  const input = document.getElementById('inputBox').value;
+  const inputEl = document.getElementById('inputBox');
+  const input = inputEl.value;
+
+  // ── Slow mode: block multi-character insertions (suggestion taps) ──
+  if (modes.slow) {
+    const charsAdded = input.length - prevInputLength;
+    if (charsAdded > 1) {
+      // A suggestion was tapped — revert to the previous value
+      inputEl.value = inputEl.value.slice(0, prevInputLength);
+      return; // do not update prevInputLength; treat as if nothing happened
+    }
+    // Single-character input: enforce the 1-per-second rate.
+    // (deletions are always allowed so the player can correct themselves)
+    if (charsAdded === 1) {
+      const now = Date.now();
+      if (now - slowLastKeyTime < 1000) {
+        inputEl.value = inputEl.value.slice(0, prevInputLength);
+        return;
+      }
+      slowLastKeyTime = now;
+    }
+  }
 
   // Detect typing vs deleting: only penalise when length increases
   const isTyping = input.length > prevInputLength;
@@ -1110,8 +1213,7 @@ function checkTyping(e) {
   const currentWordIdx = typedWords.length - 1;
 
   let allCorrect = true;
-  let newErrorThisCheck = false;  // for error counter (deduped per word)
-  let currentWordIsWrong = false; // for punishment (re-fires on every wrong keypress)
+  let currentWordIsWrong = false;
 
   spans.forEach((span, i) => {
     span.classList.remove('correct', 'incorrect', 'cursor-on');
@@ -1121,8 +1223,8 @@ function checkTyping(e) {
       return;
     }
 
-    const typed = typedWords[i];
-    const target = span.innerText;
+    const typed  = normalise(typedWords[i]);
+    const target = normalise(span.innerText);
 
     if (i === currentWordIdx) {
       let hasError = false;
@@ -1135,7 +1237,6 @@ function checkTyping(e) {
         if (!taskErrorCounted[i]) {
           taskErrorCounted[i] = true;
           taskErrors++;
-          newErrorThisCheck = true;
         }
       }
       const isLastWord = i === spans.length - 1;
@@ -1156,15 +1257,13 @@ function checkTyping(e) {
       if (!taskErrorCounted[i]) {
         taskErrorCounted[i] = true;
         taskErrors++;
-        newErrorThisCheck = true;
       }
     }
   });
 
   if (typedWords.length !== spans.length) allCorrect = false;
 
-  // Punishment: fire whenever user types a character onto a wrong word, not in cooldown.
-  // Uses currentWordIsWrong so duplicate characters (e.g. 'ww' in 'wizard') still trigger.
+  // Punishment: fire whenever user types a character onto a wrong word
   if (modes.punishment && isTyping && currentWordIsWrong) {
     triggerPunishment();
   }
@@ -1185,7 +1284,6 @@ function checkTyping(e) {
 
   if (allCorrect) {
     document.getElementById('nextBtn').classList.add('ready');
-    const inputEl = document.getElementById('inputBox');
     inputEl.disabled = true;
     inputEl.style.opacity = '0.5';
     inputEl.style.cursor = 'default';
@@ -1197,19 +1295,16 @@ function checkTyping(e) {
 function triggerPunishment() {
   totalPunishments++;
 
-  // Flash the ERROR overlay
   const flash = document.getElementById('errorFlash');
   flash.classList.remove('show');
   void flash.offsetWidth;
   flash.classList.add('show');
 
-  // Lock the input immediately
   const inputEl = document.getElementById('inputBox');
   inputEl.disabled = true;
   inputEl.style.opacity = '0.5';
   inputEl.style.cursor = 'default';
 
-  // After 1 second: reset the task and re-enable input
   setTimeout(() => {
     loadText();
   }, 1000);
@@ -1221,27 +1316,23 @@ function resetNoBreaksTimer() {
 }
 
 function triggerInactivity() {
-  // Add a task
   const extra = buildPool(1);
   selected.push(...extra);
   total++;
   totalInactivityPenalties++;
   updateProgress();
 
-  // Flash the inactivity overlay
   const flash = document.getElementById('inactivityFlash');
   flash.classList.remove('show');
   void flash.offsetWidth;
   flash.classList.add('show');
 
-  // Restart the timer immediately — no rest
   resetNoBreaksTimer();
 }
 
 function nextText() {
   if (!document.getElementById('nextBtn').classList.contains('ready')) return;
 
-  // Clicking continue resets the inactivity timer
   if (modes.nobreaks) resetNoBreaksTimer();
   const taskElapsed = (Date.now() - taskStartTime) / 1000 / 60;
   const wordCount = selected[current].content.split(' ').length;
@@ -1299,7 +1390,6 @@ function endGame() {
   document.getElementById('endSubtitle').innerText = subtitle;
   document.getElementById('endTextList').innerText = selected.map(t => t.label).join(' · ');
 
-  // Modes badges
   const modesList = document.getElementById('endModesList');
   modesList.innerHTML = '';
   const activeModes = Object.entries(modes).filter(([, v]) => v);
