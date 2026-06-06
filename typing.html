@@ -1016,7 +1016,6 @@ const ALL_TEXTS = [
 ];
 
 
-
 // ── MODES ──
 const modes = { punishment: false, slow: false, nobreaks: false };
 
@@ -1117,7 +1116,7 @@ function loadText() {
   document.getElementById('textDisplay').innerHTML = words.map((w, i) => {
     const chars = w.split('').map(c => `<span class="char">${escapeHtml(c)}</span>`).join('');
     const safeWord = w.replace(/&/g, '&amp;').replace(/"/g, '&quot;');
-    return `<span class="word" id="w${i}" data-word="${safeWord}">${chars}</span>`;
+    return `<span class="word" id="w${i}" data-word="${safeWord}">${chars}<span class="word-overflow"></span></span>`;
   }).join(' ');
 
   const inputEl = document.getElementById('inputBox');
@@ -1233,9 +1232,11 @@ function checkTyping(e) {
 
     const charSpans = span.querySelectorAll('.char');
 
-    // Words not yet reached — reset all chars to untyped
+    // Words not yet reached — reset all chars to untyped and clear any overflow
     if (i > currentWordIdx || typedWords[i] === undefined) {
       charSpans.forEach(cs => { cs.className = 'char'; });
+      const ov = span.querySelector('.word-overflow');
+      if (ov) ov.innerHTML = '';
       allCorrect = false;
       return;
     }
@@ -1260,6 +1261,21 @@ function checkTyping(e) {
         }
       });
 
+      // Extra characters typed beyond the end of the word are an error.
+      // Render them visibly in red after the word so the player can see
+      // exactly what they over-typed, and clear when they backspace.
+      const overflowEl = span.querySelector('.word-overflow');
+      if (typed.length > target.length) {
+        hasError = true;
+        if (overflowEl) {
+          overflowEl.innerHTML = typed.slice(target.length).split('').map(
+            c => `<span class="char incorrect">${escapeHtml(c)}</span>`
+          ).join('');
+        }
+      } else {
+        if (overflowEl) overflowEl.innerHTML = '';
+      }
+
       if (hasError) {
         currentWordIsWrong = true;
         if (!taskErrorCounted[i]) {
@@ -1281,8 +1297,10 @@ function checkTyping(e) {
     }
 
     // ── Completed word (space already pressed) ──
+    const completedOverflow = span.querySelector('.word-overflow');
     if (typed === target) {
       charSpans.forEach(cs => { cs.className = 'char correct'; });
+      if (completedOverflow) completedOverflow.innerHTML = '';
       span.classList.add('correct');
     } else {
       charSpans.forEach((cs, ci) => {
@@ -1292,6 +1310,14 @@ function checkTyping(e) {
           cs.className = 'char incorrect'; // characters that were never typed
         }
       });
+      // Show any characters typed beyond the word's length
+      if (completedOverflow) {
+        completedOverflow.innerHTML = typed.length > target.length
+          ? typed.slice(target.length).split('').map(
+              c => `<span class="char incorrect">${escapeHtml(c)}</span>`
+            ).join('')
+          : '';
+      }
       span.classList.add('incorrect');
       allCorrect = false;
       if (!taskErrorCounted[i]) {
