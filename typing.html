@@ -1132,14 +1132,16 @@ function handleKey(e) {
   if (modes.nobreaks) resetNoBreaksTimer();
 
   if (modes.slow) {
-    const isCharKey = e.key.length === 1 || e.key === 'Backspace' || e.key === 'Delete';
-    if (isCharKey && e.key !== 'Enter') {
+    // Only throttle single-character additions to prevent desktop flicker.
+    // We ignore backspaces here so deletions are never throttled.
+    if (e.key.length === 1) {
       const now = Date.now();
       if (now - slowLastKeyTime < 1000) {
         e.preventDefault();
         return;
       }
-      slowLastKeyTime = now;
+      // Do NOT update slowLastKeyTime here. 
+      // checkTyping() handles the update when the character actually registers.
     }
   }
 
@@ -1153,7 +1155,6 @@ function handleKey(e) {
     }
   }
 }
-
 function scrollToCurrentWord() {
   const container = document.querySelector('.typing-area');
   
