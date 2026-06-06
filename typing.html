@@ -657,7 +657,7 @@ body::before {
   opacity: 0;
 }
 #inactivityFlash.show {
-  animation: flashAnim 0.8s ease-out forwards;
+  animation: flashAnim 2s ease-out forwards;
 }
 .inactivity-flash-bg {
   position: absolute;
@@ -724,6 +724,99 @@ body::before {
   min-height: 44px;
 }
 .btn-restart:hover { background: var(--pink-glow); }
+
+/* QUIZ SCREEN */
+#quiz {
+  min-height: 100vh;
+  min-height: 100dvh;
+  justify-content: center;
+  padding: 2rem;
+}
+.quiz-inner {
+  width: 100%;
+  max-width: 560px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2rem;
+}
+.quiz-card {
+  width: 100%;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 2rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+.quiz-tag {
+  font-family: 'DM Mono', monospace;
+  font-size: 0.7rem;
+  letter-spacing: 0.25em;
+  text-transform: uppercase;
+  color: var(--pink);
+  margin-bottom: 6px;
+}
+.quiz-instruction {
+  font-size: 0.9rem;
+  color: var(--muted);
+  line-height: 1.5;
+}
+.quiz-sentence {
+  font-family: 'DM Mono', monospace;
+  font-size: 1rem;
+  line-height: 1.85;
+  color: var(--text);
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 1rem 1.25rem;
+}
+.quiz-blank {
+  color: var(--pink);
+  border-bottom: 2px solid var(--pink);
+  padding-bottom: 1px;
+  font-style: italic;
+  letter-spacing: 0.08em;
+}
+.quiz-input {
+  width: 100%;
+  padding: 14px 18px;
+  font-family: 'DM Mono', monospace;
+  font-size: 16px;
+  background: var(--surface2);
+  color: var(--text);
+  border: 1px solid var(--border-strong);
+  border-radius: 10px;
+  outline: none;
+  transition: border-color 0.15s;
+  touch-action: manipulation;
+}
+.quiz-input:focus { border-color: var(--pink); }
+.quiz-feedback {
+  font-family: 'DM Mono', monospace;
+  font-size: 0.85rem;
+  min-height: 1.3em;
+  text-align: center;
+  letter-spacing: 0.04em;
+}
+.quiz-feedback.wrong { color: var(--incorrect); }
+.quiz-feedback.right { color: var(--correct); }
+.quiz-feedback.countdown { color: var(--muted); }
+.quiz-feedback.countdown.urgent { color: #ffaa00; }
+.quiz-counter {
+  font-family: 'DM Mono', monospace;
+  font-size: 0.7rem;
+  color: var(--muted);
+  letter-spacing: 0.12em;
+  text-align: center;
+}
+.mode-badge.quiz {
+  background: rgba(150,77,255,0.12);
+  border: 1px solid rgba(150,77,255,0.35);
+  color: #b07aff;
+}
 </style>
 </head>
 
@@ -789,6 +882,15 @@ body::before {
             <div class="mode-name-row">
               <div class="mode-name">No Breaks</div>
               <span class="mode-hint" onclick="event.stopPropagation()">?<div class="mode-hint-bubble">No breaks of longer than 5 seconds are permitted.</div></span>
+            </div>
+          </div>
+        </div>
+        <div class="mode-option" id="modeQuiz" onclick="toggleMode('quiz')">
+          <div class="mode-checkbox"></div>
+          <div class="mode-text">
+            <div class="mode-name-row">
+              <div class="mode-name">Quiz</div>
+              <span class="mode-hint" onclick="event.stopPropagation()">?<div class="mode-hint-bubble">After each task, fill in a missing word from the text to proceed. A wrong answer returns you to retype the task.</div></span>
             </div>
           </div>
         </div>
@@ -859,6 +961,40 @@ body::before {
   <button class="next-btn" id="nextBtn" onclick="nextText()">Continue →</button>
 </div>
 
+<div id="quiz" class="screen">
+  <div class="quiz-inner">
+    <div class="brand-block">
+      <div class="brand" style="text-align:center;">Write<em>For</em><br>Perfection</div>
+      <div class="brand-sub" style="text-align:center;margin-top:6px;">Feminist Typing Trainer</div>
+    </div>
+    <div class="quiz-card">
+      <div>
+        <div class="quiz-tag">Quiz</div>
+        <p class="quiz-instruction">Type the missing word exactly to continue to the next task. A wrong answer returns you to retype the task.</p>
+      </div>
+      <div class="quiz-sentence" id="quizSentence"></div>
+      <div class="input-wrap">
+        <input
+          type="text"
+          id="quizInput"
+          class="quiz-input"
+          placeholder="Type the missing word…"
+          autocomplete="off"
+          autocorrect="off"
+          autocapitalize="none"
+          spellcheck="false"
+          data-lpignore="true"
+          data-form-type="other"
+          onkeydown="quizHandleKey(event)"
+        >
+      </div>
+      <div id="quizFeedback" class="quiz-feedback"></div>
+      <button class="btn-primary" id="quizSubmitBtn" onclick="submitQuiz()">Submit Answer</button>
+    </div>
+    <div class="quiz-counter" id="quizCounter"></div>
+  </div>
+</div>
+
 <div id="end" class="screen">
   <div class="end-inner">
     <div class="end-title">
@@ -909,6 +1045,26 @@ window.addEventListener('drop', e => e.preventDefault());
 window.addEventListener('keydown', e => {
   const forbidden = (e.ctrlKey || e.metaKey) && ['v','c','x','a','z','y'].includes(e.key.toLowerCase());
   if (forbidden) e.preventDefault();
+
+  if (e.key === 'Enter') {
+    // Play screen: Enter advances when task is complete (textarea is disabled so
+    // onkeydown on the element itself never fires — catch it here instead)
+    if (document.getElementById('play').classList.contains('active')) {
+      const btn = document.getElementById('nextBtn');
+      if (btn && btn.classList.contains('ready')) {
+        e.preventDefault();
+        nextText();
+      } else {
+        e.preventDefault(); // always block Enter from inserting a newline
+      }
+    }
+    // Quiz screen: Enter submits (handled by quizHandleKey on the input, but
+    // catch it here too in case the input loses focus)
+    if (document.getElementById('quiz').classList.contains('active')) {
+      e.preventDefault();
+      submitQuiz();
+    }
+  }
 });
 
 // ── TEXTS ──
@@ -1015,9 +1171,8 @@ const ALL_TEXTS = [
   { label: "Malala Yousafzai", content: `Malala Yousafzai is a Pakistani female education activist, and producer of film and television. She is the youngest Nobel Prize laureate in history, receiving the Peace Prize in 2014 at age 17, and is the second Pakistani and the only Pashtun to receive a Nobel Prize. Yousafzai is a human rights advocate for the education of women and children in her native district, Swat, where the Pakistani Taliban had at times banned girls from attending school. Her advocacy has grown into an international movement, and according to former prime minister Shahid Khaqan Abbasi, she has become Pakistan's "most prominent citizen".` },
 ];
 
-
 // ── MODES ──
-const modes = { punishment: false, slow: false, nobreaks: false };
+const modes = { punishment: false, slow: false, nobreaks: false, quiz: false };
 
 function toggleMode(name) {
   modes[name] = !modes[name];
@@ -1047,6 +1202,15 @@ let slowLastKeyTime = 0;
 // No Breaks state
 let noBreaksTimer = null;
 let totalInactivityPenalties = 0;
+
+// Quiz mode state
+let totalQuizShown = 0;
+let totalQuizPassed = 0;
+let totalQuizWrongAttempts = 0;
+let quizMissingWord = '';
+let quizTaskWpm = 0;
+let quizCountdownTimer = null;
+let quizCountdownInterval = null;
 
 function adjustCount(delta) {
   const el = document.getElementById('taskCount');
@@ -1082,6 +1246,12 @@ function startGame() {
   taskWpms = [];
   slowLastKeyTime = 0;
   totalInactivityPenalties = 0;
+  totalQuizShown = 0;
+  totalQuizPassed = 0;
+  totalQuizWrongAttempts = 0;
+  quizMissingWord = '';
+  quizTaskWpm = 0;
+  clearQuizCountdown();
   if (noBreaksTimer) clearTimeout(noBreaksTimer);
   noBreaksTimer = null;
 
@@ -1398,21 +1568,182 @@ function triggerInactivity() {
 
 function nextText() {
   if (!document.getElementById('nextBtn').classList.contains('ready')) return;
-
   if (modes.nobreaks) resetNoBreaksTimer();
-  const taskElapsed = (Date.now() - taskStartTime) / 1000 / 60;
-  const wordCount = selected[current].content.split(' ').length;
-  const taskWpm = taskElapsed > 0 ? Math.round(wordCount / taskElapsed) : 0;
-  taskWpms.push(taskWpm);
-  totalErrors += taskErrors;
 
-  current++;
-  updateProgress();
-
-  if (current >= total) {
-    endGame();
+  if (modes.quiz) {
+    // Pre-calculate WPM for this task but hold back committing until quiz passes
+    const taskElapsed = (Date.now() - taskStartTime) / 1000 / 60;
+    const wordCount = selected[current].content.split(' ').length;
+    quizTaskWpm = taskElapsed > 0 ? Math.round(wordCount / taskElapsed) : 0;
+    showQuiz();
   } else {
-    loadText();
+    const taskElapsed = (Date.now() - taskStartTime) / 1000 / 60;
+    const wordCount = selected[current].content.split(' ').length;
+    const taskWpm = taskElapsed > 0 ? Math.round(wordCount / taskElapsed) : 0;
+    taskWpms.push(taskWpm);
+    totalErrors += taskErrors;
+    current++;
+    updateProgress();
+    if (current >= total) {
+      endGame();
+    } else {
+      loadText();
+    }
+  }
+}
+
+function showQuiz() {
+  totalQuizShown++;
+  const content = selected[current].content;
+
+  // Split into sentences; fall back to whole content if no punctuation boundaries
+  const rawSplit = content.replace(/([.!?])\s+/g, '$1\n').split('\n').map(s => s.trim()).filter(Boolean);
+  const sentences = rawSplit.length ? rawSplit : [content];
+
+  // Prefer sentences that contain at least 2 words with 3+ letters
+  const usable = sentences.filter(s =>
+    s.split(/\s+/).filter(w => /[a-zA-Z]{3,}/.test(w)).length >= 2
+  );
+  const sentence = (usable.length ? usable : sentences)[Math.floor(Math.random() * (usable.length || sentences.length))];
+
+  // Find word tokens eligible to be the blank (3+ consecutive letters)
+  const tokens = sentence.split(/\s+/);
+  const eligibleIdxs = tokens.reduce((acc, token, i) => {
+    if (/[a-zA-Z]{3,}/.test(token)) acc.push(i);
+    return acc;
+  }, []);
+  const targetIdx = eligibleIdxs.length
+    ? eligibleIdxs[Math.floor(Math.random() * eligibleIdxs.length)]
+    : Math.floor(Math.random() * tokens.length);
+
+  // Extract the clean alphabetic core from the token (strip surrounding punctuation)
+  const targetToken = tokens[targetIdx];
+  const m = targetToken.match(/^([^a-zA-Z'-]*)([a-zA-Z'-]+)([^a-zA-Z'-]*)$/);
+  const pre   = m ? m[1] : '';
+  const clean = m ? m[2] : targetToken;
+  const post  = m ? m[3] : '';
+  quizMissingWord = clean;
+
+  // Build sentence HTML with the target word replaced by a blank
+  const sentenceHtml = tokens.map((token, i) => {
+    if (i !== targetIdx) return escapeHtml(token);
+    const blank = '_'.repeat(Math.max(clean.length, 3));
+    return escapeHtml(pre) + '<span class="quiz-blank">' + blank + '</span>' + escapeHtml(post);
+  }).join(' ');
+
+  document.getElementById('quizSentence').innerHTML = sentenceHtml;
+  document.getElementById('quizFeedback').textContent = '';
+  document.getElementById('quizFeedback').className = 'quiz-feedback';
+  document.getElementById('quizCounter').textContent =
+    'Quiz ' + totalQuizShown + ' · Task ' + (current + 1) + ' of ' + total;
+
+  const qi = document.getElementById('quizInput');
+  qi.value = '';
+  qi.disabled = false;
+  document.getElementById('quizSubmitBtn').disabled = false;
+
+  switchScreen('quiz');
+  setTimeout(() => qi.focus(), 50);
+
+  // When no-breaks + quiz are both active: pause the inactivity timer and
+  // use a 15-second quiz-specific countdown instead
+  if (modes.nobreaks) {
+    if (noBreaksTimer) { clearTimeout(noBreaksTimer); noBreaksTimer = null; }
+    startQuizCountdown(15);
+  }
+}
+
+function startQuizCountdown(seconds) {
+  let remaining = seconds;
+  const feedbackEl = document.getElementById('quizFeedback');
+  feedbackEl.className = 'quiz-feedback countdown';
+  feedbackEl.textContent = '⏱ ' + remaining + 's remaining';
+
+  quizCountdownInterval = setInterval(() => {
+    remaining--;
+    feedbackEl.textContent = '⏱ ' + remaining + 's remaining';
+    if (remaining <= 5) feedbackEl.className = 'quiz-feedback countdown urgent';
+    if (remaining <= 0) { clearInterval(quizCountdownInterval); quizCountdownInterval = null; }
+  }, 1000);
+
+  quizCountdownTimer = setTimeout(quizAutoFail, seconds * 1000);
+}
+
+function clearQuizCountdown() {
+  if (quizCountdownTimer) { clearTimeout(quizCountdownTimer); quizCountdownTimer = null; }
+  if (quizCountdownInterval) { clearInterval(quizCountdownInterval); quizCountdownInterval = null; }
+}
+
+function quizAutoFail() {
+  clearQuizCountdown();
+  const qi = document.getElementById('quizInput');
+  const feedbackEl = document.getElementById('quizFeedback');
+  qi.disabled = true;
+  document.getElementById('quizSubmitBtn').disabled = true;
+  totalQuizWrongAttempts++;
+  feedbackEl.className = 'quiz-feedback wrong';
+  feedbackEl.textContent = '⏱ Time\'s up — the word was "' + quizMissingWord + '". Returning to task.';
+  setTimeout(() => { switchScreen('play'); loadText(); }, 2200);
+}
+
+function submitQuiz() {
+  const qi = document.getElementById('quizInput');
+  const answer = qi.value.trim();
+  if (!answer) return;
+
+  clearQuizCountdown();
+
+  const feedbackEl = document.getElementById('quizFeedback');
+  qi.disabled = true;
+  document.getElementById('quizSubmitBtn').disabled = true;
+
+  if (answer === quizMissingWord) {
+    totalQuizPassed++;
+    feedbackEl.className = 'quiz-feedback right';
+    feedbackEl.textContent = '✓ Correct!';
+    setTimeout(() => {
+      if (modes.nobreaks) resetNoBreaksTimer();
+      taskWpms.push(quizTaskWpm);
+      totalErrors += taskErrors;
+      current++;
+      updateProgress();
+      if (current >= total) {
+        endGame();
+      } else {
+        switchScreen('play');
+        loadText();
+      }
+    }, 700);
+  } else {
+    totalQuizWrongAttempts++;
+    feedbackEl.className = 'quiz-feedback wrong';
+    feedbackEl.textContent = '✗ Incorrect — the word was "' + quizMissingWord + '". Returning to task.';
+    setTimeout(() => {
+      switchScreen('play');
+      loadText();
+    }, 2200);
+  }
+}
+
+function quizHandleKey(e) {
+  // (no-breaks timer is paused on the quiz screen; countdown handles timing)
+
+  // Slow mode: throttle character keystrokes to one per second
+  if (modes.slow) {
+    const isChar = e.key.length === 1 && !e.ctrlKey && !e.metaKey && !e.altKey;
+    if (isChar) {
+      const now = Date.now();
+      if (now - slowLastKeyTime < 1000) {
+        e.preventDefault();
+        return;
+      }
+      slowLastKeyTime = now;
+    }
+  }
+
+  if (e.key === 'Enter') {
+    e.preventDefault();
+    submitQuiz();
   }
 }
 
@@ -1474,6 +1805,10 @@ function endGame() {
       }
       if (name === 'nobreaks') {
         label = 'No Breaks' + (totalInactivityPenalties > 0 ? ' · +' + totalInactivityPenalties + ' task' + (totalInactivityPenalties !== 1 ? 's' : '') : '');
+      }
+      if (name === 'quiz') {
+        label = 'Quiz Mode · ' + totalQuizPassed + '/' + totalQuizShown + ' passed'
+          + (totalQuizWrongAttempts > 0 ? ' · ' + totalQuizWrongAttempts + ' wrong attempt' + (totalQuizWrongAttempts !== 1 ? 's' : '') : '');
       }
       badge.innerHTML = `<span class="mode-badge-dot"></span>${label}`;
       modesList.appendChild(badge);
