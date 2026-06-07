@@ -863,7 +863,7 @@ body::before {
           <div class="mode-text">
             <div class="mode-name-row">
               <div class="mode-name">Punishments</div>
-              <span class="mode-hint" onclick="event.stopPropagation()">?<div class="mode-hint-bubble">Typing errors cause the task to reset.</div></span>
+              <span class="mode-hint" onclick="event.stopPropagation()">?<div class="mode-hint-bubble">Typing errors cause the current task to reset.</div></span>
             </div>
           </div>
         </div>
@@ -881,7 +881,7 @@ body::before {
           <div class="mode-text">
             <div class="mode-name-row">
               <div class="mode-name">No Breaks</div>
-              <span class="mode-hint" onclick="event.stopPropagation()">?<div class="mode-hint-bubble">No breaks of longer than 5 seconds are permitted.</div></span>
+              <span class="mode-hint" onclick="event.stopPropagation()">?<div class="mode-hint-bubble">An additional task is added if the player stops typing for more than 5 seconds.</div></span>
             </div>
           </div>
         </div>
@@ -1171,6 +1171,7 @@ const ALL_TEXTS = [
   { label: "Malala Yousafzai", content: `Malala Yousafzai is a Pakistani female education activist, and producer of film and television. She is the youngest Nobel Prize laureate in history, receiving the Peace Prize in 2014 at age 17, and is the second Pakistani and the only Pashtun to receive a Nobel Prize. Yousafzai is a human rights advocate for the education of women and children in her native district, Swat, where the Pakistani Taliban had at times banned girls from attending school. Her advocacy has grown into an international movement, and according to former prime minister Shahid Khaqan Abbasi, she has become Pakistan's "most prominent citizen".` },
 ];
 
+
 // ── MODES ──
 const modes = { punishment: false, slow: false, nobreaks: false, quiz: false };
 
@@ -1328,6 +1329,15 @@ function handleKey(e) {
       }
       // Do NOT update slowLastKeyTime here.
       // checkTyping() handles the update when the character actually registers.
+    }
+  }
+
+  // Block double spaces — they produce empty word tokens that break the word
+  // comparison logic and allow silently skipping words.
+  if (e.key === ' ') {
+    const val = document.getElementById('inputBox').value;
+    if (val === '' || val.endsWith(' ')) {
+      e.preventDefault();
     }
   }
 
@@ -1807,8 +1817,7 @@ function endGame() {
         label = 'No Breaks' + (totalInactivityPenalties > 0 ? ' · +' + totalInactivityPenalties + ' task' + (totalInactivityPenalties !== 1 ? 's' : '') : '');
       }
       if (name === 'quiz') {
-        label = 'Quiz Mode · ' + totalQuizPassed + '/' + totalQuizShown + ' passed'
-          + (totalQuizWrongAttempts > 0 ? ' · ' + totalQuizWrongAttempts + ' wrong attempt' + (totalQuizWrongAttempts !== 1 ? 's' : '') : '');
+        label = 'Quiz Mode · ' + totalQuizPassed + '/' + totalQuizShown + ' Correct';
       }
       badge.innerHTML = `<span class="mode-badge-dot"></span>${label}`;
       modesList.appendChild(badge);
