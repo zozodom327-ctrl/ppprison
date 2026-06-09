@@ -629,6 +629,17 @@ body::before {
   border: 1px solid rgba(255,51,85,0.4);
   color: var(--incorrect);
 }
+.mode-badge.punishmentPlus {
+  background: rgba(180,0,40,0.22);
+  border: 1px solid rgba(255,0,60,0.6);
+  color: #ff1a4d;
+}
+
+/* Greyed-out state for mutually exclusive modes */
+.mode-option.disabled {
+  opacity: 0.35;
+  pointer-events: none;
+}
 .mode-badge.slow {
   background: rgba(77,166,255,0.12);
   border: 1px solid rgba(77,166,255,0.35);
@@ -826,7 +837,7 @@ body::before {
   <div class="error-flash-bg"></div>
   <div class="error-flash-text">
     <div class="error-flash-word">ERROR</div>
-    <div class="error-flash-sub">Task Reset</div>
+    <div class="error-flash-sub" id="errorFlashSub">Task Reset</div>
   </div>
 </div>
 
@@ -863,7 +874,16 @@ body::before {
           <div class="mode-text">
             <div class="mode-name-row">
               <div class="mode-name">Punishments</div>
-              <span class="mode-hint" onclick="event.stopPropagation()">?<div class="mode-hint-bubble">Typing errors cause the current task to reset.</div></span>
+              <span class="mode-hint" onclick="event.stopPropagation()">?<div class="mode-hint-bubble">Typing errors cause the current sentence to reset.</div></span>
+            </div>
+          </div>
+        </div>
+        <div class="mode-option" id="modePunishmentPlus" onclick="toggleMode('punishmentPlus')">
+          <div class="mode-checkbox"></div>
+          <div class="mode-text">
+            <div class="mode-name-row">
+              <div class="mode-name">Punishments+</div>
+              <span class="mode-hint" onclick="event.stopPropagation()">?<div class="mode-hint-bubble">Typing errors cause the entire current task to reset.</div></span>
             </div>
           </div>
         </div>
@@ -872,7 +892,7 @@ body::before {
           <div class="mode-text">
             <div class="mode-name-row">
               <div class="mode-name">Slow Mode</div>
-              <span class="mode-hint" onclick="event.stopPropagation()">?<div class="mode-hint-bubble">Key inputs are limited to one per second. Type slowly and deliberately.</div></span>
+              <span class="mode-hint" onclick="event.stopPropagation()">?<div class="mode-hint-bubble">Key inputs are limited to one per second.</div></span>
             </div>
           </div>
         </div>
@@ -1171,14 +1191,20 @@ const ALL_TEXTS = [
   { label: "Malala Yousafzai", content: `Malala Yousafzai is a Pakistani female education activist, and producer of film and television. She is the youngest Nobel Prize laureate in history, receiving the Peace Prize in 2014 at age 17, and is the second Pakistani and the only Pashtun to receive a Nobel Prize. Yousafzai is a human rights advocate for the education of women and children in her native district, Swat, where the Pakistani Taliban had at times banned girls from attending school. Her advocacy has grown into an international movement, and according to former prime minister Shahid Khaqan Abbasi, she has become Pakistan's "most prominent citizen".` },
 ];
 
-
 // ── MODES ──
-const modes = { punishment: false, slow: false, nobreaks: false, quiz: false };
+const modes = { punishment: false, punishmentPlus: false, slow: false, nobreaks: false, quiz: false };
 
 function toggleMode(name) {
   modes[name] = !modes[name];
   const key = 'mode' + name.charAt(0).toUpperCase() + name.slice(1);
   document.getElementById(key).classList.toggle('selected', modes[name]);
+
+  // Punishments and Punishments+ are mutually exclusive — grey out the other
+  if (name === 'punishment' || name === 'punishmentPlus') {
+    const other    = name === 'punishment' ? 'punishmentPlus' : 'punishment';
+    const otherKey = 'mode' + other.charAt(0).toUpperCase() + other.slice(1);
+    document.getElementById(otherKey).classList.toggle('disabled', modes[name]);
+  }
 }
 
 // ── STATE ──
@@ -1196,6 +1222,7 @@ let taskWpms = [];
 // Punishment state
 let totalPunishments = 0;
 let prevInputLength = 0;
+let sentenceStartWords = []; // word indices where each sentence begins
 
 // Slow mode state
 let slowLastKeyTime = 0;
@@ -1275,7 +1302,9 @@ function escapeHtml(c) {
   return c;
 }
 
-function loadText() {
+// preserveErrors=true when called from a punishment reset so the running
+// error count carries forward across resets within the same task.
+function loadText(preserveErrors = false) {
   const text = selected[current].content;
   document.getElementById('textLabel').innerText = selected[current].label;
   document.getElementById('progressText').innerText = current + ' / ' + total;
@@ -1290,6 +1319,15 @@ function loadText() {
     return `<span class="word" id="w${i}" data-word="${safeWord}">${chars}<span class="word-overflow"></span></span>`;
   }).join(' ');
 
+  // Build sentence boundary map: the word index at which each sentence starts.
+  // Used by triggerPunishmentLight to know how far to roll back.
+  sentenceStartWords = [0];
+  words.forEach((w, i) => {
+    if (i < words.length - 1 && /[.!?]['"'\u201D]?$/.test(w)) {
+      sentenceStartWords.push(i + 1);
+    }
+  });
+
   const inputEl = document.getElementById('inputBox');
   inputEl.value = '';
   inputEl.disabled = false;
@@ -1298,18 +1336,25 @@ function loadText() {
   inputEl.focus();
   document.getElementById('nextBtn').classList.remove('ready');
 
-  taskErrors = 0;
+  // Only wipe the error counter when starting a genuinely new task.
+  // On a punishment reset within the same task we keep the count so the
+  // player can see their cumulative errors for that task.
+  if (!preserveErrors) {
+    taskErrors = 0;
+    document.getElementById('liveErrors').innerText = '0';
+  }
   taskErrorCounted = {};
-  taskStartTime = Date.now();
+  taskStartTime = preserveErrors ? taskStartTime : Date.now();
   prevInputLength = 0;
   slowLastKeyTime = 0;
 
   if (modes.nobreaks) resetNoBreaksTimer();
 
-  document.getElementById('liveWpm').innerText = '-';
-  document.getElementById('liveErrors').innerText = '0';
-  document.getElementById('liveChars').innerText = '0';
-  document.getElementById('liveAccuracy').innerText = '-';
+  if (!preserveErrors) {
+    document.getElementById('liveWpm').innerText = '-';
+    document.getElementById('liveChars').innerText = '0';
+    document.getElementById('liveAccuracy').innerText = '-';
+  }
   updateProgress();
 
   scrollToCurrentWord();
@@ -1332,12 +1377,39 @@ function handleKey(e) {
     }
   }
 
-  // Block double spaces — they produce empty word tokens that break the word
-  // comparison logic and allow silently skipping words.
+  // Robust space validation: a space is only valid when the current word has
+  // been typed exactly correctly. Anything else — leading space, mid-word
+  // space, double space, or space after overflow — is blocked, counted as an
+  // error, and triggers the appropriate punishment if a punishment mode is on.
   if (e.key === ' ') {
-    const val = document.getElementById('inputBox').value;
-    if (val === '' || val.endsWith(' ')) {
+    const inputEl2 = document.getElementById('inputBox');
+    const val = inputEl2.value;
+
+    if (val === '') { e.preventDefault(); return; }
+
+    const typedWords2   = val.split(' ');
+    const currentWordT  = typedWords2[typedWords2.length - 1];
+    const currentWIdx   = typedWords2.length - 1;
+    const wordSpans2    = document.querySelectorAll('.word');
+
+    let isOutOfPlace = false;
+    if (currentWordT === '') {
+      isOutOfPlace = true;
+    } else if (currentWIdx < wordSpans2.length) {
+      isOutOfPlace = normalise(currentWordT) !== normalise(wordSpans2[currentWIdx].dataset.word);
+    } else {
+      isOutOfPlace = true;
+    }
+
+    if (isOutOfPlace) {
       e.preventDefault();
+      if (!taskErrorCounted[currentWIdx]) {
+        taskErrorCounted[currentWIdx] = true;
+        taskErrors++;
+        document.getElementById('liveErrors').innerText = taskErrors;
+      }
+      if (modes.punishmentPlus) triggerPunishment();
+      else if (modes.punishment) triggerPunishmentLight();
     }
   }
 
@@ -1509,8 +1581,9 @@ function checkTyping(e) {
 
   if (typedWords.length !== spans.length) allCorrect = false;
 
-  if (modes.punishment && isTyping && currentWordIsWrong) {
-    triggerPunishment();
+  if (isTyping && currentWordIsWrong) {
+    if (modes.punishmentPlus) triggerPunishment();
+    else if (modes.punishment) triggerPunishmentLight();
   }
 
   const elapsed = (Date.now() - taskStartTime) / 1000 / 60;
@@ -1538,9 +1611,11 @@ function checkTyping(e) {
   scrollToCurrentWord();
 }
 
+// Punishments+ — full task reset (hard mode)
 function triggerPunishment() {
   totalPunishments++;
 
+  document.getElementById('errorFlashSub').textContent = 'Task Reset';
   const flash = document.getElementById('errorFlash');
   flash.classList.remove('show');
   void flash.offsetWidth;
@@ -1552,8 +1627,58 @@ function triggerPunishment() {
   inputEl.style.cursor = 'default';
 
   setTimeout(() => {
-    loadText();
+    loadText(true); // preserveErrors=true: keep cumulative error count
   }, 1000);
+}
+
+// Punishments — sentence revert (easier mode)
+function triggerPunishmentLight() {
+  totalPunishments++;
+
+  document.getElementById('errorFlashSub').textContent = 'Sentence Reset — 3s';
+  const flash = document.getElementById('errorFlash');
+  flash.classList.remove('show');
+  void flash.offsetWidth;
+  flash.classList.add('show');
+
+  const inputEl = document.getElementById('inputBox');
+  const currentValue = inputEl.value;
+  inputEl.disabled = true;
+  inputEl.style.opacity = '0.5';
+  inputEl.style.cursor = 'default';
+
+  // Find which sentence the current cursor word belongs to
+  const typedWords = currentValue.split(' ');
+  const currentWordIdx = Math.max(0, typedWords.length - 1);
+
+  let sentenceStart = 0;
+  for (const s of sentenceStartWords) {
+    if (s <= currentWordIdx) sentenceStart = s;
+    else break;
+  }
+
+  // Build the rolled-back input value (everything before this sentence)
+  const revertTo = sentenceStart > 0
+    ? typedWords.slice(0, sentenceStart).join(' ') + ' '
+    : '';
+
+  // Clear per-word error tracking for the reverted sentence so errors can
+  // be counted again if the player makes them again after the revert.
+  const wordSpans = document.querySelectorAll('.word');
+  for (let i = sentenceStart; i < wordSpans.length; i++) {
+    delete taskErrorCounted[i];
+  }
+
+  setTimeout(() => {
+    inputEl.value = revertTo;
+    prevInputLength = revertTo.length;
+    inputEl.disabled = false;
+    inputEl.style.opacity = '';
+    inputEl.style.cursor = '';
+    inputEl.focus();
+    checkTyping(null);
+    if (modes.nobreaks) resetNoBreaksTimer();
+  }, 3000);
 }
 
 function resetNoBreaksTimer() {
@@ -1788,8 +1913,9 @@ function endGame() {
   document.getElementById('endId').innerText = 'Session ID: ' + id;
 
   let subtitle = total + ' text' + (total !== 1 ? 's' : '') + ' completed';
-  if (modes.punishment && totalPunishments > 0) {
-    subtitle += ' · ' + totalPunishments + ' reset' + (totalPunishments !== 1 ? 's' : '') + ' triggered';
+  if ((modes.punishment || modes.punishmentPlus) && totalPunishments > 0) {
+    const resetWord = modes.punishmentPlus ? 'task reset' : 'sentence reset';
+    subtitle += ' · ' + totalPunishments + ' ' + resetWord + (totalPunishments !== 1 ? 's' : '') + ' triggered';
   }
   if (modes.nobreaks && totalInactivityPenalties > 0) {
     subtitle += ' · ' + totalInactivityPenalties + ' inactivity penalt' + (totalInactivityPenalties !== 1 ? 'ies' : 'y') + ' added';
@@ -1807,8 +1933,11 @@ function endGame() {
       const badge = document.createElement('span');
       badge.className = 'mode-badge ' + name;
       let label = name.charAt(0).toUpperCase() + name.slice(1) + ' Mode';
-      if (name === 'punishment' && totalPunishments > 0) {
-        label += ' · ' + totalPunishments + ' reset' + (totalPunishments !== 1 ? 's' : '');
+      if (name === 'punishment') {
+        label = 'Punishments' + (totalPunishments > 0 ? ' · ' + totalPunishments + ' sentence reset' + (totalPunishments !== 1 ? 's' : '') : '');
+      }
+      if (name === 'punishmentPlus') {
+        label = 'Punishments+' + (totalPunishments > 0 ? ' · ' + totalPunishments + ' task reset' + (totalPunishments !== 1 ? 's' : '') : '');
       }
       if (name === 'slow') {
         label = 'Slow Mode · 1 key/sec';
