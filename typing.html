@@ -551,7 +551,7 @@ function handleKey(e){
   if(modes.nobreaks)resetNoBreaksTimer();
   if(modes.slow&&e.key.length===1){
     const now=Date.now();
-    if(now-slowLastKeyTime<1000){e.preventDefault();return;}
+    if(now-slowLastKeyTime<500){e.preventDefault();return;}
   }
   if(e.key===' '){
     const inputEl2=document.getElementById('inputBox');
@@ -603,7 +603,7 @@ function checkTyping(e){
     if(ca>1){inputEl.value=inputEl.value.slice(0,prevInputLength);return;}
     if(ca===1){
       const now=Date.now();
-      if(now-slowLastKeyTime<1000){inputEl.value=inputEl.value.slice(0,prevInputLength);return;}
+      if(now-slowLastKeyTime<500){inputEl.value=inputEl.value.slice(0,prevInputLength);return;}
       slowLastKeyTime=now;
     }
   }
@@ -729,6 +729,8 @@ function nextText(){
 
 // ── MULTIPLE CHOICE QUIZ ──
 function showQuiz(){
+  // Pause No Breaks while the player is on the quiz screen
+  if(modes.nobreaks&&noBreaksTimer){clearTimeout(noBreaksTimer);noBreaksTimer=null;}
   totalQuizShown++;
   const label=selected[current].label;
   const questions=quizLookup[label];
