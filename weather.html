@@ -1,0 +1,885 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Femdom Weather Report</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Share+Tech+Mono&family=Inter:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #0a0a0f;
+    --surface: #111118;
+    --border: #1e1e2e;
+    --accent: #4a9eff;
+    --accent-dim: #1a3a5c;
+    --text-primary: #e8e8f0;
+    --text-secondary: #7878a0;
+    --text-dim: #3a3a5a;
+    --mono: 'Share Tech Mono', monospace;
+    --display: 'Bebas Neue', sans-serif;
+    --body: 'Inter', sans-serif;
+  }
+
+  html, body {
+    min-height: 100%;
+    background: var(--bg);
+    color: var(--text-primary);
+    font-family: var(--body);
+  }
+
+  body {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    padding: 60px 2rem 50px;
+    position: relative;
+  }
+
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image:
+      linear-gradient(var(--border) 1px, transparent 1px),
+      linear-gradient(90deg, var(--border) 1px, transparent 1px);
+    background-size: 60px 60px;
+    opacity: 0.3;
+    pointer-events: none;
+  }
+
+  /* Top bar — no live transmission, just date */
+  .hud-top {
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    height: 40px;
+    background: var(--bg);
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 1.5rem;
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--text-dim);
+    z-index: 100;
+  }
+
+  .hud-bottom {
+    position: fixed;
+    bottom: 0; left: 0; right: 0;
+    height: 36px;
+    background: var(--bg);
+    border-top: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 1.5rem;
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--text-dim);
+    z-index: 100;
+  }
+
+  /* Big title above the card */
+  .site-title {
+    position: relative;
+    z-index: 1;
+    font-family: var(--display);
+    font-size: clamp(2rem, 6.5vw, 4.4rem);
+    letter-spacing: -0.01em;
+    line-height: 0.88;
+    text-align: center;
+    margin-bottom: 1.2rem;
+    color: var(--text-primary);
+    text-shadow:
+      0 0 40px rgba(74,158,255,0.12),
+      2px 2px 0px #0a0a0f,
+      3px 3px 0px rgba(74,158,255,0.1);
+  }
+  .site-title span {
+    color: var(--accent);
+  }
+
+  /* Main card */
+  .card {
+    position: relative;
+    z-index: 1;
+    width: 100%;
+    max-width: 640px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    padding: 2.5rem;
+  }
+
+  /* Loading */
+  #loading { text-align: center; }
+  .loading-label {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--text-dim);
+    letter-spacing: 0.2em;
+    margin-bottom: 1.5rem;
+  }
+  .loading-bar-wrap {
+    width: 200px; height: 1px;
+    background: var(--border);
+    margin: 0 auto; overflow: hidden;
+  }
+  .loading-bar {
+    height: 100%; width: 0%;
+    background: var(--accent);
+    animation: load 2s ease-in-out infinite;
+  }
+  @keyframes load {
+    0%   { width: 0%;  margin-left: 0%; }
+    50%  { width: 60%; margin-left: 20%; }
+    100% { width: 0%;  margin-left: 100%; }
+  }
+
+  #error { display: none; text-align: center; }
+  #error p { color: var(--text-secondary); font-size: 14px; margin-top: 0.5rem; }
+  #weather { display: none; }
+
+  .transmission-id {
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--text-dim);
+    letter-spacing: 0.15em;
+    margin-bottom: 0.5rem;
+  }
+
+  .location-name {
+    font-family: var(--display);
+    font-size: clamp(2.5rem, 8vw, 5rem);
+    line-height: 0.9;
+    color: var(--text-primary);
+    letter-spacing: 0.02em;
+    margin-bottom: 0.25rem;
+  }
+
+  .location-coords {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--text-secondary);
+    margin-bottom: 2rem;
+  }
+
+  .divider {
+    height: 1px;
+    background: var(--border);
+    margin: 1.5rem 0;
+  }
+
+  /* Temp + condition + weather symbol row */
+  .temp-row {
+    display: flex;
+    align-items: flex-start;
+    gap: 1.5rem;
+    margin-bottom: 1.5rem;
+  }
+  .temp-main {
+    font-family: var(--display);
+    font-size: clamp(4rem, 15vw, 8rem);
+    line-height: 1;
+    color: var(--accent);
+    letter-spacing: -0.02em;
+  }
+  .temp-unit {
+    font-family: var(--display);
+    font-size: 2rem;
+    color: var(--text-dim);
+    margin-top: 0.5rem;
+  }
+  .condition-block {
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    padding-bottom: 0.5rem;
+    flex: 1;
+  }
+  .weather-icon {
+    margin-bottom: 0.5rem;
+  }
+  .weather-icon svg {
+    width: 72px;
+    height: 72px;
+    display: block;
+  }
+  .condition-text {
+    font-family: var(--display);
+    font-size: clamp(1.6rem, 5vw, 2.4rem);
+    font-weight: 400;
+    color: var(--text-primary);
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    line-height: 1;
+  }
+  .feels-like {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--text-dim);
+    margin-top: 0.25rem;
+  }
+
+  /* Stats grid */
+  .stats-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1px;
+    background: var(--border);
+    margin-top: 1.5rem;
+  }
+  .stat { background: var(--surface); padding: 1rem; }
+  .stat-label {
+    font-family: var(--mono);
+    font-size: 9px;
+    color: var(--text-dim);
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    margin-bottom: 0.4rem;
+  }
+  .stat-value {
+    font-family: var(--mono);
+    font-size: 18px;
+    color: var(--text-primary);
+  }
+  .stat-unit { font-size: 11px; color: var(--text-secondary); }
+
+  .range-row {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-top: 1.5rem;
+    font-family: var(--mono);
+    font-size: 12px;
+    color: var(--text-secondary);
+  }
+  .range-bar-wrap {
+    flex: 1; height: 3px;
+    background: var(--border);
+    position: relative;
+  }
+  .range-bar {
+    position: absolute;
+    height: 100%;
+    background: linear-gradient(90deg, #1a4a8a, var(--accent));
+  }
+  .range-label { white-space: nowrap; }
+
+  .sun-row {
+    display: flex;
+    gap: 2rem;
+    margin-top: 1.2rem;
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--text-secondary);
+  }
+  .sun-item span {
+    color: var(--text-dim);
+    font-size: 9px;
+    letter-spacing: 0.15em;
+    display: block;
+    margin-bottom: 2px;
+  }
+
+  .next-change {
+    margin-top: 1.5rem;
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--text-dim);
+    letter-spacing: 0.1em;
+    text-align: right;
+  }
+</style>
+</head>
+<body>
+
+<div class="hud-top">
+  <span id="hud-date">—</span>
+  <span>FEMDOM WEATHER REPORT</span>
+  <span></span>
+</div>
+
+<!-- Big stylised title above the card -->
+<div class="site-title">FEMDOM<br><span>WEATHER</span> REPORT</div>
+
+<div class="card">
+  <div id="loading">
+    <div class="loading-label">ACQUIRING SIGNAL</div>
+    <div class="loading-bar-wrap"><div class="loading-bar"></div></div>
+  </div>
+
+  <div id="error">
+    <div class="location-name" style="font-size:2rem; color:#555;">SIGNAL LOST</div>
+    <p id="error-msg">Unable to retrieve weather data.</p>
+  </div>
+
+  <div id="weather">
+    <div class="location-name" id="loc-name">—</div>
+    <div class="location-coords" id="loc-coords">—</div>
+
+    <div class="divider"></div>
+
+    <div class="temp-row">
+      <div>
+        <div style="display:flex; align-items:flex-start; gap:4px;">
+          <div class="temp-main" id="temp-val">—</div>
+          <div class="temp-unit">°C</div>
+        </div>
+      </div>
+      <div class="condition-block">
+        <div class="weather-icon" id="weather-icon"></div>
+        <div class="condition-text" id="condition">—</div>
+        <div class="feels-like" id="feels">FEELS LIKE — °C</div>
+      </div>
+    </div>
+
+    <div class="stats-grid">
+      <div class="stat">
+        <div class="stat-label">HUMIDITY</div>
+        <div class="stat-value"><span id="humidity">—</span><span class="stat-unit">%</span></div>
+      </div>
+      <div class="stat">
+        <div class="stat-label">WIND</div>
+        <div class="stat-value"><span id="wind">—</span><span class="stat-unit">km/h</span></div>
+      </div>
+      <div class="stat">
+        <div class="stat-label">PRECIP</div>
+        <div class="stat-value"><span id="precip">—</span><span class="stat-unit">mm</span></div>
+      </div>
+    </div>
+
+    <div class="range-row">
+      <span class="range-label" id="temp-low">—</span>
+      <div class="range-bar-wrap">
+        <div class="range-bar" id="range-bar" style="left:0%;width:100%"></div>
+      </div>
+      <span class="range-label" id="temp-high">—</span>
+    </div>
+
+    <div class="sun-row">
+      <div class="sun-item"><span>SUNRISE</span><span id="sunrise">—</span></div>
+      <div class="sun-item"><span>SUNSET</span><span id="sunset">—</span></div>
+      <div class="sun-item"><span>UV INDEX</span><span id="uv">—</span></div>
+      <div class="sun-item"><span>VISIBILITY</span><span id="visibility">—</span></div>
+    </div>
+
+    <div class="next-change" id="next-change">NEXT LOCATION ASSIGNED IN —</div>
+  </div>
+</div>
+
+<div class="hud-bottom">
+  <span>WEATHER DATA: OPEN-METEO.COM</span>
+  <span id="hud-coords">—</span>
+  <span>DESIGNED BY PERFECTION</span>
+</div>
+
+<script>
+// ─── SVG Weather Icons ────────────────────────────────────────────────────────
+// All hand-drawn inline SVGs styled to match the dark blue theme.
+// stroke colour matches --accent (#4a9eff); muted elements use #3a3a5a.
+
+const ICONS = {
+  clear: `<svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <!-- Sun rays -->
+    <line x1="24" y1="4"  x2="24" y2="9"  stroke="#4a9eff" stroke-width="2" stroke-linecap="round"/>
+    <line x1="24" y1="39" x2="24" y2="44" stroke="#4a9eff" stroke-width="2" stroke-linecap="round"/>
+    <line x1="4"  y1="24" x2="9"  y2="24" stroke="#4a9eff" stroke-width="2" stroke-linecap="round"/>
+    <line x1="39" y1="24" x2="44" y2="24" stroke="#4a9eff" stroke-width="2" stroke-linecap="round"/>
+    <line x1="9.5"  y1="9.5"  x2="13"  y2="13"  stroke="#4a9eff" stroke-width="2" stroke-linecap="round"/>
+    <line x1="35"   y1="35"   x2="38.5" y2="38.5" stroke="#4a9eff" stroke-width="2" stroke-linecap="round"/>
+    <line x1="38.5" y1="9.5"  x2="35"   y2="13"   stroke="#4a9eff" stroke-width="2" stroke-linecap="round"/>
+    <line x1="13"   y1="35"   x2="9.5"  y2="38.5" stroke="#4a9eff" stroke-width="2" stroke-linecap="round"/>
+    <circle cx="24" cy="24" r="8" stroke="#4a9eff" stroke-width="2"/>
+  </svg>`,
+
+  mainly_clear: `<svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <!-- Sun, slightly smaller, with a small cloud hint -->
+    <line x1="20" y1="5"  x2="20" y2="9"  stroke="#4a9eff" stroke-width="1.8" stroke-linecap="round"/>
+    <line x1="6"  y1="20" x2="10" y2="20" stroke="#4a9eff" stroke-width="1.8" stroke-linecap="round"/>
+    <line x1="10" y1="10" x2="13" y2="13" stroke="#4a9eff" stroke-width="1.8" stroke-linecap="round"/>
+    <line x1="30" y1="10" x2="27" y2="13" stroke="#4a9eff" stroke-width="1.8" stroke-linecap="round"/>
+    <line x1="34" y1="20" x2="30" y2="20" stroke="#4a9eff" stroke-width="1.8" stroke-linecap="round"/>
+    <circle cx="20" cy="20" r="7" stroke="#4a9eff" stroke-width="1.8"/>
+    <!-- Small cloud -->
+    <path d="M26 34 Q26 29 31 29 Q31 26 35 26 Q40 26 40 31 Q43 31 43 35 Q43 38 40 38 L28 38 Q26 38 26 36 Z"
+          stroke="#7878a0" stroke-width="1.6" fill="none"/>
+  </svg>`,
+
+  partly_cloudy: `<svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <!-- Sun behind cloud -->
+    <line x1="14" y1="4"  x2="14" y2="8"  stroke="#4a9eff" stroke-width="1.8" stroke-linecap="round"/>
+    <line x1="4"  y1="14" x2="8"  y2="14" stroke="#4a9eff" stroke-width="1.8" stroke-linecap="round"/>
+    <line x1="7"  y1="7"  x2="10" y2="10" stroke="#4a9eff" stroke-width="1.8" stroke-linecap="round"/>
+    <line x1="21" y1="7"  x2="18" y2="10" stroke="#4a9eff" stroke-width="1.8" stroke-linecap="round"/>
+    <circle cx="14" cy="14" r="6" stroke="#4a9eff" stroke-width="1.8"/>
+    <!-- Main cloud -->
+    <path d="M14 38 Q14 30 21 30 Q22 24 29 24 Q37 24 37 32 Q42 32 42 38 Q42 43 37 43 L18 43 Q14 43 14 40 Z"
+          stroke="#4a9eff" stroke-width="2" fill="none"/>
+  </svg>`,
+
+  overcast: `<svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <!-- Back cloud -->
+    <path d="M6 28 Q6 21 13 21 Q15 15 22 15 Q31 15 31 23 Q36 23 36 28 Q36 33 31 33 L10 33 Q6 33 6 30 Z"
+          stroke="#3a3a5a" stroke-width="1.8" fill="none"/>
+    <!-- Front cloud -->
+    <path d="M12 40 Q12 33 19 33 Q20 27 27 27 Q36 27 36 35 Q41 35 41 40 Q41 45 36 45 L16 45 Q12 45 12 42 Z"
+          stroke="#7878a0" stroke-width="2" fill="none"/>
+  </svg>`,
+
+  fog: `<svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <line x1="8"  y1="16" x2="40" y2="16" stroke="#7878a0" stroke-width="2" stroke-linecap="round"/>
+    <line x1="8"  y1="24" x2="40" y2="24" stroke="#7878a0" stroke-width="2" stroke-linecap="round"/>
+    <line x1="12" y1="32" x2="36" y2="32" stroke="#7878a0" stroke-width="1.6" stroke-linecap="round"/>
+    <line x1="16" y1="40" x2="32" y2="40" stroke="#3a3a5a" stroke-width="1.4" stroke-linecap="round"/>
+  </svg>`,
+
+  icy_fog: `<svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <line x1="8"  y1="14" x2="40" y2="14" stroke="#7878a0" stroke-width="2" stroke-linecap="round"/>
+    <line x1="8"  y1="22" x2="40" y2="22" stroke="#7878a0" stroke-width="2" stroke-linecap="round"/>
+    <line x1="12" y1="30" x2="36" y2="30" stroke="#7878a0" stroke-width="1.6" stroke-linecap="round"/>
+    <!-- Ice crystals -->
+    <line x1="14" y1="38" x2="14" y2="44" stroke="#4a9eff" stroke-width="1.4" stroke-linecap="round"/>
+    <line x1="11" y1="41" x2="17" y2="41" stroke="#4a9eff" stroke-width="1.4" stroke-linecap="round"/>
+    <line x1="24" y1="38" x2="24" y2="44" stroke="#4a9eff" stroke-width="1.4" stroke-linecap="round"/>
+    <line x1="21" y1="41" x2="27" y2="41" stroke="#4a9eff" stroke-width="1.4" stroke-linecap="round"/>
+    <line x1="34" y1="38" x2="34" y2="44" stroke="#4a9eff" stroke-width="1.4" stroke-linecap="round"/>
+    <line x1="31" y1="41" x2="37" y2="41" stroke="#4a9eff" stroke-width="1.4" stroke-linecap="round"/>
+  </svg>`,
+
+  drizzle: `<svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <path d="M8 22 Q8 14 16 14 Q18 8 26 8 Q36 8 36 18 Q42 18 42 24 Q42 30 36 30 L12 30 Q8 30 8 26 Z"
+          stroke="#7878a0" stroke-width="2" fill="none"/>
+    <!-- Short dashes for light drizzle -->
+    <line x1="18" y1="36" x2="16" y2="42" stroke="#4a9eff" stroke-width="1.6" stroke-linecap="round"/>
+    <line x1="26" y1="36" x2="24" y2="42" stroke="#4a9eff" stroke-width="1.6" stroke-linecap="round"/>
+    <line x1="34" y1="36" x2="32" y2="42" stroke="#4a9eff" stroke-width="1.6" stroke-linecap="round"/>
+  </svg>`,
+
+  heavy_drizzle: `<svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <path d="M6 22 Q6 14 14 14 Q16 8 24 8 Q34 8 34 18 Q40 18 40 24 Q40 30 34 30 L10 30 Q6 30 6 26 Z"
+          stroke="#7878a0" stroke-width="2" fill="none"/>
+    <line x1="12" y1="35" x2="9"  y2="43" stroke="#4a9eff" stroke-width="1.8" stroke-linecap="round"/>
+    <line x1="20" y1="35" x2="17" y2="43" stroke="#4a9eff" stroke-width="1.8" stroke-linecap="round"/>
+    <line x1="28" y1="35" x2="25" y2="43" stroke="#4a9eff" stroke-width="1.8" stroke-linecap="round"/>
+    <line x1="36" y1="35" x2="33" y2="43" stroke="#4a9eff" stroke-width="1.8" stroke-linecap="round"/>
+  </svg>`,
+
+  freezing_drizzle: `<svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <path d="M8 22 Q8 14 16 14 Q18 8 26 8 Q36 8 36 18 Q42 18 42 24 Q42 30 36 30 L12 30 Q8 30 8 26 Z"
+          stroke="#7878a0" stroke-width="2" fill="none"/>
+    <!-- Freezing: dotted/crystal drops -->
+    <circle cx="18" cy="38" r="2" stroke="#4a9eff" stroke-width="1.5" fill="none"/>
+    <circle cx="26" cy="40" r="2" stroke="#4a9eff" stroke-width="1.5" fill="none"/>
+    <circle cx="34" cy="38" r="2" stroke="#4a9eff" stroke-width="1.5" fill="none"/>
+  </svg>`,
+
+  rain: `<svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <path d="M6 21 Q6 13 14 13 Q16 7 24 7 Q34 7 34 17 Q40 17 40 23 Q40 29 34 29 L10 29 Q6 29 6 25 Z"
+          stroke="#7878a0" stroke-width="2" fill="none"/>
+    <line x1="14" y1="34" x2="10" y2="44" stroke="#4a9eff" stroke-width="2" stroke-linecap="round"/>
+    <line x1="24" y1="34" x2="20" y2="44" stroke="#4a9eff" stroke-width="2" stroke-linecap="round"/>
+    <line x1="34" y1="34" x2="30" y2="44" stroke="#4a9eff" stroke-width="2" stroke-linecap="round"/>
+  </svg>`,
+
+  heavy_rain: `<svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <path d="M4 20 Q4 12 12 12 Q14 6 22 6 Q32 6 32 16 Q38 16 38 22 Q38 28 32 28 L8 28 Q4 28 4 24 Z"
+          stroke="#7878a0" stroke-width="2" fill="none"/>
+    <line x1="10" y1="33" x2="5"  y2="45" stroke="#4a9eff" stroke-width="2.2" stroke-linecap="round"/>
+    <line x1="19" y1="33" x2="14" y2="45" stroke="#4a9eff" stroke-width="2.2" stroke-linecap="round"/>
+    <line x1="28" y1="33" x2="23" y2="45" stroke="#4a9eff" stroke-width="2.2" stroke-linecap="round"/>
+    <line x1="37" y1="33" x2="32" y2="45" stroke="#4a9eff" stroke-width="2.2" stroke-linecap="round"/>
+  </svg>`,
+
+  freezing_rain: `<svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <path d="M6 21 Q6 13 14 13 Q16 7 24 7 Q34 7 34 17 Q40 17 40 23 Q40 29 34 29 L10 29 Q6 29 6 25 Z"
+          stroke="#7878a0" stroke-width="2" fill="none"/>
+    <!-- Diagonal freezing lines -->
+    <line x1="14" y1="33" x2="10" y2="43" stroke="#4a9eff" stroke-width="1.8" stroke-linecap="round"/>
+    <circle cx="10" cy="44" r="1.8" fill="#4a9eff"/>
+    <line x1="24" y1="33" x2="20" y2="43" stroke="#4a9eff" stroke-width="1.8" stroke-linecap="round"/>
+    <circle cx="20" cy="44" r="1.8" fill="#4a9eff"/>
+    <line x1="34" y1="33" x2="30" y2="43" stroke="#4a9eff" stroke-width="1.8" stroke-linecap="round"/>
+    <circle cx="30" cy="44" r="1.8" fill="#4a9eff"/>
+  </svg>`,
+
+  snow: `<svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <path d="M6 21 Q6 13 14 13 Q16 7 24 7 Q34 7 34 17 Q40 17 40 23 Q40 29 34 29 L10 29 Q6 29 6 25 Z"
+          stroke="#7878a0" stroke-width="2" fill="none"/>
+    <!-- Snowflakes -->
+    <line x1="14" y1="34" x2="14" y2="44" stroke="#4a9eff" stroke-width="1.6" stroke-linecap="round"/>
+    <line x1="10" y1="39" x2="18" y2="39" stroke="#4a9eff" stroke-width="1.6" stroke-linecap="round"/>
+    <line x1="11" y1="36" x2="17" y2="42" stroke="#4a9eff" stroke-width="1.2" stroke-linecap="round"/>
+    <line x1="17" y1="36" x2="11" y2="42" stroke="#4a9eff" stroke-width="1.2" stroke-linecap="round"/>
+    <line x1="30" y1="34" x2="30" y2="44" stroke="#4a9eff" stroke-width="1.6" stroke-linecap="round"/>
+    <line x1="26" y1="39" x2="34" y2="39" stroke="#4a9eff" stroke-width="1.6" stroke-linecap="round"/>
+    <line x1="27" y1="36" x2="33" y2="42" stroke="#4a9eff" stroke-width="1.2" stroke-linecap="round"/>
+    <line x1="33" y1="36" x2="27" y2="42" stroke="#4a9eff" stroke-width="1.2" stroke-linecap="round"/>
+  </svg>`,
+
+  heavy_snow: `<svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <path d="M4 19 Q4 11 12 11 Q14 5 22 5 Q32 5 32 15 Q38 15 38 21 Q38 27 32 27 L8 27 Q4 27 4 23 Z"
+          stroke="#7878a0" stroke-width="2" fill="none"/>
+    <!-- Three snowflakes -->
+    <line x1="10" y1="32" x2="10" y2="40" stroke="#4a9eff" stroke-width="1.6" stroke-linecap="round"/>
+    <line x1="6"  y1="36" x2="14" y2="36" stroke="#4a9eff" stroke-width="1.6" stroke-linecap="round"/>
+    <line x1="7"  y1="33" x2="13" y2="39" stroke="#4a9eff" stroke-width="1.2" stroke-linecap="round"/>
+    <line x1="13" y1="33" x2="7"  y2="39" stroke="#4a9eff" stroke-width="1.2" stroke-linecap="round"/>
+    <line x1="24" y1="32" x2="24" y2="40" stroke="#4a9eff" stroke-width="1.6" stroke-linecap="round"/>
+    <line x1="20" y1="36" x2="28" y2="36" stroke="#4a9eff" stroke-width="1.6" stroke-linecap="round"/>
+    <line x1="21" y1="33" x2="27" y2="39" stroke="#4a9eff" stroke-width="1.2" stroke-linecap="round"/>
+    <line x1="27" y1="33" x2="21" y2="39" stroke="#4a9eff" stroke-width="1.2" stroke-linecap="round"/>
+    <line x1="38" y1="32" x2="38" y2="40" stroke="#4a9eff" stroke-width="1.6" stroke-linecap="round"/>
+    <line x1="34" y1="36" x2="42" y2="36" stroke="#4a9eff" stroke-width="1.6" stroke-linecap="round"/>
+    <line x1="35" y1="33" x2="41" y2="39" stroke="#4a9eff" stroke-width="1.2" stroke-linecap="round"/>
+    <line x1="41" y1="33" x2="35" y2="39" stroke="#4a9eff" stroke-width="1.2" stroke-linecap="round"/>
+  </svg>`,
+
+  snow_grains: `<svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <path d="M6 21 Q6 13 14 13 Q16 7 24 7 Q34 7 34 17 Q40 17 40 23 Q40 29 34 29 L10 29 Q6 29 6 25 Z"
+          stroke="#7878a0" stroke-width="2" fill="none"/>
+    <!-- Small grain dots -->
+    <circle cx="14" cy="37" r="2" stroke="#4a9eff" stroke-width="1.5" fill="none"/>
+    <circle cx="22" cy="41" r="2" stroke="#4a9eff" stroke-width="1.5" fill="none"/>
+    <circle cx="30" cy="37" r="2" stroke="#4a9eff" stroke-width="1.5" fill="none"/>
+    <circle cx="38" cy="41" r="2" stroke="#4a9eff" stroke-width="1.5" fill="none"/>
+  </svg>`,
+
+  showers: `<svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <!-- Sun peeking -->
+    <circle cx="12" cy="12" r="5" stroke="#4a9eff" stroke-width="1.6" fill="none"/>
+    <line x1="12" y1="4"  x2="12" y2="6"  stroke="#4a9eff" stroke-width="1.4" stroke-linecap="round"/>
+    <line x1="4"  y1="12" x2="6"  y2="12" stroke="#4a9eff" stroke-width="1.4" stroke-linecap="round"/>
+    <line x1="6.5" y1="6.5" x2="8" y2="8" stroke="#4a9eff" stroke-width="1.4" stroke-linecap="round"/>
+    <!-- Main shower cloud -->
+    <path d="M12 30 Q12 22 20 22 Q22 16 30 16 Q40 16 40 26 Q45 26 45 32 Q45 38 40 38 L16 38 Q12 38 12 34 Z"
+          stroke="#7878a0" stroke-width="2" fill="none"/>
+    <!-- Shower drops: short and gappy -->
+    <line x1="20" y1="41" x2="18" y2="46" stroke="#4a9eff" stroke-width="1.8" stroke-linecap="round"/>
+    <line x1="30" y1="41" x2="28" y2="46" stroke="#4a9eff" stroke-width="1.8" stroke-linecap="round"/>
+    <line x1="40" y1="41" x2="38" y2="46" stroke="#4a9eff" stroke-width="1.8" stroke-linecap="round"/>
+  </svg>`,
+
+  violent_showers: `<svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <path d="M4 18 Q4 10 12 10 Q14 4 22 4 Q32 4 32 14 Q38 14 38 20 Q38 26 32 26 L8 26 Q4 26 4 22 Z"
+          stroke="#7878a0" stroke-width="2" fill="none"/>
+    <!-- Heavy diagonal drops -->
+    <line x1="10" y1="30" x2="6"  y2="44" stroke="#4a9eff" stroke-width="2.4" stroke-linecap="round"/>
+    <line x1="20" y1="30" x2="16" y2="44" stroke="#4a9eff" stroke-width="2.4" stroke-linecap="round"/>
+    <line x1="30" y1="30" x2="26" y2="44" stroke="#4a9eff" stroke-width="2.4" stroke-linecap="round"/>
+    <line x1="40" y1="30" x2="36" y2="44" stroke="#4a9eff" stroke-width="2.4" stroke-linecap="round"/>
+  </svg>`,
+
+  snow_showers: `<svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <circle cx="12" cy="12" r="5" stroke="#4a9eff" stroke-width="1.6" fill="none"/>
+    <line x1="12" y1="4"  x2="12" y2="6"  stroke="#4a9eff" stroke-width="1.4" stroke-linecap="round"/>
+    <line x1="4"  y1="12" x2="6"  y2="12" stroke="#4a9eff" stroke-width="1.4" stroke-linecap="round"/>
+    <path d="M12 30 Q12 22 20 22 Q22 16 30 16 Q40 16 40 26 Q45 26 45 32 Q45 38 40 38 L16 38 Q12 38 12 34 Z"
+          stroke="#7878a0" stroke-width="2" fill="none"/>
+    <!-- Snowflake below -->
+    <line x1="22" y1="41" x2="22" y2="47" stroke="#4a9eff" stroke-width="1.5" stroke-linecap="round"/>
+    <line x1="19" y1="44" x2="25" y2="44" stroke="#4a9eff" stroke-width="1.5" stroke-linecap="round"/>
+    <line x1="20" y1="42" x2="24" y2="46" stroke="#4a9eff" stroke-width="1.2" stroke-linecap="round"/>
+    <line x1="24" y1="42" x2="20" y2="46" stroke="#4a9eff" stroke-width="1.2" stroke-linecap="round"/>
+    <line x1="35" y1="41" x2="35" y2="47" stroke="#4a9eff" stroke-width="1.5" stroke-linecap="round"/>
+    <line x1="32" y1="44" x2="38" y2="44" stroke="#4a9eff" stroke-width="1.5" stroke-linecap="round"/>
+    <line x1="33" y1="42" x2="37" y2="46" stroke="#4a9eff" stroke-width="1.2" stroke-linecap="round"/>
+    <line x1="37" y1="42" x2="33" y2="46" stroke="#4a9eff" stroke-width="1.2" stroke-linecap="round"/>
+  </svg>`,
+
+  thunderstorm: `<svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <path d="M4 20 Q4 12 12 12 Q14 6 22 6 Q32 6 32 16 Q38 16 38 22 Q38 28 32 28 L8 28 Q4 28 4 24 Z"
+          stroke="#7878a0" stroke-width="2" fill="none"/>
+    <!-- Lightning bolt -->
+    <polyline points="22,30 18,38 23,38 19,47" stroke="#4a9eff" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+    <!-- Rain either side -->
+    <line x1="9"  y1="32" x2="6"  y2="40" stroke="#3a3a5a" stroke-width="1.6" stroke-linecap="round"/>
+    <line x1="35" y1="32" x2="32" y2="40" stroke="#3a3a5a" stroke-width="1.6" stroke-linecap="round"/>
+  </svg>`,
+
+  thunderstorm_hail: `<svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <path d="M4 20 Q4 12 12 12 Q14 6 22 6 Q32 6 32 16 Q38 16 38 22 Q38 28 32 28 L8 28 Q4 28 4 24 Z"
+          stroke="#7878a0" stroke-width="2" fill="none"/>
+    <polyline points="22,30 18,38 23,38 19,47" stroke="#4a9eff" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+    <!-- Hail dots -->
+    <circle cx="9"  cy="36" r="2.2" stroke="#4a9eff" stroke-width="1.5" fill="none"/>
+    <circle cx="35" cy="36" r="2.2" stroke="#4a9eff" stroke-width="1.5" fill="none"/>
+    <circle cx="9"  cy="44" r="2.2" stroke="#4a9eff" stroke-width="1.5" fill="none"/>
+    <circle cx="35" cy="44" r="2.2" stroke="#4a9eff" stroke-width="1.5" fill="none"/>
+  </svg>`,
+
+  unknown: `<svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <circle cx="24" cy="24" r="18" stroke="#3a3a5a" stroke-width="2"/>
+    <text x="24" y="30" text-anchor="middle" font-size="20" fill="#3a3a5a" font-family="serif">?</text>
+  </svg>`,
+};
+
+function getIcon(code) {
+  if (code === 0) return ICONS.clear;
+  if (code === 1) return ICONS.mainly_clear;
+  if (code === 2) return ICONS.partly_cloudy;
+  if (code === 3) return ICONS.overcast;
+  if (code === 45) return ICONS.fog;
+  if (code === 48) return ICONS.icy_fog;
+  if (code === 51) return ICONS.drizzle;
+  if (code === 53) return ICONS.drizzle;
+  if (code === 55) return ICONS.heavy_drizzle;
+  if (code === 56) return ICONS.freezing_drizzle;
+  if (code === 57) return ICONS.freezing_drizzle;
+  if (code === 61) return ICONS.rain;
+  if (code === 63) return ICONS.rain;
+  if (code === 65) return ICONS.heavy_rain;
+  if (code === 66) return ICONS.freezing_rain;
+  if (code === 67) return ICONS.freezing_rain;
+  if (code === 71) return ICONS.snow;
+  if (code === 73) return ICONS.snow;
+  if (code === 75) return ICONS.heavy_snow;
+  if (code === 77) return ICONS.snow_grains;
+  if (code === 80) return ICONS.showers;
+  if (code === 81) return ICONS.showers;
+  if (code === 82) return ICONS.violent_showers;
+  if (code === 85) return ICONS.snow_showers;
+  if (code === 86) return ICONS.snow_showers;
+  if (code === 95) return ICONS.thunderstorm;
+  if (code === 96) return ICONS.thunderstorm_hail;
+  if (code === 99) return ICONS.thunderstorm_hail;
+  return ICONS.unknown;
+}
+
+// ─── CEST date seed ───────────────────────────────────────────────────────────
+// CEST = UTC+2. We derive the date in CEST so the day rolls over at midnight CEST.
+function getCESTDateString() {
+  const now = new Date();
+  // CEST offset: UTC+2 (May–Oct). We always use +2 for simplicity (covers CEST).
+  // If you want CET (UTC+1) in winter too, you can adjust, but CEST is the stated requirement.
+  const cestOffset = 2 * 60; // minutes
+  const cestMs = now.getTime() + (cestOffset - now.getTimezoneOffset()) * 60000;
+  // Actually cleaner: just add 2h to UTC
+  const utcMs = now.getTime();
+  const cestDate = new Date(utcMs + 2 * 3600 * 1000);
+  const y = cestDate.getUTCFullYear();
+  const m = String(cestDate.getUTCMonth() + 1).padStart(2,'0');
+  const d = String(cestDate.getUTCDate()).padStart(2,'0');
+  return `${y}${m}${d}`;
+}
+
+function getTodaySeed() {
+  return parseInt(getCESTDateString(), 10);
+}
+
+function getTodayDisplayString() {
+  const now = new Date();
+  const cestDate = new Date(now.getTime() + 2 * 3600 * 1000);
+  return cestDate.toLocaleDateString('en-GB', {
+    weekday: 'long', year: 'numeric', month: 'long', day: 'numeric', timeZone: 'UTC'
+  });
+}
+
+function getDayOfYear() {
+  const now = new Date();
+  const cestDate = new Date(now.getTime() + 2 * 3600 * 1000);
+  const start = new Date(Date.UTC(cestDate.getUTCFullYear(), 0, 0));
+  return Math.floor((cestDate - start) / 86400000);
+}
+
+// ─── PRNG ─────────────────────────────────────────────────────────────────────
+function mulberry32(seed) {
+  return function() {
+    seed |= 0; seed = seed + 0x6D2B79F5 | 0;
+    let t = Math.imul(seed ^ seed >>> 15, 1 | seed);
+    t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t;
+    return ((t ^ t >>> 14) >>> 0) / 4294967296;
+  };
+}
+
+// ─── Location pool ────────────────────────────────────────────────────────────
+const LOCATIONS = [
+  [5.55,-0.20,"Accra","Ghana"],[-25.97,32.57,"Maputo","Mozambique"],[33.89,9.54,"Kairouan","Tunisia"],
+  [-1.94,30.06,"Kigali","Rwanda"],[12.37,43.15,"Djibouti City","Djibouti"],[4.36,18.56,"Bangui","Central African Rep."],
+  [-19.84,34.84,"Beira","Mozambique"],[15.55,32.53,"Khartoum","Sudan"],[-26.32,31.13,"Mbabane","Eswatini"],
+  [6.36,2.42,"Cotonou","Benin"],[-13.95,33.78,"Lilongwe","Malawi"],[8.98,38.76,"Addis Ababa","Ethiopia"],
+  [-29.32,27.48,"Maseru","Lesotho"],[5.84,-0.18,"Kumasi","Ghana"],[3.87,11.52,"Yaoundé","Cameroon"],
+  [12.10,15.04,"N'Djamena","Chad"],[-4.32,15.32,"Brazzaville","Republic of Congo"],[9.03,38.74,"Hawassa","Ethiopia"],
+  [-23.35,43.67,"Toliara","Madagascar"],[17.29,-12.36,"Lüderitz","Namibia"],[32.90,13.18,"Tripoli","Libya"],
+  [27.47,89.64,"Thimphu","Bhutan"],[17.97,102.60,"Vientiane","Laos"],[47.90,106.90,"Ulaanbaatar","Mongolia"],
+  [39.93,32.86,"Ankara","Turkey"],[36.70,3.21,"Algiers","Algeria"],[37.57,126.98,"Seoul","South Korea"],
+  [55.75,37.62,"Moscow","Russia"],[28.61,77.21,"New Delhi","India"],[35.69,139.69,"Tokyo","Japan"],
+  [1.35,103.82,"Singapore","Singapore"],[22.28,114.16,"Hong Kong","China"],[41.69,44.83,"Tbilisi","Georgia"],
+  [40.18,44.51,"Yerevan","Armenia"],[37.94,58.38,"Ashgabat","Turkmenistan"],[42.87,74.59,"Bishkek","Kyrgyzstan"],
+  [38.56,68.77,"Dushanbe","Tajikistan"],[41.30,69.24,"Tashkent","Uzbekistan"],[51.18,71.45,"Astana","Kazakhstan"],
+  [27.72,85.32,"Kathmandu","Nepal"],[6.91,79.85,"Colombo","Sri Lanka"],[16.87,96.17,"Yangon","Myanmar"],
+  [11.56,104.92,"Phnom Penh","Cambodia"],[10.82,106.63,"Ho Chi Minh City","Vietnam"],[3.15,101.71,"Kuala Lumpur","Malaysia"],
+  [-8.56,125.57,"Dili","Timor-Leste"],[33.34,44.40,"Baghdad","Iraq"],[35.69,51.42,"Tehran","Iran"],
+  [24.69,46.72,"Riyadh","Saudi Arabia"],[25.29,51.53,"Doha","Qatar"],[23.42,53.85,"Abu Dhabi","UAE"],
+  [15.35,44.21,"Sana'a","Yemen"],[34.52,69.18,"Kabul","Afghanistan"],[31.56,74.34,"Lahore","Pakistan"],
+  [23.72,90.41,"Dhaka","Bangladesh"],[48.21,16.37,"Vienna","Austria"],[52.52,13.40,"Berlin","Germany"],
+  [48.85,2.35,"Paris","France"],[51.51,-0.13,"London","UK"],[41.90,12.50,"Rome","Italy"],
+  [40.42,-3.70,"Madrid","Spain"],[59.33,18.07,"Stockholm","Sweden"],[55.68,12.57,"Copenhagen","Denmark"],
+  [60.17,24.94,"Helsinki","Finland"],[59.91,10.75,"Oslo","Norway"],[52.23,21.01,"Warsaw","Poland"],
+  [50.08,14.44,"Prague","Czech Republic"],[47.50,19.04,"Budapest","Hungary"],[44.80,20.46,"Belgrade","Serbia"],
+  [42.00,21.43,"Skopje","North Macedonia"],[41.33,19.82,"Tirana","Albania"],[43.85,18.36,"Sarajevo","Bosnia"],
+  [42.44,19.26,"Podgorica","Montenegro"],[42.70,23.32,"Sofia","Bulgaria"],[44.44,26.10,"Bucharest","Romania"],
+  [46.95,7.45,"Bern","Switzerland"],[55.95,-3.19,"Edinburgh","Scotland"],[53.33,-6.25,"Dublin","Ireland"],
+  [50.85,4.35,"Brussels","Belgium"],[52.37,4.90,"Amsterdam","Netherlands"],[38.72,-9.14,"Lisbon","Portugal"],
+  [45.81,15.98,"Zagreb","Croatia"],[46.05,14.51,"Ljubljana","Slovenia"],[56.95,24.11,"Riga","Latvia"],
+  [59.44,24.75,"Tallinn","Estonia"],[54.69,25.28,"Vilnius","Lithuania"],[53.90,27.57,"Minsk","Belarus"],
+  [50.45,30.52,"Kyiv","Ukraine"],[37.97,23.73,"Athens","Greece"],[35.17,33.37,"Nicosia","Cyprus"],
+  [64.15,-21.94,"Reykjavik","Iceland"],[36.81,10.18,"Tunis","Tunisia"],[19.43,-99.13,"Mexico City","Mexico"],
+  [4.71,-74.07,"Bogotá","Colombia"],[-12.05,-77.04,"Lima","Peru"],[-34.60,-58.38,"Buenos Aires","Argentina"],
+  [-15.78,-47.93,"Brasília","Brazil"],[-33.46,-70.65,"Santiago","Chile"],[10.48,-66.88,"Caracas","Venezuela"],
+  [-0.23,-78.52,"Quito","Ecuador"],[-16.50,-68.15,"La Paz","Bolivia"],[25.79,-80.22,"Miami","USA"],
+  [47.61,-122.33,"Seattle","USA"],[41.88,-87.63,"Chicago","USA"],[29.76,-95.37,"Houston","USA"],
+  [33.45,-112.07,"Phoenix","USA"],[44.98,-93.27,"Minneapolis","USA"],[39.74,-104.98,"Denver","USA"],
+  [36.17,-115.14,"Las Vegas","USA"],[61.22,-149.90,"Anchorage","USA"],[21.31,-157.86,"Honolulu","USA"],
+  [45.42,-75.69,"Ottawa","Canada"],[51.05,-114.07,"Calgary","Canada"],[49.90,-97.14,"Winnipeg","Canada"],
+  [46.81,-71.21,"Quebec City","Canada"],[9.10,-79.40,"Panama City","Panama"],[13.69,-89.19,"San Salvador","El Salvador"],
+  [14.08,-87.21,"Tegucigalpa","Honduras"],[12.13,-86.28,"Managua","Nicaragua"],[9.94,-84.10,"San José","Costa Rica"],
+  [15.50,-90.47,"Guatemala City","Guatemala"],[18.47,-69.90,"Santo Domingo","Dominican Republic"],
+  [18.54,-72.34,"Port-au-Prince","Haiti"],[17.99,-76.79,"Kingston","Jamaica"],
+  [10.65,-61.52,"Port of Spain","Trinidad and Tobago"],[5.83,-55.17,"Paramaribo","Suriname"],
+  [6.80,-58.16,"Georgetown","Guyana"],[-22.91,-43.17,"Rio de Janeiro","Brazil"],
+  [-23.55,-46.63,"São Paulo","Brazil"],[-30.03,-51.23,"Porto Alegre","Brazil"],
+  [-8.05,-34.88,"Recife","Brazil"],[-3.73,-38.53,"Fortaleza","Brazil"],
+  [-27.47,153.03,"Brisbane","Australia"],[-37.81,144.96,"Melbourne","Australia"],
+  [-31.95,115.86,"Perth","Australia"],[-34.93,138.60,"Adelaide","Australia"],
+  [-42.88,147.32,"Hobart","Australia"],[-12.46,130.84,"Darwin","Australia"],
+  [-36.87,174.77,"Auckland","New Zealand"],[-41.29,174.78,"Wellington","New Zealand"],
+  [-43.53,172.64,"Christchurch","New Zealand"],[-18.14,178.44,"Suva","Fiji"],
+  [-9.44,147.18,"Port Moresby","Papua New Guinea"],[56.84,60.60,"Yekaterinburg","Russia"],
+  [54.99,82.90,"Novosibirsk","Russia"],[52.29,104.30,"Irkutsk","Russia"],[43.12,131.89,"Vladivostok","Russia"],
+  [68.97,33.07,"Murmansk","Russia"],[64.54,40.52,"Arkhangelsk","Russia"],[69.35,88.21,"Norilsk","Russia"],
+  [-54.80,-68.30,"Ushuaia","Argentina"],[78.22,15.65,"Longyearbyen","Svalbard"],
+  [4.17,73.51,"Malé","Maldives"],[-20.16,57.50,"Port Louis","Mauritius"],
+  [-4.62,55.45,"Victoria","Seychelles"],[14.69,-17.44,"Dakar","Senegal"],
+  [12.36,-1.53,"Ouagadougou","Burkina Faso"],[13.51,2.12,"Niamey","Niger"],
+  [9.54,-13.68,"Conakry","Guinea"],[8.49,-13.23,"Freetown","Sierra Leone"],
+  [5.35,-4.00,"Abidjan","Ivory Coast"],[-18.92,47.53,"Antananarivo","Madagascar"],
+  [0.39,9.45,"Libreville","Gabon"],[3.86,11.52,"Douala","Cameroon"],
+  [-4.27,15.28,"Kinshasa","DR Congo"],[-8.84,13.23,"Luanda","Angola"],
+  [-22.56,17.08,"Windhoek","Namibia"],[-24.65,25.91,"Gaborone","Botswana"],
+  [-17.83,31.05,"Harare","Zimbabwe"],[-25.75,28.19,"Pretoria","South Africa"],
+  [2.04,45.34,"Mogadishu","Somalia"],[31.63,-8.00,"Marrakesh","Morocco"],
+  [33.99,-6.85,"Rabat","Morocco"],[30.06,31.25,"Cairo","Egypt"],
+  [31.20,29.92,"Alexandria","Egypt"],[25.69,32.65,"Luxor","Egypt"],
+  [42.44,18.76,"Dubrovnik","Croatia"],[43.51,16.44,"Split","Croatia"],
+  [53.21,50.15,"Samara","Russia"],[57.15,65.53,"Tyumen","Russia"],
+];
+
+function getDailyLocation() {
+  const seed = getTodaySeed();
+  const rand = mulberry32(seed);
+  const idx = Math.floor(rand() * LOCATIONS.length);
+  return LOCATIONS[idx];
+}
+
+// ─── WMO code → label ─────────────────────────────────────────────────────────
+function wmoDescription(code) {
+  const codes = {
+    0:"Clear sky",1:"Mainly clear",2:"Partly cloudy",3:"Overcast",
+    45:"Foggy",48:"Icy fog",51:"Light drizzle",53:"Drizzle",55:"Heavy drizzle",
+    56:"Freezing drizzle",57:"Heavy freezing drizzle",61:"Light rain",63:"Rain",
+    65:"Heavy rain",66:"Freezing rain",67:"Heavy freezing rain",71:"Light snow",
+    73:"Snow",75:"Heavy snow",77:"Snow grains",80:"Rain showers",81:"Rain showers",
+    82:"Violent rain showers",85:"Snow showers",86:"Heavy snow showers",
+    95:"Thunderstorm",96:"Thunderstorm + hail",99:"Thunderstorm + heavy hail",
+  };
+  return codes[code] || "Unknown";
+}
+
+function windDirection(deg) {
+  const dirs=["N","NNE","NE","ENE","E","ESE","SE","SSE","S","SSW","SW","WSW","W","WNW","NW","NNW"];
+  return dirs[Math.round(deg/22.5)%16];
+}
+
+function hoursUntilCESTMidnight() {
+  const now = new Date();
+  // Next midnight CEST = next midnight UTC+2
+  const cestNow = new Date(now.getTime() + 2*3600*1000);
+  const nextMidnightCEST = new Date(Date.UTC(cestNow.getUTCFullYear(), cestNow.getUTCMonth(), cestNow.getUTCDate()+1));
+  // That's midnight UTC of the next CEST date, then subtract 2h to get real UTC time
+  const nextMidnightUTC = new Date(nextMidnightCEST.getTime() - 2*3600*1000);
+  const diff = nextMidnightUTC - now;
+  const h = Math.floor(diff/3600000);
+  const m = Math.floor((diff%3600000)/60000);
+  return `${h}h ${m}m`;
+}
+
+function formatTime(isoStr) {
+  if (!isoStr) return '—';
+  const t = new Date(isoStr);
+  return t.toUTCString().slice(17,22);
+}
+
+// ─── Main ─────────────────────────────────────────────────────────────────────
+async function init() {
+  const [lat,lon,city,country] = getDailyLocation();
+  const seed = getTodaySeed();
+  const day = getDayOfYear();
+
+  document.getElementById('hud-date').textContent = getTodayDisplayString();
+  document.getElementById('hud-coords').textContent = `${lat.toFixed(2)}°, ${lon.toFixed(2)}°`;
+
+  const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}`
+    +`&current=temperature_2m,apparent_temperature,relative_humidity_2m,precipitation,weather_code,wind_speed_10m,wind_direction_10m,uv_index,visibility`
+    +`&daily=temperature_2m_max,temperature_2m_min,sunrise,sunset`
+    +`&timezone=UTC&forecast_days=1`;
+
+  try {
+    const res = await fetch(url);
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const data = await res.json();
+    const c = data.current;
+    const d = data.daily;
+
+    const tMax = d.temperature_2m_max[0];
+    const tMin = d.temperature_2m_min[0];
+    const tRange = tMax-tMin||1;
+    const tCurrent = c.temperature_2m;
+
+    document.getElementById('loc-name').textContent = city;
+    document.getElementById('loc-coords').textContent =
+      `${Math.abs(lat).toFixed(4)}°${lat>=0?'N':'S'}, ${Math.abs(lon).toFixed(4)}°${lon>=0?'E':'W'} — ${country}`;
+
+    document.getElementById('temp-val').textContent = Math.round(tCurrent);
+    document.getElementById('weather-icon').innerHTML = getIcon(c.weather_code);
+    document.getElementById('condition').textContent = wmoDescription(c.weather_code);
+    document.getElementById('feels').textContent = `FEELS LIKE ${Math.round(c.apparent_temperature)}°C`;
+    document.getElementById('humidity').textContent = c.relative_humidity_2m;
+    document.getElementById('wind').textContent =
+      `${Math.round(c.wind_speed_10m)} ${windDirection(c.wind_direction_10m)}`;
+    document.getElementById('precip').textContent = c.precipitation.toFixed(1);
+
+    document.getElementById('temp-low').textContent = `${Math.round(tMin)}°C`;
+    document.getElementById('temp-high').textContent = `${Math.round(tMax)}°C`;
+    document.getElementById('range-bar').style.left='0%';
+    document.getElementById('range-bar').style.width=`${Math.max(10,((tCurrent-tMin)/tRange)*100).toFixed(1)}%`;
+
+    document.getElementById('sunrise').textContent = formatTime(d.sunrise[0]);
+    document.getElementById('sunset').textContent = formatTime(d.sunset[0]);
+    document.getElementById('uv').textContent = c.uv_index??'—';
+    document.getElementById('visibility').textContent =
+      c.visibility!=null?`${(c.visibility/1000).toFixed(1)} km`:'—';
+
+    document.getElementById('next-change').textContent =
+      `NEXT LOCATION ASSIGNED IN ${hoursUntilCESTMidnight()}`;
+
+    document.getElementById('loading').style.display='none';
+    document.getElementById('weather').style.display='block';
+
+  } catch(err) {
+    document.getElementById('loading').style.display='none';
+    document.getElementById('error').style.display='block';
+    document.getElementById('error-msg').textContent=`${err.message}`;
+    console.error(err);
+  }
+}
+
+init();
+</script>
+</body>
+</html>
