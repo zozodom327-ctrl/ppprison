@@ -494,7 +494,7 @@
       <div class="start-dialog">
         <div class="dialog-title">
           <div class="tb-icon" style="width:14px;height:14px;font-size:9px">$</div>
-          New Processing Docket
+          Task Details
         </div>
         <div class="dialog-body">
           <div class="dialog-icon-row">
@@ -502,6 +502,7 @@
             <div>
               <p>Perfection has decided you need to do some accountancy, lucky you! Just fill in the forms with the data provided, easy. There are even instructions and a handy calculator under 'tools'!</p>
               <p>Think carefully before submitting, wrong answers will lead to a <strong>5 minute</strong> wait before resubmission is permitted.</p>
+              <p>Note on inactivity: Perfection's tasks are to be done in one sitting - if you fail to respond to popups within 20 seconds additional tasks will be added.'</p>
             </div>
           </div>
           <div class="dialog-divider"></div>
@@ -608,7 +609,10 @@
       <div class="popup-icon" id="taunt-icon">ℹ️</div>
       <div class="popup-text" id="taunt-text"></div>
     </div>
-    <div class="popup-btn-row"><button class="win-push-btn default-btn" onclick="closeTaunt()">OK</button></div>
+    <div class="popup-btn-row" style="flex-direction:column;align-items:center;gap:6px">
+      <button class="win-push-btn default-btn" id="taunt-ok-btn" onclick="closeTaunt()">OK</button>
+      <div id="taunt-countdown" style="font-size:15px;color:#555;font-family:'Share Tech Mono',monospace;letter-spacing:0.05em"></div>
+    </div>
   </div>
 </div>
 
@@ -649,6 +653,7 @@ let totalTasks=5, currentTaskIndex=0, taskQueue=[];
 let errors=0, startTime=null, elapsedTimer=null;
 let lockoutTimer=null, lockoutSeconds=0, isLocked=false;
 let tauntTimer=null, tauntVisible=false;
+let inactivityTimer=null, inactivityTasks=0, tauntCountdownInterval=null;
 
 // ═══════════════════════════════════════════════════════
 // UTILS
@@ -780,25 +785,66 @@ const tauntsError = [
 ];
 
 function showTaunt(msg, isError=false) {
-  if (tauntVisible) return;
+  // Always update content and show popup — no bailing out
   tauntVisible = true;
   document.getElementById('taunt-text').textContent = msg;
   document.getElementById('taunt-icon').textContent = isError ? '⚠️' : 'ℹ️';
   document.getElementById('taunt-title-text').textContent = isError ? 'Submission Error' : 'System Notice';
   document.getElementById('popup-taunt').classList.add('visible');
   document.getElementById('popup-overlay').classList.add('visible');
+  // Inactivity countdown runs on ALL popups — no pausing via error screen
+  startInactivityCountdown();
 }
 function closeTaunt() {
   tauntVisible = false;
   document.getElementById('popup-taunt').classList.remove('visible');
   document.getElementById('popup-overlay').classList.remove('visible');
+  clearInactivityCountdown();
 }
 function scheduleRandomTaunt() {
   clearTimeout(tauntTimer);
   tauntTimer = setTimeout(()=>{
     showTaunt(tauntsInterval[rand(0,tauntsInterval.length-1)]);
-    scheduleRandomTaunt();
+    scheduleRandomTaunt(); // always keep scheduling regardless of popup state
   }, rand(25000,50000));
+}
+
+// ── INACTIVITY COUNTDOWN ──
+function startInactivityCountdown() {
+  clearInactivityCountdown();
+  let secs = 20;
+  const cd = document.getElementById('taunt-countdown');
+  cd.textContent = secs;
+  tauntCountdownInterval = setInterval(()=>{
+    secs--;
+    if (secs > 0) {
+      cd.textContent = secs;
+    } else {
+      // Inactivity penalty
+      inactivityTasks++;
+      const extra = builders[rand(0,builders.length-1)]();
+      taskQueue.push(extra);
+      document.getElementById('tb-task').textContent = `${currentTaskIndex+1} / ${taskQueue.length}`;
+      // Update pips
+      const pipRow = document.getElementById('pip-row');
+      pipRow.innerHTML = '';
+      for(let j=0;j<taskQueue.length;j++){
+        const p=document.createElement('div');
+        p.className='pip'+(j<currentTaskIndex?' done':j===currentTaskIndex?' current':'');
+        pipRow.appendChild(p);
+      }
+      // Brief pause then restart countdown
+      cd.textContent = '';
+      clearInterval(tauntCountdownInterval);
+      setTimeout(()=>{ startInactivityCountdown(); }, 500);
+    }
+  }, 1000);
+}
+function clearInactivityCountdown() {
+  clearInterval(tauntCountdownInterval);
+  tauntCountdownInterval = null;
+  const cd = document.getElementById('taunt-countdown');
+  if (cd) cd.textContent = '';
 }
 
 // ═══════════════════════════════════════════════════════
@@ -976,8 +1022,8 @@ function buildDepreciation() {
 function buildPayroll() {
   const emps=Array.from({length:rand(3,5)},()=>{
     const gross  =randF(4500,9000);
-    const taxRate=20;
-    const niRate =8;
+    const taxRate=[15,20,22,25,28,30,32][rand(0,6)];
+    const niRate =[6,7,8,9,10,12][rand(0,5)];
     const tax    =parseFloat((gross*taxRate/100).toFixed(2));
     const ni     =parseFloat((gross*niRate/100).toFixed(2));
     const net    =parseFloat((gross-tax-ni).toFixed(2));
@@ -1455,7 +1501,7 @@ function handleSubmit(){
   }
 }
 function advance(){
-  currentTaskIndex++; clearTimeout(tauntTimer); closeTaunt();
+  currentTaskIndex++; clearTimeout(tauntTimer); clearInactivityCountdown(); closeTaunt();
   if(currentTaskIndex>=taskQueue.length) endGame();
   else { loadTask(currentTaskIndex); scheduleRandomTaunt(); }
 }
@@ -1464,7 +1510,7 @@ function advance(){
 // END GAME
 // ═══════════════════════════════════════════════════════
 function endGame(){
-  clearInterval(elapsedTimer); clearTimeout(tauntTimer);
+  clearInterval(elapsedTimer); clearTimeout(tauntTimer); clearInactivityCountdown();
   const secs=Math.floor((Date.now()-startTime)/1000);
   showScreen('end-screen');
   // Count occurrences of each task type
@@ -1478,6 +1524,7 @@ function endGame(){
     ['Tasks Completed',taskQueue.length],
     ['Incorrect Submissions',errors],
     ['Total Lockout Time',fmtTime(errors*300)],
+    ['Extra Tasks for Inactivity',inactivityTasks],
   ].map(([l,v])=>`<div class="stat-row"><span class="stat-label">${l}</span><span class="stat-val">${v}</span></div>`).join('')
   + `<div class="stat-row" style="background:#e8e8f8;font-weight:bold"><span class="stat-label">Task Breakdown</span><span class="stat-val">count</span></div>`
   + taskBreakdown;
@@ -1490,7 +1537,7 @@ function endGame(){
 // ═══════════════════════════════════════════════════════
 function startGame(){
   totalTasks=Math.max(1,Math.min(20,parseInt(document.getElementById('task-count-input').value)||5));
-  errors=0; currentTaskIndex=0;
+  errors=0; currentTaskIndex=0; inactivityTasks=0;
   document.getElementById('tb-errors').textContent    ='0';
   document.getElementById('tb-elapsed').textContent   ='00:00:00';
   taskQueue=buildQueue(totalTasks);
@@ -1504,7 +1551,7 @@ function startGame(){
 document.getElementById('start-btn').addEventListener('click',startGame);
 document.getElementById('submit-btn').addEventListener('click',handleSubmit);
 document.getElementById('restart-btn').addEventListener('click',()=>{
-  clearInterval(elapsedTimer); clearTimeout(tauntTimer); closeTaunt();
+  clearInterval(elapsedTimer); clearTimeout(tauntTimer); clearInactivityCountdown(); closeTaunt();
   document.getElementById('tb-task').textContent     ='— / —';
   document.getElementById('tb-elapsed').textContent  ='00:00:00';
   showScreen('start-screen');
