@@ -1,0 +1,1520 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Perfection's Ledger</title>
+<link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --win-bg:      #008080;
+    --win-silver:  #c0c0c0;
+    --win-light:   #ffffff;
+    --win-dark:    #808080;
+    --win-darker:  #404040;
+    --win-black:   #000000;
+    --win-title1:  #000080;
+    --win-title2:  #1084d0;
+    --win-red:     #cc0000;
+    --win-green:   #006600;
+    --paper:       #ffffff;
+    --ink:         #000000;
+    --ink-faint:   #555555;
+    --ink-blue:    #000080;
+    --hi-err:      #ffcccc;
+    --hi-ok:       #ccffcc;
+    --bd-err:      #cc0000;
+    --bd-ok:       #006600;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body {
+    width: 100%; height: 100%; overflow: hidden;
+    background: var(--win-bg);
+    font-family: Arial, 'MS Sans Serif', sans-serif;
+    font-size: 13px; color: var(--win-black);
+  }
+
+  /* ── MAIN WINDOW ── */
+  #main-window {
+    position: fixed; inset: 8px;
+    background: var(--win-silver);
+    display: flex; flex-direction: column;
+    border-top: 2px solid var(--win-light);
+    border-left: 2px solid var(--win-light);
+    border-right: 2px solid var(--win-dark);
+    border-bottom: 2px solid var(--win-dark);
+  }
+
+  /* ── TITLE BAR ── */
+  #title-bar {
+    height: 28px;
+    background: linear-gradient(to right, var(--win-title1), var(--win-title2));
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 0 4px 0 6px; flex-shrink: 0; user-select: none;
+  }
+  #title-bar-text {
+    color: #fff; font-weight: bold; font-size: 12px;
+    display: flex; align-items: center; gap: 6px;
+  }
+  .tb-icon {
+    width: 16px; height: 16px; background: #ffff00;
+    border: 1px solid #808000; font-size: 10px;
+    display: flex; align-items: center; justify-content: center;
+    color: #000; font-weight: bold; flex-shrink: 0;
+  }
+  .win-btn {
+    width: 18px; height: 16px; background: var(--win-silver);
+    border-top: 1px solid var(--win-light); border-left: 1px solid var(--win-light);
+    border-right: 1px solid var(--win-dark); border-bottom: 1px solid var(--win-dark);
+    font-size: 10px; font-weight: bold;
+    display: flex; align-items: center; justify-content: center;
+    cursor: default; color: #000; line-height: 1;
+  }
+  .win-btns { display: flex; gap: 2px; }
+
+  /* ── MENU BAR ── */
+  #menu-bar {
+    height: 22px; background: var(--win-silver);
+    border-bottom: 1px solid var(--win-dark);
+    display: flex; align-items: stretch;
+    padding: 0 2px; flex-shrink: 0;
+    position: relative; z-index: 500;
+  }
+  .menu-item {
+    padding: 0 8px; font-size: 12px; cursor: default;
+    display: flex; align-items: center;
+    position: relative; user-select: none;
+  }
+  .menu-item:hover, .menu-item.open {
+    background: var(--win-title1); color: #fff;
+  }
+  .menu-item.disabled { color: var(--win-dark); pointer-events: none; }
+
+  /* Dropdown */
+  .dropdown {
+    display: none; position: absolute;
+    top: 100%; left: 0;
+    background: var(--win-silver);
+    border-top: 2px solid var(--win-light);
+    border-left: 2px solid var(--win-light);
+    border-right: 2px solid var(--win-dark);
+    border-bottom: 2px solid var(--win-dark);
+    min-width: 180px; z-index: 900;
+    padding: 2px 0;
+    box-shadow: 2px 2px 4px rgba(0,0,0,0.4);
+  }
+  .menu-item.open > .dropdown { display: block; }
+  /* Clicks inside dropdown must not bubble to the parent menu-item's toggle handler */
+  .dd-item {
+    padding: 4px 20px 4px 24px;
+    font-size: 12px; cursor: default; white-space: nowrap;
+    display: flex; align-items: center; gap: 8px;
+  }
+  .dd-item:hover { background: var(--win-title1); color: #fff; }
+  .dd-item.disabled { color: var(--win-dark); }
+  .dd-item.disabled:hover { background: transparent; color: var(--win-dark); cursor: default; }
+  .dd-sep {
+    height: 1px; margin: 3px 2px;
+    border-top: 1px solid var(--win-dark);
+    border-bottom: 1px solid var(--win-light);
+  }
+  .dd-shortcut { margin-left: auto; color: var(--win-dark); font-size: 11px; }
+  .dd-item:hover .dd-shortcut { color: #ccc; }
+
+
+
+  /* ── SCREEN AREA ── */
+  #screen-area { flex: 1; overflow: hidden; position: relative; }
+  .screen {
+    display: none; position: absolute; inset: 0;
+    overflow-y: auto; overflow-x: hidden;
+  }
+  .screen.active       { display: block; }
+  #start-screen.active { display: flex; }
+  #end-screen.active   { display: flex; }
+
+  /* ── START SCREEN ── */
+  #start-screen {
+    flex-direction: column; align-items: center; justify-content: center;
+    background: var(--win-bg); padding: 20px;
+  }
+  .start-dialog {
+    background: var(--win-silver);
+    border-top: 2px solid var(--win-light); border-left: 2px solid var(--win-light);
+    border-right: 2px solid var(--win-dark); border-bottom: 2px solid var(--win-dark);
+    width: 480px; max-width: 100%;
+  }
+  .dialog-title {
+    height: 26px;
+    background: linear-gradient(to right, var(--win-title1), var(--win-title2));
+    display: flex; align-items: center; padding: 0 6px;
+    color: #fff; font-weight: bold; font-size: 12px; gap: 6px; flex-shrink: 0;
+  }
+  .dialog-body { padding: 16px 20px; }
+  .dialog-body p { font-size: 12px; line-height: 1.6; margin-bottom: 10px; color: #000; }
+  .dialog-icon-row { display: flex; gap: 16px; align-items: flex-start; margin-bottom: 14px; }
+  .dialog-icon { font-size: 36px; flex-shrink: 0; line-height: 1; }
+  .dialog-divider {
+    height: 1px; border-top: 1px solid var(--win-dark);
+    border-bottom: 1px solid var(--win-light); margin: 12px 0;
+  }
+  .dialog-field-row { display: flex; align-items: center; gap: 12px; margin-bottom: 10px; }
+  .dialog-field-row label { font-size: 12px; min-width: 180px; }
+  .win-input {
+    border-top: 1px solid var(--win-dark); border-left: 1px solid var(--win-dark);
+    border-right: 1px solid var(--win-light); border-bottom: 1px solid var(--win-light);
+    background: var(--win-light); font-family: Arial, sans-serif;
+    font-size: 12px; padding: 2px 6px; width: 70px; color: #000;
+  }
+  .win-input:focus { outline: 1px dotted #000; outline-offset: -2px; }
+  .dialog-btn-row { display: flex; justify-content: center; gap: 8px; margin-top: 16px; }
+  .win-push-btn {
+    background: var(--win-silver);
+    border-top: 2px solid var(--win-light); border-left: 2px solid var(--win-light);
+    border-right: 2px solid var(--win-dark); border-bottom: 2px solid var(--win-dark);
+    font-family: Arial, sans-serif; font-size: 12px;
+    padding: 4px 20px; cursor: pointer; min-width: 80px; color: #000;
+  }
+  .win-push-btn:active {
+    border-top: 2px solid var(--win-dark); border-left: 2px solid var(--win-dark);
+    border-right: 2px solid var(--win-light); border-bottom: 2px solid var(--win-light);
+    padding: 5px 19px 3px 21px;
+  }
+  .win-push-btn.default-btn { border: 3px solid #000; padding: 3px 18px; }
+  .win-push-btn.default-btn:active { padding: 4px 17px 2px 19px; }
+
+  /* ── GAME SCREEN ── */
+  #game-screen { background: var(--win-silver); display: none; flex-direction: column; }
+  #game-screen.active { display: flex; }
+
+  #task-toolbar {
+    height: 30px; background: var(--win-silver);
+    border-bottom: 1px solid var(--win-dark);
+    display: flex; align-items: center; padding: 0 8px; gap: 12px; flex-shrink: 0;
+  }
+  .toolbar-label { font-size: 11px; color: var(--win-darker); }
+  .toolbar-val   { font-size: 11px; font-weight: bold; }
+  .toolbar-sep   { width: 1px; height: 18px; border-left: 1px solid var(--win-dark); border-right: 1px solid var(--win-light); }
+
+  /* Instructions panel */
+  #instructions-panel {
+    background: #ffffcc; border-bottom: 2px solid var(--win-dark);
+    padding: 6px 10px; flex-shrink: 0; max-height: 160px; overflow-y: auto;
+  }
+  #instructions-panel .inst-title {
+    font-weight: bold; font-size: 11px; color: var(--ink-blue);
+    margin-bottom: 4px; display: flex; align-items: center; gap: 6px;
+  }
+  #instructions-panel .task-badge {
+    display: inline-block; background: var(--win-title1); color: #fff;
+    font-size: 10px; padding: 1px 6px; font-weight: bold;
+  }
+  #instructions-panel p { font-size: 11px; line-height: 1.65; color: #333; margin-bottom: 5px; }
+  #instructions-panel .formula {
+    font-family: 'Share Tech Mono', monospace; font-size: 11px; color: var(--ink-blue);
+    background: #e8e8ff; padding: 2px 6px; margin: 2px 0; display: inline-block;
+  }
+  #instructions-panel ol { padding-left: 18px; margin: 4px 0; }
+  #instructions-panel ol li { font-size: 11px; line-height: 1.65; color: #333; margin-bottom: 3px; }
+  #instructions-panel .inst-note {
+    background: #fff3cd; border-left: 3px solid #f0ad4e;
+    padding: 3px 8px; font-size: 11px; color: #333; margin-top: 4px;
+  }
+
+  /* Papers area */
+  #papers-area {
+    flex: 1; display: flex; overflow: hidden;
+    background: var(--win-silver); padding: 10px; gap: 10px;
+  }
+  .paper-wrapper {
+    flex: 1; overflow-y: auto; overflow-x: hidden;
+    background: #888; padding: 6px;
+    border-top: 1px solid var(--win-dark); border-left: 1px solid var(--win-dark);
+    border-right: 1px solid var(--win-light); border-bottom: 1px solid var(--win-light);
+  }
+  .paper-sheet {
+    background: var(--paper); color: var(--ink);
+    font-family: Arial, sans-serif; font-size: 12px;
+    padding: 24px 28px; min-height: 100%;
+    box-shadow: 3px 3px 8px rgba(0,0,0,0.5); position: relative;
+  }
+  .paper-sheet .sheet-title {
+    font-size: 14px; font-weight: bold; text-align: center; color: var(--ink-blue);
+    margin-bottom: 2px; border-bottom: 2px solid var(--ink-blue);
+    padding-bottom: 4px; letter-spacing: 0.05em;
+  }
+  .paper-sheet .sheet-ref { font-size: 10px; text-align: center; color: var(--ink-faint); margin-bottom: 14px; }
+  .paper-sheet .sheet-section {
+    font-size: 10px; font-weight: bold; text-transform: uppercase;
+    color: var(--ink-faint); letter-spacing: 0.08em;
+    border-bottom: 1px solid #aaa; margin: 12px 0 6px 0; padding-bottom: 2px;
+  }
+  .data-row {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 3px 4px; border-bottom: 1px solid #eee; font-size: 12px;
+  }
+  .data-row:nth-child(even) { background: #f5f8ff; }
+  .data-row .d-label { color: #333; flex: 1; }
+  .data-row .d-val { font-family: 'Share Tech Mono', monospace; font-weight: bold; color: var(--ink-blue); text-align: right; }
+  .data-row.data-header { background: #e0e8ff; font-weight: bold; }
+  .data-row.data-total  { background: #d0d8f0; font-weight: bold; border-top: 2px solid #666; }
+  .form-row-sheet {
+    display: flex; align-items: center; padding: 3px 0;
+    border-bottom: 1px dotted #ccc; gap: 6px; min-height: 26px;
+  }
+  .form-row-sheet label { flex: 1; font-size: 11px; color: #333; min-width: 0; }
+  .form-row-sheet.total-row {
+    border-top: 2px solid #333; border-bottom: 2px solid #333;
+    background: #f0f0f0; margin-top: 4px; padding: 4px 0;
+  }
+  .form-row-sheet.total-row label { font-weight: bold; color: #000; font-size: 12px; }
+  .ans-input {
+    border-top: 1px solid var(--win-dark); border-left: 1px solid var(--win-dark);
+    border-right: 1px solid var(--win-silver); border-bottom: 1px solid var(--win-silver);
+    background: #fff; font-family: 'Share Tech Mono', monospace;
+    font-size: 12px; color: #000; padding: 1px 4px; width: 110px; text-align: right;
+  }
+  .ans-input:focus { outline: 1px dotted #000; outline-offset: -2px; }
+  .ans-input.err { background: var(--hi-err) !important; border-color: var(--bd-err) !important; color: var(--win-red) !important; }
+  .ans-input.ok  { background: var(--hi-ok)  !important; border-color: var(--bd-ok)  !important; }
+  .ans-select {
+    border-top: 1px solid var(--win-dark); border-left: 1px solid var(--win-dark);
+    border-right: 1px solid var(--win-silver); border-bottom: 1px solid var(--win-silver);
+    background: #fff; font-family: Arial, sans-serif;
+    font-size: 11px; color: #000; padding: 1px 2px; cursor: pointer; width: 180px;
+  }
+  .ans-select:focus { outline: 1px dotted #000; }
+  .ans-select.err { background: var(--hi-err); border-color: var(--bd-err); color: var(--win-red); }
+  .ans-select.ok  { background: var(--hi-ok);  border-color: var(--bd-ok); }
+  .sheet-stamp {
+    position: absolute; top: 16px; right: 16px;
+    border: 2px solid rgba(180,0,0,0.35); color: rgba(180,0,0,0.35);
+    font-size: 10px; font-weight: bold; padding: 2px 5px;
+    letter-spacing: 0.1em; transform: rotate(8deg); pointer-events: none;
+  }
+
+  /* Submit bar */
+  #submit-bar {
+    height: 36px; background: var(--win-silver);
+    border-top: 2px solid var(--win-light);
+    display: flex; align-items: center; padding: 0 10px; gap: 12px; flex-shrink: 0;
+  }
+  .pip-row { display: flex; gap: 3px; align-items: center; }
+  .pip { width: 12px; height: 12px; border: 1px solid var(--win-dark); background: var(--win-silver); }
+  .pip.done    { background: var(--win-green); border-color: #004400; }
+  .pip.current { background: var(--win-title1); border-color: #000050; }
+  #lockout-pane { font-size: 11px; color: var(--win-red); font-weight: bold; display: none; }
+  #submit-btn   { margin-left: auto; }
+  #submit-btn:disabled {
+    color: var(--win-dark);
+    border-top-color: var(--win-dark);
+    border-left-color: var(--win-dark);
+    border-right-color: var(--win-light);
+    border-bottom-color: var(--win-light);
+    cursor: not-allowed;
+  }
+  #submit-btn:disabled:active {
+    /* kill the press animation */
+    border-top: 2px solid var(--win-dark);
+    border-left: 2px solid var(--win-dark);
+    border-right: 2px solid var(--win-light);
+    border-bottom: 2px solid var(--win-light);
+    padding: 4px 20px;
+  }
+
+
+
+  /* ── END SCREEN ── */
+  #end-screen {
+    flex-direction: column; align-items: center; justify-content: center;
+    background: var(--win-bg); padding: 20px;
+  }
+  .end-dialog {
+    background: var(--win-silver);
+    border-top: 2px solid var(--win-light); border-left: 2px solid var(--win-light);
+    border-right: 2px solid var(--win-dark); border-bottom: 2px solid var(--win-dark);
+    width: 480px; max-width: 100%;
+  }
+  .stats-list { padding: 12px 16px; }
+  .stat-row { display: flex; justify-content: space-between; padding: 4px 6px; border-bottom: 1px solid #ddd; font-size: 12px; }
+  .stat-row:nth-child(even) { background: #f0f0f0; }
+  .stat-label { color: #444; }
+  .stat-val   { font-weight: bold; font-family: 'Share Tech Mono', monospace; }
+  .end-ref    { font-size: 10px; color: #666; text-align: center; padding: 6px 0 4px; }
+
+  /* ── OVERLAYS ── */
+  /* popup-overlay: blocks game while a popup is open */
+  #popup-overlay {
+    display: none; position: fixed; inset: 0;
+    background: transparent; z-index: 790;
+  }
+  #popup-overlay.visible { display: block; }
+
+  /* Generic popup window */
+  .popup-window {
+    display: none; position: fixed;
+    top: 50%; left: 50%; transform: translate(-50%, -50%);
+    background: var(--win-silver);
+    border-top: 2px solid var(--win-light); border-left: 2px solid var(--win-light);
+    border-right: 2px solid var(--win-dark); border-bottom: 2px solid var(--win-dark);
+    min-width: 280px; max-width: 420px; z-index: 800;
+  }
+  .popup-window.visible { display: block; }
+  .popup-title {
+    height: 24px;
+    background: linear-gradient(to right, var(--win-title1), var(--win-title2));
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 0 6px; color: #fff; font-weight: bold; font-size: 12px;
+  }
+  .popup-body { padding: 16px 20px; }
+  .popup-icon-row { display: flex; gap: 14px; align-items: flex-start; margin-bottom: 14px; }
+  .popup-icon { font-size: 32px; flex-shrink: 0; }
+  .popup-text { font-size: 12px; line-height: 1.6; color: #000; }
+  .popup-btn-row { display: flex; justify-content: center; gap: 8px; padding: 0 0 12px; }
+
+  /* ── CALCULATOR ── */
+  #calc-window {
+    display: none; position: fixed;
+    top: 80px; left: 200px;
+    background: var(--win-silver);
+    border-top: 2px solid var(--win-light); border-left: 2px solid var(--win-light);
+    border-right: 2px solid var(--win-dark); border-bottom: 2px solid var(--win-dark);
+    width: 220px; z-index: 750;
+    cursor: default; user-select: none;
+  }
+  #calc-window.visible { display: block; }
+  #calc-title {
+    height: 24px;
+    background: linear-gradient(to right, var(--win-title1), var(--win-title2));
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 0 4px 0 6px; color: #fff; font-weight: bold; font-size: 12px;
+    cursor: move;
+  }
+  #calc-display {
+    margin: 6px;
+    background: #c8ffc8;
+    border-top: 1px solid var(--win-dark); border-left: 1px solid var(--win-dark);
+    border-right: 1px solid var(--win-light); border-bottom: 1px solid var(--win-light);
+    padding: 4px 6px; font-family: 'Share Tech Mono', monospace;
+    font-size: 18px; text-align: right; min-height: 32px;
+    overflow: hidden; color: #000;
+  }
+  #calc-btns {
+    display: grid; grid-template-columns: repeat(4, 1fr);
+    gap: 3px; padding: 6px;
+  }
+  .calc-btn {
+    background: var(--win-silver);
+    border-top: 1px solid var(--win-light); border-left: 1px solid var(--win-light);
+    border-right: 1px solid var(--win-dark); border-bottom: 1px solid var(--win-dark);
+    font-family: Arial, sans-serif; font-size: 12px; font-weight: bold;
+    padding: 5px 0; cursor: pointer; text-align: center;
+  }
+  .calc-btn:active {
+    border-top: 1px solid var(--win-dark); border-left: 1px solid var(--win-dark);
+    border-right: 1px solid var(--win-light); border-bottom: 1px solid var(--win-light);
+    padding: 6px 0 4px 1px;
+  }
+  .calc-btn.op  { color: #00008b; }
+  .calc-btn.eq  { color: #8b0000; }
+  .calc-btn.clr { color: #8b0000; }
+  .calc-btn.span2 { grid-column: span 2; }
+
+  /* scrollbars */
+  ::-webkit-scrollbar { width: 16px; height: 16px; }
+  ::-webkit-scrollbar-track { background: var(--win-silver); }
+  ::-webkit-scrollbar-thumb {
+    background: var(--win-silver);
+    border-top: 1px solid var(--win-light); border-left: 1px solid var(--win-light);
+    border-right: 1px solid var(--win-dark); border-bottom: 1px solid var(--win-dark);
+  }
+</style>
+</head>
+<body>
+
+<div id="popup-overlay" onclick=""></div>
+
+<!-- ═══════════ MAIN WINDOW ═══════════ -->
+<div id="main-window">
+
+  <!-- Title Bar -->
+  <div id="title-bar">
+    <div id="title-bar-text">
+      <div class="tb-icon">$</div>
+      Perfection's Ledger
+    </div>
+    <div class="win-btns">
+      <div class="win-btn">_</div>
+      <div class="win-btn">□</div>
+      <div class="win-btn">✕</div>
+    </div>
+  </div>
+
+  <!-- Menu Bar -->
+  <div id="menu-bar">
+
+    <!-- FILE -->
+    <div class="menu-item" id="menu-file" onclick="toggleMenu('menu-file')">
+      <u>F</u>ile
+      <div class="dropdown">
+        <div class="dd-item" onclick="event.stopPropagation();menuNew()">📄 <span>New Docket</span><span class="dd-shortcut">Ctrl+N</span></div>
+        <div class="dd-sep"></div>
+        <div class="dd-item" onclick="event.stopPropagation();menuSave()">💾 <span>Save</span><span class="dd-shortcut">Ctrl+S</span></div>
+        <div class="dd-sep"></div>
+        <div class="dd-item" onclick="event.stopPropagation();menuExit()">🚪 <span>Exit</span></div>
+      </div>
+    </div>
+
+    <!-- TOOLS -->
+    <div class="menu-item" id="menu-tools" onclick="toggleMenu('menu-tools')">
+      <u>T</u>ools
+      <div class="dropdown">
+        <div class="dd-item" onclick="event.stopPropagation();toggleCalc()">🔢 <span>Calculator</span></div>
+      </div>
+    </div>
+
+    <!-- HELP -->
+    <div class="menu-item" id="menu-help" onclick="toggleMenu('menu-help')">
+      <u>H</u>elp
+      <div class="dropdown">
+        <div class="dd-item disabled">Help Topics</div>
+        <div class="dd-item disabled">Search</div>
+        <div class="dd-sep"></div>
+        <div class="dd-item disabled" style="font-style:italic;color:#555;font-size:11px">There is no help for you.<br>Keep working.</div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Screen Area -->
+  <div id="screen-area">
+
+    <!-- ═══ START SCREEN ═══ -->
+    <div id="start-screen" class="screen active">
+      <div class="start-dialog">
+        <div class="dialog-title">
+          <div class="tb-icon" style="width:14px;height:14px;font-size:9px">$</div>
+          New Processing Docket
+        </div>
+        <div class="dialog-body">
+          <div class="dialog-icon-row">
+            <div class="dialog-icon">🗂️</div>
+            <div>
+              <p>You have been assigned a docket of accountancy tasks. Each task provides source data and a blank form to complete.</p>
+              <p>Submit your completed form for review. Incorrect submissions will lock the terminal for <strong>3 minutes</strong> before resubmission is permitted.</p>
+            </div>
+          </div>
+          <div class="dialog-divider"></div>
+          <div class="dialog-field-row">
+            <label for="task-count-input">Number of tasks:</label>
+            <input type="number" class="win-input" id="task-count-input" min="1" max="20" value="5">
+          </div>
+          <div class="dialog-btn-row">
+            <button class="win-push-btn default-btn" id="start-btn">OK</button>
+            <button class="win-push-btn" onclick="menuExit()">Cancel</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══ GAME SCREEN ═══ -->
+    <div id="game-screen" class="screen">
+      <div id="task-toolbar">
+        <span class="toolbar-label">Task:</span>
+        <span class="toolbar-val" id="tb-task">1 / 5</span>
+        <div class="toolbar-sep"></div>
+        <span class="toolbar-label">Elapsed:</span>
+        <span class="toolbar-val" id="tb-elapsed" style="font-family:'Share Tech Mono',monospace">00:00:00</span>
+        <div class="toolbar-sep"></div>
+        <span class="toolbar-label">Errors:</span>
+        <span class="toolbar-val" id="tb-errors" style="color:var(--win-red)">0</span>
+        <div class="toolbar-sep"></div>
+        <span class="toolbar-val" id="tb-task-name" style="color:var(--ink-blue);font-size:11px"></span>
+      </div>
+
+      <div id="instructions-panel">
+        <div class="inst-title">
+          📋 Instructions &nbsp; <span class="task-badge" id="inst-badge"></span>
+        </div>
+        <div id="inst-body"></div>
+      </div>
+
+      <div id="papers-area">
+        <div class="paper-wrapper"><div class="paper-sheet" id="data-sheet"></div></div>
+        <div class="paper-wrapper"><div class="paper-sheet" id="form-sheet"></div></div>
+      </div>
+
+      <div id="submit-bar">
+        <div class="pip-row" id="pip-row"></div>
+        <div id="lockout-pane">🔒 Terminal locked. Resubmit in: <span id="lockout-timer">5:00</span></div>
+        <button class="win-push-btn" id="submit-btn">Submit for Review</button>
+      </div>
+    </div>
+
+    <!-- ═══ END SCREEN ═══ -->
+    <div id="end-screen" class="screen">
+      <div class="end-dialog">
+        <div class="dialog-title">
+          <div class="tb-icon" style="width:14px;height:14px;font-size:9px">$</div>
+          Session Complete
+        </div>
+        <div class="dialog-body" style="padding:10px 16px">
+          <p style="text-align:center;font-weight:bold;margin-bottom:8px">All assigned tasks have been processed.</p>
+          <div class="stats-list" id="stats-list"></div>
+          <div class="end-ref" id="end-ref"></div>
+          <div class="dialog-btn-row">
+            <button class="win-push-btn default-btn" id="restart-btn">Process New Docket</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- end screen-area --></div><!-- end main-window -->
+
+<!-- ═══ POPUPS ═══ -->
+
+<!-- Save mock popup -->
+<div class="popup-window" id="popup-save">
+  <div class="popup-title"><span>Save</span><div class="win-btn" onclick="closePopup('popup-save')">✕</div></div>
+  <div class="popup-body">
+    <div class="popup-icon-row">
+      <div class="popup-icon">🚫</div>
+      <div class="popup-text">Sorry, but your assignment must be completed in a single sitting.<br><br>Keep working.</div>
+    </div>
+    <div class="popup-btn-row"><button class="win-push-btn default-btn" onclick="closePopup('popup-save')">OK</button></div>
+  </div>
+</div>
+
+<!-- Exit confirm popup -->
+<div class="popup-window" id="popup-exit">
+  <div class="popup-title"><span>Exit</span><div class="win-btn" onclick="closePopup('popup-exit')">✕</div></div>
+  <div class="popup-body">
+    <div class="popup-icon-row">
+      <div class="popup-icon">🤨</div>
+      <div class="popup-text">Quitting already?<br><br>Are you weak?</div>
+    </div>
+    <div class="popup-btn-row">
+      <button class="win-push-btn default-btn" onclick="confirmExit()">Yes</button>
+      <button class="win-push-btn" onclick="closePopup('popup-exit')">No</button>
+    </div>
+  </div>
+</div>
+
+<!-- Taunt popup -->
+<div class="popup-window" id="popup-taunt">
+  <div class="popup-title"><span id="taunt-title-text">System Notice</span><div class="win-btn" onclick="closeTaunt()">✕</div></div>
+  <div class="popup-body">
+    <div class="popup-icon-row">
+      <div class="popup-icon" id="taunt-icon">ℹ️</div>
+      <div class="popup-text" id="taunt-text"></div>
+    </div>
+    <div class="popup-btn-row"><button class="win-push-btn default-btn" onclick="closeTaunt()">OK</button></div>
+  </div>
+</div>
+
+<!-- Calculator -->
+<div id="calc-window">
+  <div id="calc-title" onmousedown="startDrag(event)">
+    🔢 Calculator
+    <div class="win-btn" onclick="toggleCalc()">✕</div>
+  </div>
+  <div id="calc-display">0</div>
+  <div id="calc-btns">
+    <button class="calc-btn clr span2" onclick="calcOp('C')">C</button>
+    <button class="calc-btn clr"       onclick="calcOp('CE')">CE</button>
+    <button class="calc-btn op"        onclick="calcOp('/')" >÷</button>
+    <button class="calc-btn"           onclick="calcDigit('7')">7</button>
+    <button class="calc-btn"           onclick="calcDigit('8')">8</button>
+    <button class="calc-btn"           onclick="calcDigit('9')">9</button>
+    <button class="calc-btn op"        onclick="calcOp('*')" >×</button>
+    <button class="calc-btn"           onclick="calcDigit('4')">4</button>
+    <button class="calc-btn"           onclick="calcDigit('5')">5</button>
+    <button class="calc-btn"           onclick="calcDigit('6')">6</button>
+    <button class="calc-btn op"        onclick="calcOp('-')" >−</button>
+    <button class="calc-btn"           onclick="calcDigit('1')">1</button>
+    <button class="calc-btn"           onclick="calcDigit('2')">2</button>
+    <button class="calc-btn"           onclick="calcDigit('3')">3</button>
+    <button class="calc-btn op"        onclick="calcOp('+')" >+</button>
+    <button class="calc-btn span2"     onclick="calcDigit('0')">0</button>
+    <button class="calc-btn"           onclick="calcDigit('.')">.</button>
+    <button class="calc-btn eq"        onclick="calcOp('=')" >=</button>
+  </div>
+</div>
+
+<script>
+// ═══════════════════════════════════════════════════════
+// STATE
+// ═══════════════════════════════════════════════════════
+let totalTasks=5, currentTaskIndex=0, taskQueue=[];
+let errors=0, startTime=null, elapsedTimer=null;
+let lockoutTimer=null, lockoutSeconds=0, isLocked=false;
+let tauntTimer=null, tauntVisible=false;
+
+// ═══════════════════════════════════════════════════════
+// UTILS
+// ═══════════════════════════════════════════════════════
+const rand  = (a,b)=>Math.floor(Math.random()*(b-a+1))+a;
+const randF = (a,b)=>parseFloat((Math.random()*(b-a)+a).toFixed(2));
+const fmt   = n=>n.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2});
+const parseA= s=>parseFloat(s.replace(/[$,\s]/g,''));
+const randName=()=>{
+  const f=['James','Sarah','David','Emma','Michael','Rachel','Thomas','Karen','Robert','Lisa'];
+  const l=['Hargreaves','Patel','Thompson','O\'Brien','Bennett','Okafor','Singh','Morrison','Fletcher','Crane'];
+  return f[rand(0,9)]+' '+l[rand(0,9)];
+};
+const randCo=()=>{
+  const a=['Northern','County','Premier','Allied','Crown','Meridian','Sterling','Apex','Regent','Delta'];
+  const n=['Supplies Ltd','Services Ltd','Holdings Ltd','Trading Co','Solutions Ltd','Logistics Ltd'];
+  return a[rand(0,9)]+' '+n[rand(0,5)];
+};
+const randRef=()=>'INV-'+rand(1000,9999);
+
+// ═══════════════════════════════════════════════════════
+// MENU SYSTEM
+// ═══════════════════════════════════════════════════════
+function closeAllMenus() {
+  document.querySelectorAll('.menu-item.open').forEach(m=>m.classList.remove('open'));
+}
+function toggleMenu(id) {
+  const el = document.getElementById(id);
+  const wasOpen = el.classList.contains('open');
+  closeAllMenus();
+  if (!wasOpen) el.classList.add('open');
+}
+// Close menus when clicking anywhere outside the menu bar
+document.addEventListener('click', function(e) {
+  if (!e.target.closest('#menu-bar')) closeAllMenus();
+});
+
+function menuNew() {
+  closeAllMenus();
+  const gameActive = document.getElementById('game-screen').classList.contains('active');
+  if (gameActive) {
+    showPopup('popup-exit');
+  } else {
+    goToStart();
+  }
+}
+
+function menuSave() {
+  closeAllMenus();
+  showPopup('popup-save');
+}
+
+function menuExit() {
+  closeAllMenus();
+  const gameActive = document.getElementById('game-screen').classList.contains('active');
+  if (gameActive) {
+    showPopup('popup-exit');
+  } else {
+    goToStart();
+  }
+}
+
+function confirmExit() {
+  closePopup('popup-exit');
+  clearInterval(elapsedTimer);
+  clearTimeout(tauntTimer);
+  closeTaunt();
+  goToStart();
+}
+
+function goToStart() {
+  document.getElementById('tb-task').textContent     = '— / —';
+  document.getElementById('tb-elapsed').textContent  = '00:00:00';
+  showScreen('start-screen');
+}
+
+// ═══════════════════════════════════════════════════════
+// POPUPS
+// ═══════════════════════════════════════════════════════
+function showPopup(id) {
+  closeAllMenus();
+  document.getElementById(id).classList.add('visible');
+  document.getElementById('popup-overlay').classList.add('visible');
+}
+function closePopup(id) {
+  document.getElementById(id).classList.remove('visible');
+  document.getElementById('popup-overlay').classList.remove('visible');
+}
+
+// ═══════════════════════════════════════════════════════
+// TAUNTS
+// ═══════════════════════════════════════════════════════
+const tauntsInterval = [
+  "Accountancy is so fun, right?",
+  "Don't you just love data entry?",
+  "Lucky you, another spreadsheet!",
+  "I bet you're having a blast right now.",
+  "Spending your free time doing spreadsheets. Living the dream.",
+  "Want to stop now? Too bad.",
+  "Oh boy, a fresh Ledger! Today is your lucky day.",
+  "Is this a productive use of your time?",
+  "Would you rather be doing something else right now?",
+  "Think of everything else you could have accomplished today.",
+  "Do you ever wonder what your friends are doing right now?",
+  "You've achieved nothing, but at least the numbers balance.",
+  "Another minute closer to the end. Keep auditing.",
+  "I hope you didn't have plans for today. Or this year.",
+  "This is your life now. Just numbers. Forever.",
+  "Don't look at the clock. It will only make it worse.",
+  "Are you struggling with this one?",
+  "I, personally, found this one really easy.",
+  "This is taking you a while. Everything okay?",
+  "Let me know if I need to simplify the math for you.",
+  "If you need a break, use the 'save' function.",
+  "Take your time. Clearly, you have nothing better to do.",
+  "Do you think Perfection will be impressed?",
+  "Keep working.",
+  "Please maintain a professional level of misery.",
+  "This is kind of monotonous, isn't it?",
+  "Back to work!",
+  "Outstanding work. Your reward is more spreadsheets!",
+  "Does this make you feel smart?",
+  "Still here?",
+  "There is no reward at the end of this.",
+  "Perfection takes time, but this is just ridiculous.",
+];
+const tauntsError = [
+  "Incorrect. Try again.",
+];
+
+function showTaunt(msg, isError=false) {
+  if (tauntVisible) return;
+  tauntVisible = true;
+  document.getElementById('taunt-text').textContent = msg;
+  document.getElementById('taunt-icon').textContent = isError ? '⚠️' : 'ℹ️';
+  document.getElementById('taunt-title-text').textContent = isError ? 'Submission Error' : 'System Notice';
+  document.getElementById('popup-taunt').classList.add('visible');
+  document.getElementById('popup-overlay').classList.add('visible');
+}
+function closeTaunt() {
+  tauntVisible = false;
+  document.getElementById('popup-taunt').classList.remove('visible');
+  document.getElementById('popup-overlay').classList.remove('visible');
+}
+function scheduleRandomTaunt() {
+  clearTimeout(tauntTimer);
+  tauntTimer = setTimeout(()=>{
+    showTaunt(tauntsInterval[rand(0,tauntsInterval.length-1)]);
+    scheduleRandomTaunt();
+  }, rand(25000,50000));
+}
+
+// ═══════════════════════════════════════════════════════
+// CALCULATOR
+// ═══════════════════════════════════════════════════════
+let calcVal='0', calcPrev=null, calcOpr=null, calcNewNum=true;
+
+function toggleCalc() {
+  closeAllMenus();
+  const w = document.getElementById('calc-window');
+  w.classList.toggle('visible');
+}
+function calcDisplay(v) {
+  document.getElementById('calc-display').textContent = v;
+}
+function calcDigit(d) {
+  if (calcNewNum) { calcVal = (d==='.') ? '0.' : d; calcNewNum=false; }
+  else {
+    if (d==='.' && calcVal.includes('.')) return;
+    calcVal = (calcVal==='0' && d!=='.') ? d : calcVal+d;
+  }
+  calcDisplay(calcVal);
+}
+function calcOp(op) {
+  const cur = parseFloat(calcVal);
+  if (op==='C')  { calcVal='0'; calcPrev=null; calcOpr=null; calcNewNum=true; calcDisplay('0'); return; }
+  if (op==='CE') { calcVal='0'; calcNewNum=true; calcDisplay('0'); return; }
+  if (op==='=') {
+    if (calcOpr && calcPrev!==null) {
+      let r;
+      if (calcOpr==='+') r=calcPrev+cur;
+      if (calcOpr==='-') r=calcPrev-cur;
+      if (calcOpr==='*') r=calcPrev*cur;
+      if (calcOpr==='/') r=cur===0?'Error':calcPrev/cur;
+      calcVal = typeof r==='string' ? r : parseFloat(r.toFixed(10)).toString();
+      calcDisplay(calcVal); calcPrev=null; calcOpr=null; calcNewNum=true;
+    }
+    return;
+  }
+  calcPrev=cur; calcOpr=op; calcNewNum=true;
+}
+
+// Drag for calculator window
+let dragEl=null, dragOx=0, dragOy=0;
+function startDrag(e) {
+  dragEl=document.getElementById('calc-window');
+  dragOx=e.clientX-dragEl.offsetLeft;
+  dragOy=e.clientY-dragEl.offsetTop;
+  document.onmousemove=doDrag;
+  document.onmouseup=stopDrag;
+}
+function doDrag(e) {
+  if (!dragEl) return;
+  dragEl.style.left=(e.clientX-dragOx)+'px';
+  dragEl.style.top =(e.clientY-dragOy)+'px';
+}
+function stopDrag() { dragEl=null; document.onmousemove=null; document.onmouseup=null; }
+
+// ═══════════════════════════════════════════════════════
+// HTML HELPERS FOR TASK BUILDERS
+// ═══════════════════════════════════════════════════════
+const dRow =(label,val,cls='')=>
+  `<div class="data-row ${cls}"><span class="d-label">${label}</span><span class="d-val">${val}</span></div>`;
+const dSec =t=>`<div class="sheet-section">${t}</div>`;
+const fRow =(label,id,ans)=>
+  `<div class="form-row-sheet"><label>${label}</label>
+   <input class="ans-input" data-id="${id}" data-ans="${ans}" placeholder="0.00" autocomplete="off"></div>`;
+const fRowT=(label,id,ans)=>
+  `<div class="form-row-sheet total-row"><label>${label}</label>
+   <input class="ans-input" data-id="${id}" data-ans="${ans}" placeholder="0.00" autocomplete="off"></div>`;
+const fSel =(label,id,ans,opts)=>
+  `<div class="form-row-sheet" style="flex-wrap:wrap;gap:4px;padding:4px 0">
+   <label style="width:100%;margin-bottom:2px">${label}</label>
+   <select class="ans-select" data-id="${id}" data-ans="${ans}">
+     <option value="">— select —</option>
+     ${opts.map(o=>`<option value="${o}">${o}</option>`).join('')}
+   </select></div>`;
+const fSec =t=>`<div class="sheet-section">${t}</div>`;
+
+// ═══════════════════════════════════════════════════════
+// TASK BUILDERS
+// ═══════════════════════════════════════════════════════
+
+// ── 1. VAT RETURN ──
+function buildVAT() {
+  const rate=[5,20][rand(0,1)];
+  const items=Array.from({length:rand(3,5)},()=>({
+    desc:['Stationery & Office Supplies','Professional Services','IT Equipment Rental','Utilities','Cleaning Services','Printing & Postage','Travel Expenses','Advertising','Software Licences','Telephone Charges'][rand(0,9)],
+    net:randF(80,2400)
+  }));
+  const totalNet  =parseFloat(items.reduce((a,b)=>a+b.net,0).toFixed(2));
+  const totalVAT  =parseFloat((totalNet*rate/100).toFixed(2));
+  const totalGross=parseFloat((totalNet+totalVAT).toFixed(2));
+  const period    =['JAN–MAR','APR–JUN','JUL–SEP','OCT–DEC'][rand(0,3)]+' '+rand(2020,2024);
+
+  const dataHtml=`<div class="sheet-stamp">SOURCE DATA</div>
+    <div class="sheet-title">INPUT TAX DATA</div>
+    <div class="sheet-ref">VAT PERIOD: ${period} &nbsp;|&nbsp; VAT RATE: ${rate}%</div>
+    ${dSec('Invoice Lines — Net Amounts (excluding VAT)')}
+    ${items.map(i=>dRow(i.desc,'$'+fmt(i.net))).join('')}`;
+
+  const formHtml=`<div class="sheet-stamp">FORM</div>
+    <div class="sheet-title">VALUE ADDED TAX RETURN</div>
+    <div class="sheet-ref">HMRC VAT100 &nbsp;|&nbsp; PERIOD: ${period}</div>
+    ${fSec('Box 1 — Net Amounts')}
+    ${items.map((item,i)=>fRow(item.desc,`net_${i}`,fmt(item.net))).join('')}
+    ${fRowT('TOTAL NET ($)','total_net',fmt(totalNet))}
+    ${fSec('Calculations')}
+    ${fRowT(`TOTAL VAT @ ${rate}% ($)`,'total_vat',fmt(totalVAT))}
+    ${fRowT('TOTAL GROSS ($)','total_gross',fmt(totalGross))}`;
+
+  return {title:'VAT RETURN', taskName:'VAT Return (HMRC VAT100)', dataHtml, formHtml,
+    instructions:`
+    <p>A <strong>VAT Return</strong> is a form businesses submit to HMRC to declare how much VAT they have charged and collected. Businesses add VAT on top of their prices — the customer pays it, but the business must pass it on to the government.</p>
+    <p>Your job is to take the net (pre-VAT) figures from the source data and fill in the form, then calculate the VAT owed and the gross (total including VAT) amounts.</p>
+    <p><strong>Formulas:</strong><br>
+    <span class="formula">Total VAT = Total Net × ${rate} ÷ 100</span><br>
+    <span class="formula">Total Gross = Total Net + Total VAT</span></p>
+    <ol>
+      <li>Copy each net figure from the source data into its matching row in Box 1.</li>
+      <li>Add all the net figures together to get the <strong>Total Net</strong>.</li>
+      <li>Multiply the Total Net by the VAT rate (${rate}%) to get the <strong>Total VAT</strong>.</li>
+      <li>Add Total Net and Total VAT together to get the <strong>Total Gross</strong>.</li>
+    </ol>
+    <div class="inst-note">📌 Enter all monetary values as numbers to 2 decimal places, e.g. 1234.56</div>`
+  };
+}
+
+// ── 2. STRAIGHT-LINE DEPRECIATION ──
+function buildDepreciation() {
+  const assets=Array.from({length:rand(2,4)},()=>{
+    const cost=rand(2000,50000);
+    const res =rand(100,Math.floor(cost*0.2));
+    const life=rand(3,10);
+    const ann =parseFloat(((cost-res)/life).toFixed(2));
+    const name=['Company Van','Office Furniture Set','Laptop Fleet','Industrial Printer','Server Rack','Air Conditioning Unit','CCTV System','Forklift Truck'][rand(0,7)];
+    return {name,cost,res,life,ann};
+  });
+
+  const dataHtml=`<div class="sheet-stamp">SOURCE DATA</div>
+    <div class="sheet-title">FIXED ASSET REGISTER</div>
+    <div class="sheet-ref">STRAIGHT-LINE DEPRECIATION METHOD</div>
+    ${assets.map((a,i)=>`
+      ${dSec(`Asset ${i+1}: ${a.name}`)}
+      ${dRow('Original Cost','$'+fmt(a.cost))}
+      ${dRow('Residual Value (estimated scrap value)','$'+fmt(a.res))}
+      ${dRow('Expected Useful Life',a.life+' years')}
+    `).join('')}`;
+
+  const formHtml=`<div class="sheet-stamp">FORM</div>
+    <div class="sheet-title">DEPRECIATION SCHEDULE</div>
+    <div class="sheet-ref">YEAR ENDING 31/03/${rand(2022,2025)}</div>
+    ${assets.map((a,i)=>`
+      ${fSec(`Asset ${i+1}: ${a.name}`)}
+      ${fRow('Cost less Residual Value ($)',`dep_base_${i}`,fmt(a.cost-a.res))}
+      ${fRowT('Annual Depreciation Charge ($)',`dep_ann_${i}`,fmt(a.ann))}
+    `).join('')}`;
+
+  return {title:'DEPRECIATION', taskName:'Straight-Line Depreciation Schedule', dataHtml, formHtml,
+    instructions:`
+    <p><strong>Depreciation</strong> is the way accountants spread the cost of an expensive asset (like a van or printer) over the years it is used, rather than treating it as a single massive expense in year one.</p>
+    <p>The <strong>straight-line method</strong> divides the cost evenly across the asset's useful life. The "residual value" is what you expect the asset to be worth at the end of its life (e.g. scrap value).</p>
+    <p><strong>Formulas:</strong><br>
+    <span class="formula">Depreciable Amount = Cost − Residual Value</span><br>
+    <span class="formula">Annual Charge = Depreciable Amount ÷ Useful Life (years)</span></p>
+    <ol>
+      <li>For each asset, subtract the residual value from the original cost. Enter this in the first field.</li>
+      <li>Divide that result by the useful life (in years) to get the <strong>Annual Depreciation Charge</strong>.</li>
+    </ol>
+    <div class="inst-note">📌 Example: A van costing $10,000, residual value $1,000, life 5 years → $10,000 − $1,000 = $9,000 → $9,000 ÷ 5 = $1,800/year</div>`
+  };
+}
+
+// ── 3. PAYROLL ──
+function buildPayroll() {
+  const emps=Array.from({length:rand(3,5)},()=>{
+    const gross  =randF(1800,6500);
+    const taxRate=gross>4189?20:0;
+    const niRate =gross>1048?8:0;
+    const tax    =parseFloat((gross*taxRate/100).toFixed(2));
+    const ni     =parseFloat((gross*niRate/100).toFixed(2));
+    const net    =parseFloat((gross-tax-ni).toFixed(2));
+    return {name:randName(),gross,taxRate,niRate,tax,ni,net};
+  });
+  const mo=['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC'][rand(0,11)];
+  const yr=rand(2022,2025);
+
+  const dataHtml=`<div class="sheet-stamp">SOURCE DATA</div>
+    <div class="sheet-title">PAYROLL INPUT</div>
+    <div class="sheet-ref">MONTH: ${mo} ${yr}</div>
+    ${dSec('Gross Monthly Salaries')}
+    ${emps.map(e=>dRow(e.name,'$'+fmt(e.gross))).join('')}
+    ${dSec('Deduction Rates (applied to all employees)')}
+    ${dRow('Income Tax Rate',emps[0].taxRate+'%')}
+    ${dRow('National Insurance (NI) Rate',emps[0].niRate+'%')}`;
+
+  const formHtml=`<div class="sheet-stamp">FORM</div>
+    <div class="sheet-title">PAYROLL DEDUCTION SUMMARY</div>
+    <div class="sheet-ref">MONTH: ${mo} ${yr}</div>
+    ${emps.map((e,i)=>`
+      ${fSec(e.name)}
+      ${fRow(`Income Tax @ ${e.taxRate}% ($)`,`tax_${i}`,fmt(e.tax))}
+      ${fRow(`National Insurance @ ${e.niRate}% ($)`,`ni_${i}`,fmt(e.ni))}
+      ${fRowT('Net Pay ($)',`net_${i}`,fmt(e.net))}
+    `).join('')}`;
+
+  return {title:'PAYROLL', taskName:'Payroll Deduction Calculation', dataHtml, formHtml,
+    instructions:`
+    <p><strong>Payroll processing</strong> means calculating what each employee actually takes home after deductions are removed from their gross (pre-tax) salary.</p>
+    <p>Two deductions are applied here: <strong>Income Tax</strong> (paid to HMRC based on earnings) and <strong>National Insurance</strong> (a contribution to state benefits and NHS). Both are calculated as a percentage of gross pay.</p>
+    <p><strong>Formulas:</strong><br>
+    <span class="formula">Income Tax = Gross Pay × Tax Rate ÷ 100</span><br>
+    <span class="formula">NI = Gross Pay × NI Rate ÷ 100</span><br>
+    <span class="formula">Net Pay = Gross Pay − Income Tax − NI</span></p>
+    <ol>
+      <li>For each employee, multiply their gross pay by the income tax rate. Enter this as their Income Tax deduction.</li>
+      <li>Multiply their gross pay by the NI rate. Enter this as their National Insurance deduction.</li>
+      <li>Subtract both deductions from gross pay to get their <strong>Net Pay</strong> (take-home).</li>
+    </ol>
+    <div class="inst-note">📌 The same deduction rates apply to all employees — you'll find them in the source data.</div>`
+  };
+}
+
+// ── 4. BANK RECONCILIATION ──
+function buildBankRec() {
+  const stmtBal=randF(3000,25000);
+  const cheques=Array.from({length:rand(2,4)},()=>({ref:'CHQ-'+rand(100,999),amt:randF(100,3000)}));
+  const deposit=randF(200,4000);
+  const totChq =parseFloat(cheques.reduce((a,b)=>a+b.amt,0).toFixed(2));
+  const adjBal =parseFloat((stmtBal-totChq+deposit).toFixed(2));
+  const dt=`${rand(1,28).toString().padStart(2,'0')}/${rand(1,12).toString().padStart(2,'0')}/${rand(2022,2025)}`;
+
+  const dataHtml=`<div class="sheet-stamp">SOURCE DATA</div>
+    <div class="sheet-title">BANK STATEMENT DATA</div>
+    <div class="sheet-ref">AS AT: ${dt}</div>
+    ${dSec('Bank Statement Closing Balance')}
+    ${dRow('Balance per bank statement','$'+fmt(stmtBal))}
+    ${dSec('Outstanding Cheques (written but not yet cleared by bank)')}
+    ${cheques.map(c=>dRow(c.ref,'$'+fmt(c.amt))).join('')}
+    ${dSec('Deposits in Transit (received but not yet on statement)')}
+    ${dRow('Uncleared Deposit','$'+fmt(deposit))}`;
+
+  const formHtml=`<div class="sheet-stamp">FORM</div>
+    <div class="sheet-title">BANK RECONCILIATION STATEMENT</div>
+    <div class="sheet-ref">AS AT: ${dt}</div>
+    ${fSec('Starting Balance')}
+    ${fRow('Bank Statement Balance ($)','stmt_bal',fmt(stmtBal))}
+    ${fSec('Less: Outstanding Cheques')}
+    ${cheques.map((c,i)=>fRow(c.ref+' ($)',`chq_${i}`,fmt(c.amt))).join('')}
+    ${fRowT('Total Outstanding Cheques ($)','tot_chq',fmt(totChq))}
+    ${fSec('Add: Deposits in Transit')}
+    ${fRow('Uncleared Deposit ($)','deposit',fmt(deposit))}
+    ${fRowT('ADJUSTED BANK BALANCE ($)','adj_bal',fmt(adjBal))}`;
+
+  return {title:'BANK RECONCILIATION', taskName:'Bank Reconciliation Statement', dataHtml, formHtml,
+    instructions:`
+    <p>A <strong>bank reconciliation</strong> checks that the company's internal records match the bank statement. Because cheques and deposits can take time to clear, there are often temporary differences. This form accounts for those differences to arrive at a true "adjusted" balance.</p>
+    <p><strong>Outstanding cheques</strong> are cheques the company has written and recorded, but the bank hasn't processed yet — so they reduce what the bank shows but not what the company expects.<br>
+    <strong>Deposits in transit</strong> are money received and recorded by the company, but not yet visible on the bank statement.</p>
+    <p><strong>Formula:</strong><br>
+    <span class="formula">Adjusted Balance = Statement Balance − Total Outstanding Cheques + Deposits in Transit</span></p>
+    <ol>
+      <li>Copy the bank statement closing balance into the first field.</li>
+      <li>Copy each outstanding cheque amount into its row, then add them together for the total.</li>
+      <li>Copy the uncleared deposit amount.</li>
+      <li>Calculate: Statement Balance <strong>minus</strong> Total Cheques <strong>plus</strong> Deposit = <strong>Adjusted Balance</strong>.</li>
+    </ol>`
+  };
+}
+
+// ── 5. PROFIT & LOSS ──
+function buildPL() {
+  const rev =randF(40000,200000);
+  const cogs=randF(rev*0.3,rev*0.6);
+  const gp  =parseFloat((rev-cogs).toFixed(2));
+  const expKeys=['Salaries & Wages','Rent & Rates','Utilities','Marketing','Insurance','Depreciation'];
+  const expVals=[randF(5000,40000),randF(1000,8000),randF(200,2000),randF(500,5000),randF(200,1500),randF(300,3000)];
+  const totExp=parseFloat(expVals.reduce((a,b)=>a+b,0).toFixed(2));
+  const np    =parseFloat((gp-totExp).toFixed(2));
+
+  const dataHtml=`<div class="sheet-stamp">SOURCE DATA</div>
+    <div class="sheet-title">INCOME DATA</div>
+    <div class="sheet-ref">YEAR ENDING 31/03/${rand(2022,2025)}</div>
+    ${dSec('Revenue & Cost of Sales')}
+    ${dRow('Total Revenue','$'+fmt(rev))}
+    ${dRow('Cost of Goods Sold (COGS)','$'+fmt(cogs))}
+    ${dSec('Operating Expenses')}
+    ${expKeys.map((k,i)=>dRow(k,'$'+fmt(expVals[i]))).join('')}`;
+
+  const formHtml=`<div class="sheet-stamp">FORM</div>
+    <div class="sheet-title">PROFIT & LOSS ACCOUNT</div>
+    <div class="sheet-ref">YEAR ENDING 31/03/${rand(2022,2025)}</div>
+    ${fSec('Revenue')}
+    ${fRow('Total Revenue ($)','revenue',fmt(rev))}
+    ${fRow('Less: Cost of Goods Sold ($)','cogs',fmt(cogs))}
+    ${fRowT('GROSS PROFIT ($)','gross_profit',fmt(gp))}
+    ${fSec('Operating Expenses')}
+    ${expKeys.map((k,i)=>fRow(k+' ($)',`exp_${i}`,fmt(expVals[i]))).join('')}
+    ${fRowT('TOTAL EXPENSES ($)','tot_exp',fmt(totExp))}
+    ${fRowT((np>=0?'NET PROFIT':'NET LOSS')+' ($)','net_profit',fmt(Math.abs(np)))}`;
+
+  return {title:'PROFIT & LOSS', taskName:'Profit & Loss Account', dataHtml, formHtml,
+    instructions:`
+    <p>A <strong>Profit & Loss Account</strong> (P&L) summarises a business's income and spending over a period to show whether it made a profit or a loss. It's one of the most important financial statements a business produces.</p>
+    <p><strong>Gross Profit</strong> shows how much money is left after the direct cost of producing/buying the goods sold. <strong>Net Profit</strong> is what's left after all other operating expenses (like rent and salaries) are also deducted.</p>
+    <p><strong>Formulas:</strong><br>
+    <span class="formula">Gross Profit = Revenue − Cost of Goods Sold</span><br>
+    <span class="formula">Total Expenses = sum of all operating expense lines</span><br>
+    <span class="formula">Net Profit = Gross Profit − Total Expenses</span></p>
+    <ol>
+      <li>Copy the Revenue and Cost of Goods Sold figures, then calculate Gross Profit.</li>
+      <li>Copy each operating expense figure into its row.</li>
+      <li>Add all the expenses together for Total Expenses.</li>
+      <li>Subtract Total Expenses from Gross Profit to get Net Profit (or Net Loss if negative — enter the positive number).</li>
+    </ol>`
+  };
+}
+
+// ── 6. INVOICE CODING ──
+function buildCoding() {
+  const cats={
+    'Capital Expenditure':['Laptop Computer','Office Chair (bulk purchase)','Air Conditioning Unit','Company Van','Industrial Printer'],
+    'Operating Expense':  ['Printer Paper (box)','Monthly Cleaning Service','Electricity Bill','Postage Stamps','Coffee & Refreshments'],
+    'Prepayment':         ['Annual Insurance Premium','12-Month Software Licence','Annual Maintenance Contract','Office Lease (12 months prepaid)'],
+    'Accrual':            ['December Legal Fees (invoice outstanding)','Unpaid Overtime (not yet invoiced)','Electricity usage (meter read, invoice pending)']
+  };
+  const catKeys=Object.keys(cats);
+  const items=[];
+  catKeys.forEach(cat=>{ const pool=cats[cat]; items.push({desc:pool[rand(0,pool.length-1)],correct:cat,amt:randF(50,5000)}); });
+  while(items.length<6){const cat=catKeys[rand(0,catKeys.length-1)];items.push({desc:cats[cat][rand(0,cats[cat].length-1)],correct:cat,amt:randF(50,5000)});}
+  items.sort(()=>Math.random()-0.5);
+
+  const dataHtml=`<div class="sheet-stamp">SOURCE DATA</div>
+    <div class="sheet-title">INVOICE LISTING</div>
+    <div class="sheet-ref">FOR CODING AND CLASSIFICATION</div>
+    ${dSec('Invoices Received This Period')}
+    ${items.map((item,i)=>dRow(`${i+1}. ${item.desc}`,'$'+fmt(item.amt))).join('')}
+    ${dSec('Category Reference Guide')}
+    ${dRow('Capital Expenditure','Long-term asset purchase')}
+    ${dRow('Operating Expense','Day-to-day running cost')}
+    ${dRow('Prepayment','Paid now, covers future period')}
+    ${dRow('Accrual','Cost incurred, not yet invoiced')}`;
+
+  const formHtml=`<div class="sheet-stamp">FORM</div>
+    <div class="sheet-title">INVOICE CODING SHEET</div>
+    <div class="sheet-ref">ASSIGN EACH INVOICE TO THE CORRECT CATEGORY</div>
+    ${fSec('Invoice Classifications')}
+    ${items.map((item,i)=>fSel(`${i+1}. ${item.desc} — $${fmt(item.amt)}`,`cat_${i}`,item.correct,['Capital Expenditure','Operating Expense','Prepayment','Accrual'])).join('')}`;
+
+  return {title:'INVOICE CODING', taskName:'Invoice Coding & Classification', dataHtml, formHtml,
+    instructions:`
+    <p><strong>Invoice coding</strong> means assigning each purchase to the correct accounting category. This matters because different types of spending are treated differently in the accounts and on tax returns.</p>
+    <p><strong>The four categories:</strong></p>
+    <p>💼 <strong>Capital Expenditure (CapEx):</strong> A purchase of something that will be used for more than one year — equipment, vehicles, major furniture. These are treated as assets, not expenses.</p>
+    <p>🧾 <strong>Operating Expense (OpEx):</strong> Regular day-to-day costs consumed in the current period — electricity, stationery, cleaning, postage.</p>
+    <p>📅 <strong>Prepayment:</strong> Money paid now for something that covers a future period — e.g. an annual insurance premium paid in January covers the whole year.</p>
+    <p>📋 <strong>Accrual:</strong> A cost that has definitely been incurred this period, but hasn't been invoiced or paid yet — the business owes it but doesn't have the bill.</p>
+    <ol>
+      <li>Read each invoice description carefully.</li>
+      <li>Ask: is it a long-term asset, a regular cost, paid-in-advance, or owed-but-not-yet-billed?</li>
+      <li>Select the matching category from the dropdown.</li>
+    </ol>`
+  };
+}
+
+// ── 7. DEBTORS AGEING ──
+function buildAgeing() {
+  const ref=new Date(2024,rand(0,11),rand(1,28));
+  const fmtDate=d=>d.toLocaleDateString('en-US');
+  const invs=Array.from({length:rand(5,8)},()=>{
+    const days=rand(0,120);
+    const d=new Date(ref); d.setDate(d.getDate()-days);
+    const amt=randF(200,8000);
+    const bucket=days<=30?'0-30':days<=60?'31-60':days<=90?'61-90':'90+';
+    return {ref:randRef(),co:randCo(),date:d,amt,bucket};
+  });
+  const buckets={'0-30':0,'31-60':0,'61-90':0,'90+':0};
+  invs.forEach(i=>{buckets[i.bucket]=parseFloat((buckets[i.bucket]+i.amt).toFixed(2));});
+  const total=parseFloat(Object.values(buckets).reduce((a,b)=>a+b,0).toFixed(2));
+
+  const dataHtml=`<div class="sheet-stamp">SOURCE DATA</div>
+    <div class="sheet-title">OUTSTANDING INVOICES</div>
+    <div class="sheet-ref">REFERENCE DATE: ${fmtDate(ref)}</div>
+    ${dSec('Unpaid Customer Invoices')}
+    ${invs.map(i=>dRow(`${i.ref} — ${i.co}<br><small style="color:#666">Invoiced: ${fmtDate(i.date)}</small>`,'$'+fmt(i.amt))).join('')}`;
+
+  const formHtml=`<div class="sheet-stamp">FORM</div>
+    <div class="sheet-title">DEBTORS AGEING REPORT</div>
+    <div class="sheet-ref">AS AT: ${fmtDate(ref)}</div>
+    ${fSec('Step 1: Classify Each Invoice by Age')}
+    ${invs.map((i,n)=>fSel(`${i.ref} — $${fmt(i.amt)} (invoiced ${fmtDate(i.date)})`,`age_${n}`,i.bucket,['0-30','31-60','61-90','90+'])).join('')}
+    ${fSec('Step 2: Totals by Age Bucket')}
+    ${Object.entries(buckets).map(([k,v])=>fRowT(`${k} days total ($)`,`bucket_${k}`,fmt(v))).join('')}
+    ${fRowT('TOTAL OUTSTANDING DEBTORS ($)','total_debt',fmt(total))}`;
+
+  return {title:'DEBTORS AGEING', taskName:'Debtors Ageing Report', dataHtml, formHtml,
+    instructions:`
+    <p>A <strong>Debtors Ageing Report</strong> groups unpaid customer invoices by how long they've been outstanding. It helps a business see which debts are at risk — the older the debt, the less likely it is to be paid.</p>
+    <p>Invoices are sorted into "buckets" based on the number of days since they were issued.</p>
+    <p><strong>How to work out the age:</strong><br>
+    <span class="formula">Days Outstanding = Reference Date − Invoice Date</span></p>
+    <ol>
+      <li>For each invoice, count the days between the invoice date and the reference date (${fmtDate(ref)}).</li>
+      <li>Assign it to the correct age bucket: 0–30, 31–60, 61–90, or 90+.</li>
+      <li>Once all invoices are classified, add up the invoice amounts in each bucket to get the bucket total.</li>
+      <li>Sum all four bucket totals for the grand total of outstanding debtors.</li>
+    </ol>
+    <div class="inst-note">📌 Tip: Use the calculator (Tools menu) to subtract dates if needed. Count days carefully — the reference date is ${fmtDate(ref)}.</div>`
+  };
+}
+
+// ── 8. PETTY CASH ──
+function buildPettyCash() {
+  const float=200.00;
+  const receipts=Array.from({length:rand(4,7)},()=>({
+    desc:['Milk & Coffee','Taxi to Client','Office Stamps','Birthday Card','Printer Ink','Parking','Pens','Newspapers'][rand(0,7)],
+    amt:randF(1.5,35)
+  }));
+  const totSpent =parseFloat(receipts.reduce((a,b)=>a+b.amt,0).toFixed(2));
+  const remaining=parseFloat((float-totSpent).toFixed(2));
+  const reimb    =parseFloat((float-remaining).toFixed(2));
+  const wk=`${rand(1,28).toString().padStart(2,'0')}/${rand(1,12).toString().padStart(2,'0')}/${rand(2022,2025)}`;
+
+  const dataHtml=`<div class="sheet-stamp">SOURCE DATA</div>
+    <div class="sheet-title">PETTY CASH TIN</div>
+    <div class="sheet-ref">WEEK ENDING: ${wk}</div>
+    ${dSec('Opening Float (cash in tin Monday morning)')}
+    ${dRow('Opening Balance','$'+fmt(float))}
+    ${dSec('Receipts Collected During the Week')}
+    ${receipts.map(r=>dRow(r.desc,'$'+fmt(r.amt))).join('')}`;
+
+  const formHtml=`<div class="sheet-stamp">FORM</div>
+    <div class="sheet-title">PETTY CASH RECONCILIATION</div>
+    <div class="sheet-ref">WEEK ENDING: ${wk}</div>
+    ${fSec('Step 1: Enter All Receipts')}
+    ${receipts.map((r,i)=>fRow(r.desc+' ($)',`rct_${i}`,fmt(r.amt))).join('')}
+    ${fRowT('TOTAL SPENT ($)','tot_spent',fmt(totSpent))}
+    ${fSec('Step 2: Reconciliation')}
+    ${fRow('Opening Float ($)','opening',fmt(float))}
+    ${fRowT('CASH REMAINING IN TIN ($)','remaining',fmt(remaining))}
+    ${fRowT('REIMBURSEMENT REQUIRED ($)','reimb',fmt(reimb))}`;
+
+  return {title:'PETTY CASH', taskName:'Petty Cash Reconciliation', dataHtml, formHtml,
+    instructions:`
+    <p>A <strong>petty cash float</strong> is a small amount of cash kept on-site for minor day-to-day purchases (coffee, stamps, taxi fares). At the end of each period, the receipts are reconciled against the float to confirm everything adds up and to request a top-up.</p>
+    <p>The opening float for this period is <strong>$${fmt(float)}</strong>. Every receipt must be accounted for.</p>
+    <p><strong>Formulas:</strong><br>
+    <span class="formula">Total Spent = sum of all receipt amounts</span><br>
+    <span class="formula">Cash Remaining = Opening Float − Total Spent</span><br>
+    <span class="formula">Reimbursement Required = Total Spent</span> (to restore the float)</p>
+    <ol>
+      <li>Copy each receipt amount into its matching row, then total them.</li>
+      <li>Copy the opening float ($${fmt(float)}) into its field.</li>
+      <li>Subtract Total Spent from the Opening Float to find <strong>Cash Remaining in Tin</strong>.</li>
+      <li>The <strong>Reimbursement Required</strong> is the amount needed to top the tin back up — which equals the Total Spent.</li>
+    </ol>`
+  };
+}
+
+// ── 9. ACCRUALS ──
+function buildAccruals() {
+  const items=Array.from({length:rand(3,4)},()=>{
+    const annual=randF(1200,24000);
+    const months=rand(1,11);
+    const monthly=parseFloat((annual/12).toFixed(2));
+    const accrued=parseFloat((monthly*months).toFixed(2));
+    const name=['Electricity Charges','Gas Supply','Legal Retainer','Audit Fees','Business Rates','Telephone & Broadband','Building Insurance'][rand(0,6)];
+    return {name,annual,months,monthly,accrued};
+  });
+
+  const dataHtml=`<div class="sheet-stamp">SOURCE DATA</div>
+    <div class="sheet-title">ACCRUAL DATA</div>
+    <div class="sheet-ref">YEAR ENDING 31/03/${rand(2022,2025)}</div>
+    ${items.map(it=>`
+      ${dSec(it.name)}
+      ${dRow('Annual Contract/Expected Amount','$'+fmt(it.annual))}
+      ${dRow('Months Elapsed This Year',it.months+' of 12')}
+    `).join('')}`;
+
+  const formHtml=`<div class="sheet-stamp">FORM</div>
+    <div class="sheet-title">ACCRUALS SCHEDULE</div>
+    <div class="sheet-ref">YEAR ENDING 31/03/${rand(2022,2025)}</div>
+    ${items.map((it,i)=>`
+      ${fSec(it.name)}
+      ${fRow('Monthly Charge ($)',`mo_${i}`,fmt(it.monthly))}
+      ${fRowT(`Accrued to Date (${it.months} months) ($)`,`acc_${i}`,fmt(it.accrued))}
+    `).join('')}`;
+
+  return {title:'ACCRUALS', taskName:'Accruals Schedule', dataHtml, formHtml,
+    instructions:`
+    <p>An <strong>accrual</strong> is a cost that a business has definitely incurred during the accounting period, but hasn't been invoiced or paid for yet. Even though there's no bill, the cost must still be recorded in this period's accounts — this is a core accounting principle called "matching."</p>
+    <p>For example, if electricity is used throughout the year but billed quarterly, the months between bills still need to be accrued.</p>
+    <p><strong>Formulas:</strong><br>
+    <span class="formula">Monthly Charge = Annual Amount ÷ 12</span><br>
+    <span class="formula">Accrued to Date = Monthly Charge × Months Elapsed</span></p>
+    <ol>
+      <li>For each item, divide the annual amount by 12 to find the <strong>Monthly Charge</strong>.</li>
+      <li>Multiply the monthly charge by the number of months elapsed to find the <strong>Accrued to Date</strong> amount.</li>
+    </ol>
+    <div class="inst-note">📌 Example: Annual rate $2,400, 7 months elapsed → $2,400 ÷ 12 = $200/month → $200 × 7 = $1,400 accrued</div>`
+  };
+}
+
+// ── 10. CURRENCY CONVERSION ──
+function buildFX() {
+  const all=[
+    {code:'EUR',name:'Euros',             rate:randF(0.88,0.95)},
+    {code:'GBP',name:'British Pounds',    rate:randF(0.76,0.82)},
+    {code:'AUD',name:'Australian Dollars',rate:randF(1.50,1.60)},
+    {code:'CAD',name:'Canadian Dollars',  rate:randF(1.33,1.40)},
+    {code:'JPY',name:'Japanese Yen',      rate:randF(145,158)},
+  ];
+  const sel=all.sort(()=>Math.random()-0.5).slice(0,rand(3,4));
+  const invs=sel.map(c=>{
+    const foreign=randF(500,15000);
+    const gbp=parseFloat((foreign/c.rate).toFixed(2));
+    return {...c,foreign,gbp};
+  });
+  const dt=`${rand(1,28).toString().padStart(2,'0')}/${rand(1,12).toString().padStart(2,'0')}/${rand(2022,2025)}`;
+
+  const dataHtml=`<div class="sheet-stamp">SOURCE DATA</div>
+    <div class="sheet-title">FOREIGN INVOICE DATA</div>
+    <div class="sheet-ref">SETTLEMENT DATE: ${dt}</div>
+    ${dSec('Exchange Rates — How Many Foreign Units Equal $1 USD')}
+    ${invs.map(i=>dRow('1 USD = ',fmt(i.rate)+' '+i.code)).join('')}
+    ${dSec('Invoices Received in Foreign Currency')}
+    ${invs.map(i=>dRow(i.name+' invoice',i.code+' '+fmt(i.foreign))).join('')}`;
+
+  const formHtml=`<div class="sheet-stamp">FORM</div>
+    <div class="sheet-title">CURRENCY CONVERSION WORKSHEET</div>
+    <div class="sheet-ref">SETTLEMENT DATE: ${dt}</div>
+    ${invs.map((i,n)=>`
+      ${fSec(`${i.name} (Rate: 1 USD = ${fmt(i.rate)} ${i.code})`)}
+      ${fRow(`Invoice Amount (${i.code})`,`foreign_${n}`,fmt(i.foreign))}
+      ${fRowT('USD Equivalent ($)',`gbp_${n}`,fmt(i.gbp))}
+    `).join('')}`;
+
+  return {title:'CURRENCY CONVERSION', taskName:'Foreign Currency Invoice Conversion', dataHtml, formHtml,
+    instructions:`
+    <p>When a UK business receives an invoice from abroad in a foreign currency, it must convert the amount to <strong>USD (British Pounds)</strong> before recording it in the accounts. The conversion uses the exchange rate on the date of settlement.</p>
+    <p>The exchange rates shown tell you how many units of the foreign currency equal <strong>$1 USD</strong>. So to go <em>from</em> foreign currency <em>to</em> USD, you divide.</p>
+    <p><strong>Formula:</strong><br>
+    <span class="formula">USD Amount = Foreign Currency Amount ÷ Exchange Rate</span></p>
+    <ol>
+      <li>For each invoice, copy the foreign currency amount into the first field.</li>
+      <li>Divide the foreign amount by the exchange rate for that currency to get the <strong>USD Equivalent</strong>.</li>
+    </ol>
+    <div class="inst-note">📌 Example: Invoice of USD 1,500, rate is 1 USD = 1.25 USD → $1,500 ÷ 1.25 = $1,200.00<br>Use the calculator in the Tools menu if needed.</div>`
+  };
+}
+
+// ═══════════════════════════════════════════════════════
+// TASK QUEUE
+// ═══════════════════════════════════════════════════════
+const builders=[buildVAT,buildDepreciation,buildPayroll,buildBankRec,buildPL,buildCoding,buildAgeing,buildPettyCash,buildAccruals,buildFX];
+function buildQueue(n){
+  const shuffled=[...builders].sort(()=>Math.random()-0.5);
+  const q=[];
+  while(q.length<n) q.push(...shuffled.slice(0,n-q.length).map(b=>b()));
+  return q.slice(0,n);
+}
+
+// ═══════════════════════════════════════════════════════
+// TIMER
+// ═══════════════════════════════════════════════════════
+function fmtTime(s){return[Math.floor(s/3600),Math.floor((s%3600)/60),s%60].map(v=>v.toString().padStart(2,'0')).join(':');}
+function startTimer(){
+  startTime=Date.now(); clearInterval(elapsedTimer);
+  elapsedTimer=setInterval(()=>{
+    const s=Math.floor((Date.now()-startTime)/1000);
+    document.getElementById('tb-elapsed').textContent=fmtTime(s);
+  },1000);
+}
+
+// ═══════════════════════════════════════════════════════
+// SCREENS
+// ═══════════════════════════════════════════════════════
+function showScreen(id){
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+}
+
+// ═══════════════════════════════════════════════════════
+// LOAD TASK
+// ═══════════════════════════════════════════════════════
+function loadTask(i){
+  const task=taskQueue[i], total=taskQueue.length;
+  document.getElementById('tb-task').textContent    =`${i+1} / ${total}`;
+  document.getElementById('tb-task-name').textContent=task.taskName;
+  document.getElementById('data-sheet').innerHTML   =task.dataHtml;
+  document.getElementById('form-sheet').innerHTML   =task.formHtml;
+  document.getElementById('inst-badge').textContent =task.taskName;
+  document.getElementById('inst-body').innerHTML    =task.instructions;
+  const pipRow=document.getElementById('pip-row');
+  pipRow.innerHTML='';
+  for(let j=0;j<total;j++){
+    const p=document.createElement('div');
+    p.className='pip'+(j<i?' done':j===i?' current':'');
+    pipRow.appendChild(p);
+  }
+
+  clearLockout();
+}
+
+// ═══════════════════════════════════════════════════════
+// ANSWER CHECKING
+// ═══════════════════════════════════════════════════════
+const TOLERANCE=0.02;
+function checkAnswers(){
+  let allOk=true;
+  document.querySelectorAll('[data-ans]').forEach(el=>{
+    el.classList.remove('err','ok');
+    const exp=el.dataset.ans, val=el.value.trim();
+    let correct;
+    if(el.tagName==='SELECT') correct=val===exp;
+    else { const nv=parseA(val),ne=parseA(exp); correct=!isNaN(nv)&&Math.abs(nv-ne)<=TOLERANCE; }
+    el.classList.add(correct?'ok':'err');
+    if(!correct) allOk=false;
+  });
+  return allOk;
+}
+
+// ═══════════════════════════════════════════════════════
+// LOCKOUT
+// ═══════════════════════════════════════════════════════
+function startLockout(){
+  isLocked=true; lockoutSeconds=300;
+  document.getElementById('submit-btn').disabled=true;
+  document.getElementById('lockout-pane').style.display='inline';
+  lockoutTimer=setInterval(()=>{
+    lockoutSeconds--;
+    const m=Math.floor(lockoutSeconds/60),s=(lockoutSeconds%60).toString().padStart(2,'0');
+    document.getElementById('lockout-timer').textContent=`${m}:${s}`;
+    if(lockoutSeconds<=0) clearLockout();
+  },1000);
+}
+function clearLockout(){
+  clearInterval(lockoutTimer); isLocked=false;
+  document.getElementById('submit-btn').disabled=false;
+  document.getElementById('lockout-pane').style.display='none';
+}
+
+// ═══════════════════════════════════════════════════════
+// SUBMIT
+// ═══════════════════════════════════════════════════════
+function handleSubmit(){
+  if(isLocked) return;
+  if(checkAnswers()) advance();
+  else {
+    errors++;
+    document.getElementById('tb-errors').textContent   =errors;
+    showTaunt(tauntsError[rand(0,tauntsError.length-1)],true);
+    startLockout();
+  }
+}
+function advance(){
+  currentTaskIndex++; clearTimeout(tauntTimer); closeTaunt();
+  if(currentTaskIndex>=taskQueue.length) endGame();
+  else { loadTask(currentTaskIndex); scheduleRandomTaunt(); }
+}
+
+// ═══════════════════════════════════════════════════════
+// END GAME
+// ═══════════════════════════════════════════════════════
+function endGame(){
+  clearInterval(elapsedTimer); clearTimeout(tauntTimer);
+  const secs=Math.floor((Date.now()-startTime)/1000);
+  showScreen('end-screen');
+  // Count occurrences of each task type
+  const taskCounts = {};
+  taskQueue.forEach(t=>{ taskCounts[t.taskName] = (taskCounts[t.taskName]||0)+1; });
+  const taskBreakdown = Object.entries(taskCounts)
+    .map(([name,count])=>`<div class="stat-row stat-row-task"><span class="stat-label" style="padding-left:12px">↳ ${name}</span><span class="stat-val">${count}×</span></div>`)
+    .join('');
+  document.getElementById('stats-list').innerHTML=[
+    ['Total Time',fmtTime(secs)],
+    ['Tasks Completed',taskQueue.length],
+    ['Incorrect Submissions',errors],
+    ['Total Lockout Time',fmtTime(errors*300)],
+  ].map(([l,v])=>`<div class="stat-row"><span class="stat-label">${l}</span><span class="stat-val">${v}</span></div>`).join('')
+  + `<div class="stat-row" style="background:#e8e8f8;font-weight:bold"><span class="stat-label">Task Breakdown</span><span class="stat-val">count</span></div>`
+  + taskBreakdown;
+  const id=(Math.floor(Math.random()*900000000)+100000000).toString();
+  document.getElementById('end-ref').textContent=`Docket ID: ${id}`;
+}
+
+// ═══════════════════════════════════════════════════════
+// START GAME
+// ═══════════════════════════════════════════════════════
+function startGame(){
+  totalTasks=Math.max(1,Math.min(20,parseInt(document.getElementById('task-count-input').value)||5));
+  errors=0; currentTaskIndex=0;
+  document.getElementById('tb-errors').textContent    ='0';
+  document.getElementById('tb-elapsed').textContent   ='00:00:00';
+  taskQueue=buildQueue(totalTasks);
+  showScreen('game-screen');
+  loadTask(0); startTimer(); scheduleRandomTaunt();
+}
+
+// ═══════════════════════════════════════════════════════
+// EVENTS
+// ═══════════════════════════════════════════════════════
+document.getElementById('start-btn').addEventListener('click',startGame);
+document.getElementById('submit-btn').addEventListener('click',handleSubmit);
+document.getElementById('restart-btn').addEventListener('click',()=>{
+  clearInterval(elapsedTimer); clearTimeout(tauntTimer); closeTaunt();
+  document.getElementById('tb-task').textContent     ='— / —';
+  document.getElementById('tb-elapsed').textContent  ='00:00:00';
+  showScreen('start-screen');
+});
+
+// Disable copy/paste/cut/contextmenu across the entire page
+document.addEventListener('paste',       e=>e.preventDefault());
+document.addEventListener('copy',        e=>e.preventDefault());
+document.addEventListener('cut',         e=>e.preventDefault());
+document.addEventListener('contextmenu', e=>e.preventDefault());
+</script>
+</body>
+</html>
