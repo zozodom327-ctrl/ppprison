@@ -975,9 +975,9 @@ function buildDepreciation() {
 // ── 3. PAYROLL ──
 function buildPayroll() {
   const emps=Array.from({length:rand(3,5)},()=>{
-    const gross  =randF(1800,6500);
-    const taxRate=gross>4189?20:0;
-    const niRate =gross>1048?8:0;
+    const gross  =randF(4500,9000);
+    const taxRate=20;
+    const niRate =8;
     const tax    =parseFloat((gross*taxRate/100).toFixed(2));
     const ni     =parseFloat((gross*niRate/100).toFixed(2));
     const net    =parseFloat((gross-tax-ni).toFixed(2));
