@@ -180,6 +180,8 @@
     border-right: 2px solid var(--win-light); border-bottom: 2px solid var(--win-light);
     padding: 5px 19px 3px 21px;
   }
+  .win-push-btn.default-btn { border: 3px solid #000; padding: 3px 18px; }
+  .win-push-btn.default-btn:active { padding: 4px 17px 2px 19px; }
 
   /* ── GAME SCREEN ── */
   #game-screen { background: var(--win-silver); display: none; flex-direction: column; }
@@ -509,7 +511,7 @@
             <input type="number" class="win-input" id="task-count-input" min="1" max="20" value="5">
           </div>
           <div class="dialog-btn-row">
-            <button class="win-push-btn" id="start-btn">OK</button>
+            <button class="win-push-btn default-btn" id="start-btn">OK</button>
             <button class="win-push-btn" onclick="menuExit()">Cancel</button>
           </div>
         </div>
@@ -562,7 +564,7 @@
           <div class="stats-list" id="stats-list"></div>
           <div class="end-ref" id="end-ref"></div>
           <div class="dialog-btn-row">
-            <button class="win-push-btn" id="restart-btn">Process New Docket</button>
+            <button class="win-push-btn default-btn" id="restart-btn">Process New Docket</button>
           </div>
         </div>
       </div>
@@ -580,7 +582,7 @@
       <div class="popup-icon">🚫</div>
       <div class="popup-text">Sorry, but your assignment must be completed in a single sitting.<br><br>Keep working.</div>
     </div>
-    <div class="popup-btn-row"><button class="win-push-btn" onclick="closePopup('popup-save')">OK</button></div>
+    <div class="popup-btn-row"><button class="win-push-btn default-btn" onclick="closePopup('popup-save')">OK</button></div>
   </div>
 </div>
 
@@ -593,7 +595,7 @@
       <div class="popup-text">Quitting already?<br><br>Are you weak?</div>
     </div>
     <div class="popup-btn-row">
-      <button class="win-push-btn" onclick="confirmExit()">Yes</button>
+      <button class="win-push-btn default-btn" onclick="confirmExit()">Yes</button>
       <button class="win-push-btn" onclick="closePopup('popup-exit')">No</button>
     </div>
   </div>
@@ -608,7 +610,7 @@
       <div class="popup-text" id="taunt-text"></div>
     </div>
     <div class="popup-btn-row" style="flex-direction:column;align-items:center;gap:6px">
-      <button class="win-push-btn" id="taunt-ok-btn" onclick="closeTaunt()">OK</button>
+      <button class="win-push-btn default-btn" id="taunt-ok-btn" onclick="closeTaunt()">OK</button>
       <div id="taunt-countdown" style="font-size:15px;color:#555;font-family:'Share Tech Mono',monospace;letter-spacing:0.05em"></div>
     </div>
   </div>
@@ -929,10 +931,9 @@ const fSec =t=>`<div class="sheet-section">${t}</div>`;
 // ── 1. VAT RETURN ──
 function buildVAT() {
   const rate=[5,20][rand(0,1)];
-  const items=Array.from({length:rand(3,5)},()=>({
-    desc:['Stationery & Office Supplies','Professional Services','IT Equipment Rental','Utilities','Cleaning Services','Printing & Postage','Travel Expenses','Advertising','Software Licences','Telephone Charges'][rand(0,9)],
-    net:randF(80,2400)
-  }));
+  const descPool=['Stationery & Office Supplies','Professional Services','IT Equipment Rental','Utilities','Cleaning Services','Printing & Postage','Travel Expenses','Advertising','Software Licences','Telephone Charges','Courier & Delivery','Staff Training'];
+  const shuffledDescs=descPool.sort(()=>Math.random()-0.5).slice(0,6);
+  const items=shuffledDescs.map(desc=>({desc,net:randF(80,2400)}));
   const totalNet  =parseFloat(items.reduce((a,b)=>a+b.net,0).toFixed(2));
   const totalVAT  =parseFloat((totalNet*rate/100).toFixed(2));
   const totalGross=parseFloat((totalNet+totalVAT).toFixed(2));
@@ -962,8 +963,8 @@ function buildVAT() {
     <span class="formula">Total VAT = Total Net × ${rate} ÷ 100</span><br>
     <span class="formula">Total Gross = Total Net + Total VAT</span></p>
     <ol>
-      <li>Copy each net figure from the source data into its matching row in Box 1.</li>
-      <li>Add all the net figures together to get the <strong>Total Net</strong>.</li>
+      <li>Copy each of the 6 net figures from the source data into its matching row in Box 1.</li>
+      <li>Add all 6 net figures together to get the <strong>Total Net</strong>.</li>
       <li>Multiply the Total Net by the VAT rate (${rate}%) to get the <strong>Total VAT</strong>.</li>
       <li>Add Total Net and Total VAT together to get the <strong>Total Gross</strong>.</li>
     </ol>
@@ -973,14 +974,16 @@ function buildVAT() {
 
 // ── 2. STRAIGHT-LINE DEPRECIATION ──
 function buildDepreciation() {
-  const assets=Array.from({length:rand(2,4)},()=>{
+  const assetNames=['Company Van','Office Furniture Set','Laptop Fleet','Industrial Printer','Server Rack','Air Conditioning Unit','CCTV System','Forklift Truck','Photocopier','Telephone System'];
+  const shuffledNames=assetNames.sort(()=>Math.random()-0.5).slice(0,5);
+  const assets=shuffledNames.map(name=>{
     const cost=rand(2000,50000);
     const res =rand(100,Math.floor(cost*0.2));
     const life=rand(3,10);
     const ann =parseFloat(((cost-res)/life).toFixed(2));
-    const name=['Company Van','Office Furniture Set','Laptop Fleet','Industrial Printer','Server Rack','Air Conditioning Unit','CCTV System','Forklift Truck'][rand(0,7)];
     return {name,cost,res,life,ann};
   });
+  const totalAnn=parseFloat(assets.reduce((a,b)=>a+b.ann,0).toFixed(2));
 
   const dataHtml=`<div class="sheet-stamp">SOURCE DATA</div>
     <div class="sheet-title">FIXED ASSET REGISTER</div>
@@ -999,7 +1002,9 @@ function buildDepreciation() {
       ${fSec(`Asset ${i+1}: ${a.name}`)}
       ${fRow('Cost less Residual Value ($)',`dep_base_${i}`,fmt(a.cost-a.res))}
       ${fRowT('Annual Depreciation Charge ($)',`dep_ann_${i}`,fmt(a.ann))}
-    `).join('')}`;
+    `).join('')}
+    ${fSec('Summary')}
+    ${fRowT('TOTAL ANNUAL DEPRECIATION — ALL ASSETS ($)','dep_total',fmt(totalAnn))}`;
 
   return {title:'DEPRECIATION', taskName:'Straight-Line Depreciation Schedule', dataHtml, formHtml,
     instructions:`
@@ -1007,10 +1012,12 @@ function buildDepreciation() {
     <p>The <strong>straight-line method</strong> divides the cost evenly across the asset's useful life. The "residual value" is what you expect the asset to be worth at the end of its life (e.g. scrap value).</p>
     <p><strong>Formulas:</strong><br>
     <span class="formula">Depreciable Amount = Cost − Residual Value</span><br>
-    <span class="formula">Annual Charge = Depreciable Amount ÷ Useful Life (years)</span></p>
+    <span class="formula">Annual Charge = Depreciable Amount ÷ Useful Life (years)</span><br>
+    <span class="formula">Total Annual Depreciation = sum of all 5 Annual Charges</span></p>
     <ol>
-      <li>For each asset, subtract the residual value from the original cost. Enter this in the first field.</li>
+      <li>For each of the 5 assets, subtract the residual value from the original cost. Enter this in the first field.</li>
       <li>Divide that result by the useful life (in years) to get the <strong>Annual Depreciation Charge</strong>.</li>
+      <li>Once all 5 assets are done, add all their Annual Depreciation Charges together for the <strong>Total Annual Depreciation</strong>.</li>
     </ol>
     <div class="inst-note">📌 Example: A van costing $10,000, residual value $1,000, life 5 years → $10,000 − $1,000 = $9,000 → $9,000 ÷ 5 = $1,800/year</div>`
   };
@@ -1018,15 +1025,21 @@ function buildDepreciation() {
 
 // ── 3. PAYROLL ──
 function buildPayroll() {
-  const emps=Array.from({length:rand(3,5)},()=>{
+  const namePool=['James Hargreaves','Sarah Patel','David Thompson','Emma O\'Brien','Michael Bennett','Rachel Okafor','Thomas Singh','Karen Morrison','Robert Fletcher','Lisa Crane','Alan Davies','Priya Shah'];
+  const shuffledNames=namePool.sort(()=>Math.random()-0.5).slice(0,5);
+  const taxRate=[15,20,22,25,28,30,32][rand(0,6)];
+  const niRate =[6,7,8,9,10,12][rand(0,5)];
+  const emps=shuffledNames.map(name=>{
     const gross  =randF(4500,9000);
-    const taxRate=[15,20,22,25,28,30,32][rand(0,6)];
-    const niRate =[6,7,8,9,10,12][rand(0,5)];
     const tax    =parseFloat((gross*taxRate/100).toFixed(2));
     const ni     =parseFloat((gross*niRate/100).toFixed(2));
     const net    =parseFloat((gross-tax-ni).toFixed(2));
-    return {name:randName(),gross,taxRate,niRate,tax,ni,net};
+    return {name,gross,taxRate,niRate,tax,ni,net};
   });
+  const totGross=parseFloat(emps.reduce((a,e)=>a+e.gross,0).toFixed(2));
+  const totTax  =parseFloat(emps.reduce((a,e)=>a+e.tax,0).toFixed(2));
+  const totNI   =parseFloat(emps.reduce((a,e)=>a+e.ni,0).toFixed(2));
+  const totNet  =parseFloat(emps.reduce((a,e)=>a+e.net,0).toFixed(2));
   const mo=['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC'][rand(0,11)];
   const yr=rand(2022,2025);
 
@@ -1036,33 +1049,39 @@ function buildPayroll() {
     ${dSec('Gross Monthly Salaries')}
     ${emps.map(e=>dRow(e.name,'$'+fmt(e.gross))).join('')}
     ${dSec('Deduction Rates (applied to all employees)')}
-    ${dRow('Income Tax Rate',emps[0].taxRate+'%')}
-    ${dRow('National Insurance (NI) Rate',emps[0].niRate+'%')}`;
+    ${dRow('Income Tax Rate',taxRate+'%')}
+    ${dRow('National Insurance (NI) Rate',niRate+'%')}`;
 
   const formHtml=`<div class="sheet-stamp">FORM</div>
     <div class="sheet-title">PAYROLL DEDUCTION SUMMARY</div>
     <div class="sheet-ref">MONTH: ${mo} ${yr}</div>
     ${emps.map((e,i)=>`
       ${fSec(e.name)}
-      ${fRow(`Income Tax @ ${e.taxRate}% ($)`,`tax_${i}`,fmt(e.tax))}
-      ${fRow(`National Insurance @ ${e.niRate}% ($)`,`ni_${i}`,fmt(e.ni))}
+      ${fRow(`Income Tax @ ${taxRate}% ($)`,`tax_${i}`,fmt(e.tax))}
+      ${fRow(`National Insurance @ ${niRate}% ($)`,`ni_${i}`,fmt(e.ni))}
       ${fRowT('Net Pay ($)',`net_${i}`,fmt(e.net))}
-    `).join('')}`;
+    `).join('')}
+    ${fSec('Payroll Totals — All Employees')}
+    ${fRow('Total Gross Pay ($)','tot_gross',fmt(totGross))}
+    ${fRow('Total Income Tax ($)','tot_tax',fmt(totTax))}
+    ${fRow('Total National Insurance ($)','tot_ni',fmt(totNI))}
+    ${fRowT('TOTAL NET PAY ($)','tot_net',fmt(totNet))}`;
 
   return {title:'PAYROLL', taskName:'Payroll Deduction Calculation', dataHtml, formHtml,
     instructions:`
     <p><strong>Payroll processing</strong> means calculating what each employee actually takes home after deductions are removed from their gross (pre-tax) salary.</p>
-    <p>Two deductions are applied here: <strong>Income Tax</strong> (paid to HMRC based on earnings) and <strong>National Insurance</strong> (a contribution to state benefits and NHS). Both are calculated as a percentage of gross pay.</p>
-    <p><strong>Formulas:</strong><br>
-    <span class="formula">Income Tax = Gross Pay × Tax Rate ÷ 100</span><br>
-    <span class="formula">NI = Gross Pay × NI Rate ÷ 100</span><br>
+    <p>Two deductions are applied here: <strong>Income Tax</strong> and <strong>National Insurance (NI)</strong>. The same rates apply to all 5 employees. Once each employee is done, you must also total up the columns across the whole payroll.</p>
+    <p><strong>Formulas (per employee):</strong><br>
+    <span class="formula">Income Tax = Gross Pay × ${taxRate} ÷ 100</span><br>
+    <span class="formula">NI = Gross Pay × ${niRate} ÷ 100</span><br>
     <span class="formula">Net Pay = Gross Pay − Income Tax − NI</span></p>
+    <p><strong>Payroll totals:</strong><br>
+    <span class="formula">Total Gross / Tax / NI / Net = sum of each column across all 5 employees</span></p>
     <ol>
-      <li>For each employee, multiply their gross pay by the income tax rate. Enter this as their Income Tax deduction.</li>
-      <li>Multiply their gross pay by the NI rate. Enter this as their National Insurance deduction.</li>
-      <li>Subtract both deductions from gross pay to get their <strong>Net Pay</strong> (take-home).</li>
+      <li>For each of the 5 employees, calculate and enter their Income Tax, NI, and Net Pay.</li>
+      <li>In the Payroll Totals section, add up each column across all employees to get the grand totals.</li>
     </ol>
-    <div class="inst-note">📌 The same deduction rates apply to all employees — you'll find them in the source data.</div>`
+    <div class="inst-note">📌 The same tax rate (${taxRate}%) and NI rate (${niRate}%) apply to every employee.</div>`
   };
 }
 
@@ -1071,8 +1090,12 @@ function buildBankRec() {
   const stmtBal=randF(3000,25000);
   const cheques=Array.from({length:rand(2,4)},()=>({ref:'CHQ-'+rand(100,999),amt:randF(100,3000)}));
   const deposit=randF(200,4000);
+  const bankCharge=randF(15,120);
   const totChq =parseFloat(cheques.reduce((a,b)=>a+b.amt,0).toFixed(2));
+  // Adjusted balance: start from statement, deduct outstanding cheques, add deposit in transit, deduct bank charges not yet in books
   const adjBal =parseFloat((stmtBal-totChq+deposit).toFixed(2));
+  // Book balance = adjBal - bankCharge (charges appeared on statement but not yet in the company's books)
+  const bookBal=parseFloat((adjBal-bankCharge).toFixed(2));
   const dt=`${rand(1,28).toString().padStart(2,'0')}/${rand(1,12).toString().padStart(2,'0')}/${rand(2022,2025)}`;
 
   const dataHtml=`<div class="sheet-stamp">SOURCE DATA</div>
@@ -1083,33 +1106,40 @@ function buildBankRec() {
     ${dSec('Outstanding Cheques (written but not yet cleared by bank)')}
     ${cheques.map(c=>dRow(c.ref,'$'+fmt(c.amt))).join('')}
     ${dSec('Deposits in Transit (received but not yet on statement)')}
-    ${dRow('Uncleared Deposit','$'+fmt(deposit))}`;
+    ${dRow('Uncleared Deposit','$'+fmt(deposit))}
+    ${dSec('Bank Charges on Statement (not yet recorded in company books)')}
+    ${dRow('Monthly Bank Service Charge','$'+fmt(bankCharge))}`;
 
   const formHtml=`<div class="sheet-stamp">FORM</div>
     <div class="sheet-title">BANK RECONCILIATION STATEMENT</div>
     <div class="sheet-ref">AS AT: ${dt}</div>
-    ${fSec('Starting Balance')}
+    ${fSec('Step 1: Adjust the Bank Statement Balance')}
     ${fRow('Bank Statement Balance ($)','stmt_bal',fmt(stmtBal))}
     ${fSec('Less: Outstanding Cheques')}
     ${cheques.map((c,i)=>fRow(c.ref+' ($)',`chq_${i}`,fmt(c.amt))).join('')}
     ${fRowT('Total Outstanding Cheques ($)','tot_chq',fmt(totChq))}
     ${fSec('Add: Deposits in Transit')}
     ${fRow('Uncleared Deposit ($)','deposit',fmt(deposit))}
-    ${fRowT('ADJUSTED BANK BALANCE ($)','adj_bal',fmt(adjBal))}`;
+    ${fRowT('ADJUSTED BANK BALANCE ($)','adj_bal',fmt(adjBal))}
+    ${fSec('Step 2: Adjust the Company Book Balance')}
+    ${fRow('Adjusted Bank Balance (from above) ($)','adj_bal2',fmt(adjBal))}
+    ${fRow('Less: Bank Service Charge not yet in books ($)','bank_charge',fmt(bankCharge))}
+    ${fRowT('FINAL RECONCILED BALANCE ($)','book_bal',fmt(bookBal))}`;
 
   return {title:'BANK RECONCILIATION', taskName:'Bank Reconciliation Statement', dataHtml, formHtml,
     instructions:`
-    <p>A <strong>bank reconciliation</strong> checks that the company's internal records match the bank statement. Because cheques and deposits can take time to clear, there are often temporary differences. This form accounts for those differences to arrive at a true "adjusted" balance.</p>
-    <p><strong>Outstanding cheques</strong> are cheques the company has written and recorded, but the bank hasn't processed yet — so they reduce what the bank shows but not what the company expects.<br>
-    <strong>Deposits in transit</strong> are money received and recorded by the company, but not yet visible on the bank statement.</p>
-    <p><strong>Formula:</strong><br>
-    <span class="formula">Adjusted Balance = Statement Balance − Total Outstanding Cheques + Deposits in Transit</span></p>
+    <p>A <strong>bank reconciliation</strong> checks that the company's internal records match the bank statement. There are two types of timing differences to account for:</p>
+    <p><strong>Outstanding cheques</strong> — written by the company but not yet cleared by the bank (reduce the bank balance).<br>
+    <strong>Deposits in transit</strong> — received by the company but not yet on the statement (increase the bank balance).<br>
+    <strong>Bank charges</strong> — fees shown on the bank statement that haven't been recorded in the company's books yet (reduce the book balance).</p>
+    <p><strong>Formulas:</strong><br>
+    <span class="formula">Adjusted Bank Balance = Statement Balance − Total Cheques + Deposit in Transit</span><br>
+    <span class="formula">Final Reconciled Balance = Adjusted Bank Balance − Bank Service Charge</span></p>
     <ol>
-      <li>Copy the bank statement closing balance into the first field.</li>
-      <li>Copy each outstanding cheque amount into its row, then add them together for the total.</li>
-      <li>Copy the uncleared deposit amount.</li>
-      <li>Calculate: Statement Balance <strong>minus</strong> Total Cheques <strong>plus</strong> Deposit = <strong>Adjusted Balance</strong>.</li>
-    </ol>`
+      <li>Copy the bank statement balance. Deduct each outstanding cheque and total them. Add the deposit in transit to get the <strong>Adjusted Bank Balance</strong>.</li>
+      <li>Copy the Adjusted Bank Balance into Step 2. Deduct the bank service charge to get the <strong>Final Reconciled Balance</strong>.</li>
+    </ol>
+    <div class="inst-note">📌 The Final Reconciled Balance is what the company's books should show once the bank charge is recorded.</div>`
   };
 }
 
@@ -1175,6 +1205,11 @@ function buildCoding() {
   while(items.length<6){const cat=catKeys[rand(0,catKeys.length-1)];items.push({desc:cats[cat][rand(0,cats[cat].length-1)],correct:cat,amt:randF(50,5000)});}
   items.sort(()=>Math.random()-0.5);
 
+  // Pre-calculate category totals
+  const catTotals={};
+  catKeys.forEach(k=>{catTotals[k]=0;});
+  items.forEach(item=>{catTotals[item.correct]=parseFloat((catTotals[item.correct]+item.amt).toFixed(2));});
+
   const dataHtml=`<div class="sheet-stamp">SOURCE DATA</div>
     <div class="sheet-title">INVOICE LISTING</div>
     <div class="sheet-ref">FOR CODING AND CLASSIFICATION</div>
@@ -1190,21 +1225,22 @@ function buildCoding() {
     <div class="sheet-title">INVOICE CODING SHEET</div>
     <div class="sheet-ref">ASSIGN EACH INVOICE TO THE CORRECT CATEGORY</div>
     ${fSec('Invoice Classifications')}
-    ${items.map((item,i)=>fSel(`${i+1}. ${item.desc} — $${fmt(item.amt)}`,`cat_${i}`,item.correct,['Capital Expenditure','Operating Expense','Prepayment','Accrual'])).join('')}`;
+    ${items.map((item,i)=>fSel(`${i+1}. ${item.desc} — $${fmt(item.amt)}`,`cat_${i}`,item.correct,['Capital Expenditure','Operating Expense','Prepayment','Accrual'])).join('')}
+    ${fSec('Category Totals')}
+    ${catKeys.map(k=>fRowT(`${k} — Total ($)`,`cattot_${k.replace(/\s+/g,'_')}`,fmt(catTotals[k]))).join('')}`;
 
   return {title:'INVOICE CODING', taskName:'Invoice Coding & Classification', dataHtml, formHtml,
     instructions:`
-    <p><strong>Invoice coding</strong> means assigning each purchase to the correct accounting category. This matters because different types of spending are treated differently in the accounts and on tax returns.</p>
-    <p><strong>The four categories:</strong></p>
-    <p>💼 <strong>Capital Expenditure (CapEx):</strong> A purchase of something that will be used for more than one year — equipment, vehicles, major furniture. These are treated as assets, not expenses.</p>
+    <p><strong>Invoice coding</strong> means assigning each purchase to the correct accounting category, then totalling up the spend in each category.</p>
+    <p>💼 <strong>Capital Expenditure (CapEx):</strong> A purchase of something used for more than one year — equipment, vehicles, major furniture. Treated as assets, not expenses.</p>
     <p>🧾 <strong>Operating Expense (OpEx):</strong> Regular day-to-day costs consumed in the current period — electricity, stationery, cleaning, postage.</p>
     <p>📅 <strong>Prepayment:</strong> Money paid now for something that covers a future period — e.g. an annual insurance premium paid in January covers the whole year.</p>
-    <p>📋 <strong>Accrual:</strong> A cost that has definitely been incurred this period, but hasn't been invoiced or paid yet — the business owes it but doesn't have the bill.</p>
+    <p>📋 <strong>Accrual:</strong> A cost definitely incurred this period, but not yet invoiced or paid — the business owes it but doesn't have the bill.</p>
     <ol>
-      <li>Read each invoice description carefully.</li>
-      <li>Ask: is it a long-term asset, a regular cost, paid-in-advance, or owed-but-not-yet-billed?</li>
-      <li>Select the matching category from the dropdown.</li>
-    </ol>`
+      <li>Read each invoice description carefully and select its category from the dropdown.</li>
+      <li>Once all invoices are classified, add up the invoice amounts for each category and enter the totals in the <strong>Category Totals</strong> section. If a category has no invoices this period, enter 0.00.</li>
+    </ol>
+    <div class="inst-note">📌 A category total of 0.00 is valid if no invoices belong to that category this period.</div>`
   };
 }
 
@@ -1257,10 +1293,14 @@ function buildAgeing() {
 // ── 8. PETTY CASH ──
 function buildPettyCash() {
   const float=200.00;
-  const receipts=Array.from({length:rand(4,7)},()=>({
-    desc:['Milk & Coffee','Taxi to Client','Office Stamps','Birthday Card','Printer Ink','Parking','Pens','Newspapers'][rand(0,7)],
-    amt:randF(1.5,35)
-  }));
+  const allReceipts=[
+    'Milk & Coffee','Taxi to Client','Office Stamps','Birthday Card for Staff',
+    'Printer Ink Cartridge','Car Parking','Ballpoint Pens (box)','Morning Newspapers',
+    'Cleaning Supplies','First Aid Kit Restock','Biscuits for Meeting','Window Cleaning',
+    'Notepad & Folders','Bus Fares','Marker Pens','Tea & Sugar'
+  ];
+  const shuffled=allReceipts.sort(()=>Math.random()-0.5).slice(0,8);
+  const receipts=shuffled.map(desc=>({desc,amt:randF(1.5,22)}));
   const totSpent =parseFloat(receipts.reduce((a,b)=>a+b.amt,0).toFixed(2));
   const remaining=parseFloat((float-totSpent).toFixed(2));
   const reimb    =parseFloat((float-remaining).toFixed(2));
@@ -1288,16 +1328,16 @@ function buildPettyCash() {
   return {title:'PETTY CASH', taskName:'Petty Cash Reconciliation', dataHtml, formHtml,
     instructions:`
     <p>A <strong>petty cash float</strong> is a small amount of cash kept on-site for minor day-to-day purchases (coffee, stamps, taxi fares). At the end of each period, the receipts are reconciled against the float to confirm everything adds up and to request a top-up.</p>
-    <p>The opening float for this period is <strong>$${fmt(float)}</strong>. Every receipt must be accounted for.</p>
+    <p>The opening float for this period is <strong>$${fmt(float)}</strong>. All 8 receipts must be entered.</p>
     <p><strong>Formulas:</strong><br>
-    <span class="formula">Total Spent = sum of all receipt amounts</span><br>
+    <span class="formula">Total Spent = sum of all 8 receipt amounts</span><br>
     <span class="formula">Cash Remaining = Opening Float − Total Spent</span><br>
     <span class="formula">Reimbursement Required = Total Spent</span> (to restore the float)</p>
     <ol>
-      <li>Copy each receipt amount into its matching row, then total them.</li>
+      <li>Copy each of the 8 receipt amounts into its matching row, then total them.</li>
       <li>Copy the opening float ($${fmt(float)}) into its field.</li>
       <li>Subtract Total Spent from the Opening Float to find <strong>Cash Remaining in Tin</strong>.</li>
-      <li>The <strong>Reimbursement Required</strong> is the amount needed to top the tin back up — which equals the Total Spent.</li>
+      <li>The <strong>Reimbursement Required</strong> equals the Total Spent — this is what needs to be put back in the tin.</li>
     </ol>`
   };
 }
@@ -1312,6 +1352,8 @@ function buildAccruals() {
     const name=['Electricity Charges','Gas Supply','Legal Retainer','Audit Fees','Business Rates','Telephone & Broadband','Building Insurance'][rand(0,6)];
     return {name,annual,months,monthly,accrued};
   });
+  const totalMonthly=parseFloat(items.reduce((a,b)=>a+b.monthly,0).toFixed(2));
+  const totalAccrued=parseFloat(items.reduce((a,b)=>a+b.accrued,0).toFixed(2));
 
   const dataHtml=`<div class="sheet-stamp">SOURCE DATA</div>
     <div class="sheet-title">ACCRUAL DATA</div>
@@ -1329,18 +1371,23 @@ function buildAccruals() {
       ${fSec(it.name)}
       ${fRow('Monthly Charge ($)',`mo_${i}`,fmt(it.monthly))}
       ${fRowT(`Accrued to Date (${it.months} months) ($)`,`acc_${i}`,fmt(it.accrued))}
-    `).join('')}`;
+    `).join('')}
+    ${fSec('Schedule Totals')}
+    ${fRow('Total Monthly Charge — All Items ($)','tot_monthly',fmt(totalMonthly))}
+    ${fRowT('TOTAL ACCRUED TO DATE — ALL ITEMS ($)','tot_accrued',fmt(totalAccrued))}`;
 
   return {title:'ACCRUALS', taskName:'Accruals Schedule', dataHtml, formHtml,
     instructions:`
-    <p>An <strong>accrual</strong> is a cost that a business has definitely incurred during the accounting period, but hasn't been invoiced or paid for yet. Even though there's no bill, the cost must still be recorded in this period's accounts — this is a core accounting principle called "matching."</p>
-    <p>For example, if electricity is used throughout the year but billed quarterly, the months between bills still need to be accrued.</p>
+    <p>An <strong>accrual</strong> is a cost that a business has definitely incurred during the accounting period, but hasn't been invoiced or paid for yet. Even though there's no bill, the cost must still be recorded — this is the accounting "matching" principle.</p>
     <p><strong>Formulas:</strong><br>
     <span class="formula">Monthly Charge = Annual Amount ÷ 12</span><br>
-    <span class="formula">Accrued to Date = Monthly Charge × Months Elapsed</span></p>
+    <span class="formula">Accrued to Date = Monthly Charge × Months Elapsed</span><br>
+    <span class="formula">Total Monthly Charge = sum of all Monthly Charges</span><br>
+    <span class="formula">Total Accrued to Date = sum of all Accrued to Date figures</span></p>
     <ol>
       <li>For each item, divide the annual amount by 12 to find the <strong>Monthly Charge</strong>.</li>
-      <li>Multiply the monthly charge by the number of months elapsed to find the <strong>Accrued to Date</strong> amount.</li>
+      <li>Multiply the monthly charge by the number of months elapsed to find the <strong>Accrued to Date</strong>.</li>
+      <li>In the Schedule Totals section, add up all Monthly Charges and all Accrued to Date figures.</li>
     </ol>
     <div class="inst-note">📌 Example: Annual rate $2,400, 7 months elapsed → $2,400 ÷ 12 = $200/month → $200 × 7 = $1,400 accrued</div>`
   };
@@ -1355,12 +1402,13 @@ function buildFX() {
     {code:'CAD',name:'Canadian Dollars',  rate:randF(1.33,1.40)},
     {code:'JPY',name:'Japanese Yen',      rate:randF(145,158)},
   ];
-  const sel=all.sort(()=>Math.random()-0.5).slice(0,rand(3,4));
-  const invs=sel.map(c=>{
+  // Always use all 5 currencies
+  const invs=all.map(c=>{
     const foreign=randF(500,15000);
-    const gbp=parseFloat((foreign/c.rate).toFixed(2));
-    return {...c,foreign,gbp};
+    const usd=parseFloat((foreign/c.rate).toFixed(2));
+    return {...c,foreign,usd};
   });
+  const totalUSD=parseFloat(invs.reduce((a,b)=>a+b.usd,0).toFixed(2));
   const dt=`${rand(1,28).toString().padStart(2,'0')}/${rand(1,12).toString().padStart(2,'0')}/${rand(2022,2025)}`;
 
   const dataHtml=`<div class="sheet-stamp">SOURCE DATA</div>
@@ -1377,20 +1425,24 @@ function buildFX() {
     ${invs.map((i,n)=>`
       ${fSec(`${i.name} (Rate: 1 USD = ${fmt(i.rate)} ${i.code})`)}
       ${fRow(`Invoice Amount (${i.code})`,`foreign_${n}`,fmt(i.foreign))}
-      ${fRowT('USD Equivalent ($)',`gbp_${n}`,fmt(i.gbp))}
-    `).join('')}`;
+      ${fRowT('USD Equivalent ($)',`usd_${n}`,fmt(i.usd))}
+    `).join('')}
+    ${fSec('Summary')}
+    ${fRowT('TOTAL USD VALUE — ALL INVOICES ($)','fx_total',fmt(totalUSD))}`;
 
   return {title:'CURRENCY CONVERSION', taskName:'Foreign Currency Invoice Conversion', dataHtml, formHtml,
     instructions:`
-    <p>When a UK business receives an invoice from abroad in a foreign currency, it must convert the amount to <strong>USD (British Pounds)</strong> before recording it in the accounts. The conversion uses the exchange rate on the date of settlement.</p>
-    <p>The exchange rates shown tell you how many units of the foreign currency equal <strong>$1 USD</strong>. So to go <em>from</em> foreign currency <em>to</em> USD, you divide.</p>
+    <p>When a business receives invoices from abroad in foreign currencies, it must convert each amount to <strong>USD</strong> before recording it in the accounts. The conversion uses the exchange rate on the date of settlement.</p>
+    <p>The exchange rates shown tell you how many units of the foreign currency equal <strong>$1 USD</strong>. To convert <em>from</em> a foreign currency <em>to</em> USD, you <strong>divide</strong> by the rate.</p>
     <p><strong>Formula:</strong><br>
-    <span class="formula">USD Amount = Foreign Currency Amount ÷ Exchange Rate</span></p>
+    <span class="formula">USD Amount = Foreign Currency Amount ÷ Exchange Rate</span><br>
+    <span class="formula">Total USD Value = sum of all 5 USD Equivalents</span></p>
     <ol>
-      <li>For each invoice, copy the foreign currency amount into the first field.</li>
-      <li>Divide the foreign amount by the exchange rate for that currency to get the <strong>USD Equivalent</strong>.</li>
+      <li>For each of the 5 invoices, copy the foreign currency amount into the first field.</li>
+      <li>Divide the foreign amount by that currency's exchange rate to get the <strong>USD Equivalent</strong>.</li>
+      <li>Once all 5 conversions are done, add them all together for the <strong>Total USD Value</strong>.</li>
     </ol>
-    <div class="inst-note">📌 Example: Invoice of USD 1,500, rate is 1 USD = 1.25 USD → $1,500 ÷ 1.25 = $1,200.00<br>Use the calculator in the Tools menu if needed.</div>`
+    <div class="inst-note">📌 Example: Invoice of JPY 15,000, rate is 1 USD = 150.00 JPY → $15,000 ÷ 150.00 = $100.00. Use the calculator in the Tools menu if needed.</div>`
   };
 }
 
