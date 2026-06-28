@@ -180,8 +180,6 @@
     border-right: 2px solid var(--win-light); border-bottom: 2px solid var(--win-light);
     padding: 5px 19px 3px 21px;
   }
-  .win-push-btn.default-btn { border: 3px solid #000; padding: 3px 18px; }
-  .win-push-btn.default-btn:active { padding: 4px 17px 2px 19px; }
 
   /* ── GAME SCREEN ── */
   #game-screen { background: var(--win-silver); display: none; flex-direction: column; }
@@ -511,7 +509,7 @@
             <input type="number" class="win-input" id="task-count-input" min="1" max="20" value="5">
           </div>
           <div class="dialog-btn-row">
-            <button class="win-push-btn default-btn" id="start-btn">OK</button>
+            <button class="win-push-btn" id="start-btn">OK</button>
             <button class="win-push-btn" onclick="menuExit()">Cancel</button>
           </div>
         </div>
@@ -564,7 +562,7 @@
           <div class="stats-list" id="stats-list"></div>
           <div class="end-ref" id="end-ref"></div>
           <div class="dialog-btn-row">
-            <button class="win-push-btn default-btn" id="restart-btn">Process New Docket</button>
+            <button class="win-push-btn" id="restart-btn">Process New Docket</button>
           </div>
         </div>
       </div>
@@ -582,7 +580,7 @@
       <div class="popup-icon">🚫</div>
       <div class="popup-text">Sorry, but your assignment must be completed in a single sitting.<br><br>Keep working.</div>
     </div>
-    <div class="popup-btn-row"><button class="win-push-btn default-btn" onclick="closePopup('popup-save')">OK</button></div>
+    <div class="popup-btn-row"><button class="win-push-btn" onclick="closePopup('popup-save')">OK</button></div>
   </div>
 </div>
 
@@ -595,7 +593,7 @@
       <div class="popup-text">Quitting already?<br><br>Are you weak?</div>
     </div>
     <div class="popup-btn-row">
-      <button class="win-push-btn default-btn" onclick="confirmExit()">Yes</button>
+      <button class="win-push-btn" onclick="confirmExit()">Yes</button>
       <button class="win-push-btn" onclick="closePopup('popup-exit')">No</button>
     </div>
   </div>
@@ -610,7 +608,7 @@
       <div class="popup-text" id="taunt-text"></div>
     </div>
     <div class="popup-btn-row" style="flex-direction:column;align-items:center;gap:6px">
-      <button class="win-push-btn default-btn" id="taunt-ok-btn" onclick="closeTaunt()">OK</button>
+      <button class="win-push-btn" id="taunt-ok-btn" onclick="closeTaunt()">OK</button>
       <div id="taunt-countdown" style="font-size:15px;color:#555;font-family:'Share Tech Mono',monospace;letter-spacing:0.05em"></div>
     </div>
   </div>
