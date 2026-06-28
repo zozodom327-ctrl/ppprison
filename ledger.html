@@ -975,10 +975,10 @@ function buildDepreciation() {
   const assetNames=['Company Van','Office Furniture Set','Laptop Fleet','Industrial Printer','Server Rack','Air Conditioning Unit','CCTV System','Forklift Truck','Photocopier','Telephone System'];
   const shuffledNames=assetNames.sort(()=>Math.random()-0.5).slice(0,5);
   const assets=shuffledNames.map(name=>{
-    const cost=rand(2000,50000);
-    const res =rand(100,Math.floor(cost*0.2));
     const life=rand(3,10);
-    const ann =parseFloat(((cost-res)/life).toFixed(2));
+    const res =rand(100,5000);
+    const ann =randF(500,8000);
+    const cost=parseFloat((ann*life+res).toFixed(2));
     return {name,cost,res,life,ann};
   });
   const totalAnn=parseFloat(assets.reduce((a,b)=>a+b.ann,0).toFixed(2));
@@ -1342,12 +1342,13 @@ function buildPettyCash() {
 
 // ── 9. ACCRUALS ──
 function buildAccruals() {
-  const items=Array.from({length:rand(3,4)},()=>{
-    const annual=randF(1200,24000);
+  const accrualNames=['Electricity Charges','Gas Supply','Legal Retainer','Audit Fees','Business Rates','Telephone & Broadband','Building Insurance'].sort(()=>Math.random()-0.5);
+  const itemCount=rand(3,4);
+  const items=accrualNames.slice(0,itemCount).map(name=>{
+    const monthly=randF(100,2000);
+    const annual=parseFloat((monthly*12).toFixed(2));
     const months=rand(1,11);
-    const monthly=parseFloat((annual/12).toFixed(2));
     const accrued=parseFloat((monthly*months).toFixed(2));
-    const name=['Electricity Charges','Gas Supply','Legal Retainer','Audit Fees','Business Rates','Telephone & Broadband','Building Insurance'][rand(0,6)];
     return {name,annual,months,monthly,accrued};
   });
   const totalMonthly=parseFloat(items.reduce((a,b)=>a+b.monthly,0).toFixed(2));
@@ -1402,8 +1403,8 @@ function buildFX() {
   ];
   // Always use all 5 currencies
   const invs=all.map(c=>{
-    const foreign=randF(500,15000);
-    const usd=parseFloat((foreign/c.rate).toFixed(2));
+    const usd=randF(500,15000);
+    const foreign=parseFloat((usd*c.rate).toFixed(2));
     return {...c,foreign,usd};
   });
   const totalUSD=parseFloat(invs.reduce((a,b)=>a+b.usd,0).toFixed(2));
@@ -1500,7 +1501,7 @@ function loadTask(i){
 // ═══════════════════════════════════════════════════════
 // ANSWER CHECKING
 // ═══════════════════════════════════════════════════════
-const TOLERANCE=0.02;
+const TOLERANCE=0.10;
 function checkAnswers(){
   let allOk=true;
   document.querySelectorAll('[data-ans]').forEach(el=>{
@@ -1508,7 +1509,7 @@ function checkAnswers(){
     const exp=el.dataset.ans, val=el.value.trim();
     let correct;
     if(el.tagName==='SELECT') correct=val===exp;
-    else { const nv=parseA(val),ne=parseA(exp); correct=!isNaN(nv)&&Math.abs(nv-ne)<=TOLERANCE; }
+    else { const nv=parseFloat(parseA(val).toFixed(2)),ne=parseA(exp); correct=!isNaN(nv)&&Math.abs(nv-ne)<=TOLERANCE; }
     el.classList.add(correct?'ok':'err');
     if(!correct) allOk=false;
   });
