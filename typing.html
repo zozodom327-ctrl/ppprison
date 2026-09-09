@@ -411,6 +411,11 @@ body::before {
           <div id="customLinesLockedMessage" style="display:none;" class="setting-note">Perfection has assigned you custom lines.</div>
           <textarea id="customLines" rows="4" maxlength="50000" placeholder="Paste or type one line per entry..."></textarea>
           <p class="setting-note">Each non-empty line replaces a built-in paragraph. Lines repeat in order when the session needs more.</p>
+          <label class="custom-line-toggle" for="redactCustomLines">
+            <input type="checkbox" id="redactCustomLines">
+            Redact task text in results
+          </label>
+          <p class="setting-note">Hides your custom line text on the results screen — each one still shows as its own row, just labeled "Task content redacted" instead of the real text.</p>
         </div>
       <div class="settings-tools">
         <div class="settings-actions">
@@ -825,6 +830,9 @@ let totalPunishmentTimeMs=0;
 let quizTaskWpm=0,quizCountdownTimer=null,quizCountdownInterval=null,quizAnswered=false;
 let taskRecords=[],timelineEvents=[],gameId='',sessionElapsedMs=0,taskInProgress=false;
 let sessionDeviceType='Desktop';
+// Captured from the checkbox at session start so the results screen redacts
+// consistently even if the (hidden) settings form changes after the fact.
+let redactCustomLineText=false;
 let wpmSamples=[],errorEvents=[],completedWordsBaseline=0,lastWpmSampleAt=-1;
 const SETTINGS_CODE_PREFIX='WFP1.';
 const SETTINGS_CODE_PREFIX_V2='WFP2.';
@@ -847,7 +855,7 @@ function describeSettingsPayload(payload){
   if(payload.modes.slow)parts.push('Slow Mode');
   if(payload.modes.nobreaks)parts.push('No Breaks ('+(payload.noBreaksGraceSeconds||3)+' second'+((payload.noBreaksGraceSeconds||3)!==1?'s':'')+')');
   if(payload.modes.quiz)parts.push('Quiz');
-  if(payload.useCustomLines)parts.push('Custom Lines');
+  if(payload.useCustomLines)parts.push('Custom Lines'+(payload.redactCustomLines?' (redacted)':''));
   return parts.join(' · ');
 }
 
@@ -892,7 +900,8 @@ function getSettingsPayload(){
     modes:Object.fromEntries(SETTINGS_MODE_NAMES.map(name=>[name,!!modes[name]])),
     noBreaksGraceSeconds:parseInt(document.getElementById('noBreaksGrace').value)||3,
     useCustomLines:document.getElementById('useCustomLines').checked,
-    customLines:document.getElementById('customLines').value
+    customLines:document.getElementById('customLines').value,
+    redactCustomLines:document.getElementById('redactCustomLines').checked
   };
 }
 
@@ -936,6 +945,13 @@ function validateSettingsPayload(payload){
     throw new Error('The settings code enables Custom Lines but contains no lines.');
   if(payload.useCustomLines&&payload.modes.quiz)
     throw new Error('Quiz cannot be used with Custom Lines.');
+  // Older settings codes were generated before this option existed — treat
+  // it as "unset" rather than invalid, defaulting to showing the content.
+  if(payload.redactCustomLines===undefined){
+    payload.redactCustomLines=false;
+  }else if(typeof payload.redactCustomLines!=='boolean'){
+    throw new Error('The settings code has an invalid redact-custom-lines setting.');
+  }
   return payload;
 }
 
@@ -1049,6 +1065,7 @@ async function importSettings(settings = null){
     document.getElementById('timedMinutes').value=payload.timedMinutes;
     setCustomLinesChecked(payload.useCustomLines);
     document.getElementById('customLines').value=payload.customLines;
+    document.getElementById('redactCustomLines').checked=!!payload.redactCustomLines;
     selectSessionMode(payload.sessionMode);
     SETTINGS_MODE_NAMES.forEach(name=>setMode(name,payload.modes[name]));
     setNoBreaksGraceSeconds(payload.noBreaksGraceSeconds);
@@ -1071,6 +1088,7 @@ function resetToDefaultState(){
   document.getElementById('timedMinutes').value=30;
   setCustomLinesChecked(false);
   document.getElementById('customLines').value='';
+  document.getElementById('redactCustomLines').checked=false;
   SETTINGS_MODE_NAMES.forEach(name=>setMode(name,false));
   sessionMode='basic';
   selectSessionMode('basic');
@@ -1203,6 +1221,7 @@ function recordCompletedTask(){
 
 function startGame(){
   customLineTexts=document.getElementById('useCustomLines').checked?readCustomLines():[];
+  redactCustomLineText=document.getElementById('useCustomLines').checked&&document.getElementById('redactCustomLines').checked;
   if(document.getElementById('useCustomLines').checked&&!customLineTexts.length){
     alert('Add at least one custom line before starting.');
     document.getElementById('customLines').focus();
@@ -2071,7 +2090,8 @@ function renderTaskList(){
     const row=document.createElement('div');row.className='task-row';
     const number=document.createElement('div');number.className='task-number';number.textContent=String(index+1).padStart(2,'0');
     const copy=document.createElement('div');copy.className='task-row-copy';
-    const title=document.createElement('div');title.className='task-row-title';title.textContent=customLineTexts.length?item.record.content:item.record.label;
+    const title=document.createElement('div');title.className='task-row-title';
+    title.textContent=customLineTexts.length?(redactCustomLineText?'Task content redacted':item.record.content):item.record.label;
     const detail=document.createElement('div');detail.className='task-row-detail';
     detail.textContent=customLineTexts.length?'Custom line · '+item.record.content.trim().split(/\s+/).length+' words':item.record.content.trim().split(/\s+/).length+' words · '+item.record.wpm+' WPM average';
     copy.append(title,detail);
