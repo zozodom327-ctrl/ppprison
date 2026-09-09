@@ -220,6 +220,8 @@ body::before {
 .timeline-label strong { color: var(--text); font-weight: 500; }
 .timeline-chart { width: 100%; min-height: 150px; }
 .timeline-chart svg { display: block; width: 100%; height: 150px; overflow: visible; }
+.timeline-segment-label { font-family: 'DM Mono', monospace; font-size: 0.62rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); margin: 16px 0 6px; }
+.timeline-segment-label:first-child { margin-top: 0; }
 .timeline-legend { display: flex; flex-wrap: wrap; gap: 14px; margin-top: 10px; padding-top: 8px; border-top: 1px solid var(--border); }
 .legend-item { display: flex; align-items: center; gap: 6px; font-family: 'DM Mono', monospace; font-size: 0.63rem; letter-spacing: 0.05em; color: var(--muted); }
 .legend-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
@@ -230,13 +232,21 @@ body::before {
 .mode-stat-card p { color: var(--muted); font-size: 0.75rem; line-height: 1.5; }
 .mode-stat-card p strong { color: var(--text); font-family: 'DM Mono', monospace; font-weight: 500; }
 .mode-stat-card .settings-code-small { display: block; margin-top: 4px; font-family: 'DM Mono', monospace; font-size: 0.58rem; line-height: 1.5; color: var(--muted); opacity: 0.7; word-break: break-all; }
-.task-list { display: flex; flex-direction: column; gap: 6px; }
+.task-list { display: flex; flex-direction: column; gap: 3px; }
+.task-list:not(.roomy) { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 3px 8px; }
 .task-list-empty { color: var(--muted); font-size: 0.8rem; padding: 0.75rem 0; }
-.task-row { display: grid; grid-template-columns: 34px minmax(0, 1fr) auto; gap: 10px; align-items: start; background: var(--surface2); border: 1px solid var(--border); border-radius: 9px; padding: 0.7rem 0.8rem; }
-.task-number { color: var(--pink); font-family: 'DM Mono', monospace; font-size: 0.68rem; padding-top: 2px; }
-.task-row-title { color: var(--text); font-size: 0.83rem; line-height: 1.35; overflow-wrap: anywhere; }
-.task-row-detail { color: var(--muted); font-size: 0.69rem; line-height: 1.4; margin-top: 3px; overflow-wrap: anywhere; }
-.task-row-count { color: var(--pink); font-family: 'DM Mono', monospace; font-size: 0.69rem; white-space: nowrap; padding-top: 2px; }
+.task-row { display: grid; grid-template-columns: 28px minmax(0, 1fr) auto; gap: 8px; align-items: center; background: var(--surface2); border: 1px solid var(--border); border-radius: 7px; padding: 0.38rem 0.65rem; }
+.task-number { color: var(--pink); font-family: 'DM Mono', monospace; font-size: 0.63rem; }
+.task-row-copy { display: flex; align-items: baseline; gap: 7px; min-width: 0; }
+.task-row-title { color: var(--text); font-size: 0.78rem; line-height: 1.35; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.task-row-detail { color: var(--muted); font-size: 0.63rem; line-height: 1.4; white-space: nowrap; flex-shrink: 0; }
+.task-row-count { color: var(--pink); font-family: 'DM Mono', monospace; font-size: 0.63rem; white-space: nowrap; }
+/* Short lists have room to spare — show the full text instead of truncating. */
+.task-list.roomy .task-row { align-items: start; padding: 0.6rem 0.7rem; }
+.task-list.roomy .task-row-copy { flex-direction: column; align-items: flex-start; gap: 2px; }
+.task-list.roomy .task-row-title { white-space: normal; overflow: visible; text-overflow: clip; overflow-wrap: anywhere; }
+.task-list.roomy .task-row-detail { white-space: normal; overflow-wrap: anywhere; }
+.task-list.roomy .task-number, .task-list.roomy .task-row-count { padding-top: 2px; }
 .end-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
 .btn-proof, .btn-restart { width: 100%; padding: 13px; font-family: 'DM Sans', sans-serif; font-size: 0.86rem; font-weight: 500; letter-spacing: 0.05em; cursor: pointer; border-radius: 10px; transition: background 0.15s, opacity 0.15s; touch-action: manipulation; min-height: 44px; }
 .btn-proof { background: var(--pink); color: #000; border: 1px solid var(--pink); }
@@ -256,8 +266,9 @@ body::before {
   .end-stat:last-child { grid-column: 1 / -1; }
   .mode-stats-grid { grid-template-columns: 1fr; }
   .timeline-chart, .timeline-chart svg { min-height: 135px; height: 135px; }
-  .task-row { grid-template-columns: 28px minmax(0, 1fr) auto; gap: 7px; padding: 0.65rem; }
+  .task-row { grid-template-columns: 24px minmax(0, 1fr) auto; gap: 7px; padding: 0.35rem 0.6rem; }
   .task-row-title { font-size: 0.78rem; }
+  .task-row-copy { gap: 6px; }
   .end-actions { grid-template-columns: 1fr; }
 }
 /* ── QUIZ SCREEN ── */
@@ -400,6 +411,11 @@ body::before {
           <div id="customLinesLockedMessage" style="display:none;" class="setting-note">Perfection has assigned you custom lines.</div>
           <textarea id="customLines" rows="4" maxlength="50000" placeholder="Paste or type one line per entry..."></textarea>
           <p class="setting-note">Each non-empty line replaces a built-in paragraph. Lines repeat in order when the session needs more.</p>
+          <label class="custom-line-toggle" for="redactCustomLines">
+            <input type="checkbox" id="redactCustomLines">
+            Redact task text in results
+          </label>
+          <p class="setting-note">Hides your custom line text on the results screen — each one still shows as its own row, just labeled "Task content redacted" instead of the real text.</p>
         </div>
       <div class="settings-tools">
         <div class="settings-actions">
@@ -685,7 +701,7 @@ const TIMED_BREAK_PENALTY_MINUTES=1;
 const TIMED_PUNISHMENT_PENALTY_MINUTES=1;
 const TIMED_PUNISHMENT_PLUS_PENALTY_MINUTES=3;
 const SLOW_KEY_INTERVAL_MS=1000;
-const ERROR_DOT_COLORS={mistake:'#ff9f40',punishment:'#ff3355',time:'#ffe135',quiz:'#7e22ce'};
+const ERROR_DOT_COLORS={mistake:'#ffe500',punishment:'#ffe500',time:'#00ffff',quiz:'#c084fc'};
 const ERROR_DOT_LABELS={mistake:'Mistake',punishment:'Punishment Penalty',time:'Time Penalty',quiz:'Quiz Error'};
 const TASK_DOT_COLOR='#ff4da6';
 const TASK_DOT_LABEL='Task Complete';
@@ -814,6 +830,9 @@ let totalPunishmentTimeMs=0;
 let quizTaskWpm=0,quizCountdownTimer=null,quizCountdownInterval=null,quizAnswered=false;
 let taskRecords=[],timelineEvents=[],gameId='',sessionElapsedMs=0,taskInProgress=false;
 let sessionDeviceType='Desktop';
+// Captured from the checkbox at session start so the results screen redacts
+// consistently even if the (hidden) settings form changes after the fact.
+let redactCustomLineText=false;
 let wpmSamples=[],errorEvents=[],completedWordsBaseline=0,lastWpmSampleAt=-1;
 const SETTINGS_CODE_PREFIX='WFP1.';
 const SETTINGS_CODE_PREFIX_V2='WFP2.';
@@ -836,7 +855,7 @@ function describeSettingsPayload(payload){
   if(payload.modes.slow)parts.push('Slow Mode');
   if(payload.modes.nobreaks)parts.push('No Breaks ('+(payload.noBreaksGraceSeconds||3)+' second'+((payload.noBreaksGraceSeconds||3)!==1?'s':'')+')');
   if(payload.modes.quiz)parts.push('Quiz');
-  if(payload.useCustomLines)parts.push('Custom Lines');
+  if(payload.useCustomLines)parts.push('Custom Lines'+(payload.redactCustomLines?' (redacted)':''));
   return parts.join(' · ');
 }
 
@@ -881,7 +900,8 @@ function getSettingsPayload(){
     modes:Object.fromEntries(SETTINGS_MODE_NAMES.map(name=>[name,!!modes[name]])),
     noBreaksGraceSeconds:parseInt(document.getElementById('noBreaksGrace').value)||3,
     useCustomLines:document.getElementById('useCustomLines').checked,
-    customLines:document.getElementById('customLines').value
+    customLines:document.getElementById('customLines').value,
+    redactCustomLines:document.getElementById('redactCustomLines').checked
   };
 }
 
@@ -925,6 +945,13 @@ function validateSettingsPayload(payload){
     throw new Error('The settings code enables Custom Lines but contains no lines.');
   if(payload.useCustomLines&&payload.modes.quiz)
     throw new Error('Quiz cannot be used with Custom Lines.');
+  // Older settings codes were generated before this option existed — treat
+  // it as "unset" rather than invalid, defaulting to showing the content.
+  if(payload.redactCustomLines===undefined){
+    payload.redactCustomLines=false;
+  }else if(typeof payload.redactCustomLines!=='boolean'){
+    throw new Error('The settings code has an invalid redact-custom-lines setting.');
+  }
   return payload;
 }
 
@@ -1038,6 +1065,7 @@ async function importSettings(settings = null){
     document.getElementById('timedMinutes').value=payload.timedMinutes;
     setCustomLinesChecked(payload.useCustomLines);
     document.getElementById('customLines').value=payload.customLines;
+    document.getElementById('redactCustomLines').checked=!!payload.redactCustomLines;
     selectSessionMode(payload.sessionMode);
     SETTINGS_MODE_NAMES.forEach(name=>setMode(name,payload.modes[name]));
     setNoBreaksGraceSeconds(payload.noBreaksGraceSeconds);
@@ -1060,6 +1088,7 @@ function resetToDefaultState(){
   document.getElementById('timedMinutes').value=30;
   setCustomLinesChecked(false);
   document.getElementById('customLines').value='';
+  document.getElementById('redactCustomLines').checked=false;
   SETTINGS_MODE_NAMES.forEach(name=>setMode(name,false));
   sessionMode='basic';
   selectSessionMode('basic');
@@ -1192,6 +1221,7 @@ function recordCompletedTask(){
 
 function startGame(){
   customLineTexts=document.getElementById('useCustomLines').checked?readCustomLines():[];
+  redactCustomLineText=document.getElementById('useCustomLines').checked&&document.getElementById('redactCustomLines').checked;
   if(document.getElementById('useCustomLines').checked&&!customLineTexts.length){
     alert('Add at least one custom line before starting.');
     document.getElementById('customLines').focus();
@@ -1854,6 +1884,113 @@ function wpmAtTime(atMs){
   return interpolateSeriesAt(wpmSamples,atMs);
 }
 
+const TIMELINE_HOUR_MS=3600000;
+// A trailing sliver under 10 minutes folds into the previous hour's chart
+// instead of getting a tiny chart of its own.
+const TIMELINE_HOUR_GRACE_MS=600000;
+
+// Splits a session into one segment per hour. A session up to 70 minutes
+// long stays as a single segment (the last 10 are grace); beyond that, any
+// leftover past the last full hour under 10 minutes merges into it too.
+function computeTimelineSegments(maxAt){
+  const segments=[];
+  let start=0;
+  while(start<maxAt){
+    let end=Math.min(start+TIMELINE_HOUR_MS,maxAt);
+    if(maxAt-end>0&&maxAt-end<=TIMELINE_HOUR_GRACE_MS)end=maxAt;
+    segments.push({start,end});
+    start=end;
+  }
+  if(!segments.length)segments.push({start:0,end:maxAt});
+  return segments;
+}
+
+// Clips a wpm series to [start,end], interpolating the exact boundary values
+// so each hour-chart's curve starts and ends cleanly at its own edges.
+function sliceSeriesForSegment(series,start,end){
+  const points=series.filter(point=>point.at>start&&point.at<end);
+  points.unshift({at:start,wpm:interpolateSeriesAt(series,start)});
+  points.push({at:end,wpm:interpolateSeriesAt(series,end)});
+  return points;
+}
+
+function renderTimelineSegmentSvg(segment,ctx){
+  const{width,height,left,right,top,bottom,maxSpeed,taskCompletions,punishmentErrors,timeErrors,quizErrors,errorEvents,punishmentActive,isLast,multi,segIndex,smoothWpmSeries,hasData}=ctx;
+  // Every hour-chart is drawn on a fixed 1-hour scale so hours are directly
+  // comparable — but a single (unsplit) chart has nothing to compare against,
+  // so it fills its own width instead of stopping partway for a short session.
+  const actualSpan=Math.max(1,segment.end-segment.start);
+  const fixedSpan=multi?TIMELINE_HOUR_MS:actualSpan;
+  const xFor=at=>left+((Math.min(segment.start+fixedSpan,Math.max(segment.start,at))-segment.start)/fixedSpan)*(width-left-right);
+  const yFor=wpm=>bottom-(Math.min(maxSpeed,Math.max(0,wpm||0))/maxSpeed)*(bottom-top);
+  const inSegment=at=>isLast?(at>=segment.start&&at<=segment.end):(at>=segment.start&&at<segment.end);
+  const gradId='tlFill'+segIndex,glowId='tlGlow'+segIndex;
+  const R=1.8,R_MISTAKE=1.7,R_TASK=3.2,R_TASK_INNER=1.2;
+  let out='';
+  if(multi)out+=`<div class="timeline-segment-label">Hour ${segIndex+1} · ${formatClock(segment.start)}–${formatClock(segment.end)}</div>`;
+  out+=`<svg viewBox="0 0 ${width} ${height}" role="img" aria-label="Typing speed timeline${multi?' hour '+(segIndex+1):''}">`;
+  out+=`<defs><linearGradient id="${gradId}" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#ff4da6" stop-opacity="0.28"/><stop offset="100%" stop-color="#ff4da6" stop-opacity="0"/></linearGradient><filter id="${glowId}" x="-8%" y="-40%" width="116%" height="180%"><feGaussianBlur stdDeviation="3" result="blur"/><feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge></filter></defs>`;
+  [0,0.25,0.5,0.75,1].forEach(ratio=>{
+    const y=bottom-ratio*(bottom-top);
+    const major=ratio===0||ratio===0.5||ratio===1;
+    out+=`<line x1="${left}" y1="${y}" x2="${width-right}" y2="${y}" stroke="rgba(240,232,240,${major?0.11:0.05})" stroke-width="1"/>`;
+    if(major)out+=`<text x="0" y="${y+4}" fill="#7a6e7a" font-size="10" font-family="DM Mono, monospace">${Math.round(maxSpeed*ratio)}</text>`;
+  });
+  let dataEndX=width-right;
+  if(hasData){
+    const segSeries=sliceSeriesForSegment(smoothWpmSeries,segment.start,segment.end);
+    const curvePoints=segSeries.map(point=>({x:xFor(point.at),y:yFor(point.wpm)}));
+    const curve=buildSmoothSvgPath(curvePoints);
+    const first=curvePoints[0],last=curvePoints[curvePoints.length-1];
+    dataEndX=last.x;
+    out+=`<path d="${curve} L${last.x.toFixed(2)},${bottom} L${first.x.toFixed(2)},${bottom} Z" fill="url(#${gradId})" stroke="none"/>`;
+    out+=`<path d="${curve}" fill="none" stroke="#ff4da6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" filter="url(#${glowId})"/>`;
+    // Task-complete: a short drop line from the curve down to the baseline,
+    // drawn first so the (higher-priority) error dots below can sit on top
+    // of it if one happens to land at the same spot.
+    taskCompletions.filter(event=>inSegment(event.at)).forEach(event=>{
+      const x=xFor(event.at),y=yFor(interpolateSeriesAt(smoothWpmSeries,event.at));
+      out+=`<line x1="${x}" y1="${y}" x2="${x}" y2="${bottom}" stroke="rgba(255,77,166,0.28)" stroke-width="1" stroke-dasharray="2 3"/>`;
+      out+=`<circle cx="${x}" cy="${y}" r="${R_TASK}" fill="${TASK_DOT_COLOR}"/>`;
+      out+=`<circle cx="${x}" cy="${y}" r="${R_TASK_INNER}" fill="#ffffff"/>`;
+    });
+    punishmentErrors.filter(event=>inSegment(event.at)).forEach(event=>{
+      const x=xFor(event.at),y=yFor(interpolateSeriesAt(smoothWpmSeries,event.at));
+      out+=`<circle cx="${x}" cy="${y}" r="${R}" fill="${ERROR_DOT_COLORS.punishment}"/>`;
+    });
+    timeErrors.filter(event=>inSegment(event.at)).forEach(event=>{
+      const x=xFor(event.at),y=yFor(interpolateSeriesAt(smoothWpmSeries,event.at));
+      out+=`<circle cx="${x}" cy="${y}" r="${R}" fill="${ERROR_DOT_COLORS.time}"/>`;
+    });
+    quizErrors.filter(event=>inSegment(event.at)).forEach(event=>{
+      const x=xFor(event.at),y=yFor(interpolateSeriesAt(smoothWpmSeries,event.at));
+      out+=`<circle cx="${x}" cy="${y}" r="${R}" fill="${ERROR_DOT_COLORS.quiz}"/>`;
+    });
+    // Plain mistakes only show as their own dot when Punishments mode is off —
+    // when Punishments is active every counted mistake already produces a
+    // punishment-penalty event, so the punishment dot takes priority instead.
+    // Painted dead last of all — mistakes get the highest visual priority.
+    if(!punishmentActive){
+      errorEvents.filter(event=>inSegment(event.at)).forEach(event=>{
+        const x=xFor(event.at),y=yFor(interpolateSeriesAt(smoothWpmSeries,event.at));
+        out+=`<circle cx="${x}" cy="${y}" r="${R_MISTAKE}" fill="${ERROR_DOT_COLORS.mistake}"/>`;
+      });
+    }
+  }else{
+    out+=`<text x="${width/2}" y="78" text-anchor="middle" fill="#7a6e7a" font-size="12" font-family="DM Mono, monospace">No typing data recorded</text>`;
+  }
+  out+=`<line x1="${left}" y1="${bottom}" x2="${width-right}" y2="${bottom}" stroke="rgba(240,232,240,0.24)" stroke-width="1"/>`;
+  // When the chart canvas represents a fixed hour but the data stopped early,
+  // mark exactly where recording ended instead of stretching to fill the width.
+  if(dataEndX<width-right-2){
+    out+=`<line x1="${dataEndX.toFixed(2)}" y1="${top}" x2="${dataEndX.toFixed(2)}" y2="${bottom}" stroke="rgba(255,255,255,0.28)" stroke-width="1" stroke-dasharray="3 3"/>`;
+  }
+  out+=`<text x="${left}" y="143" fill="#7a6e7a" font-size="10" font-family="DM Mono, monospace">${formatClock(segment.start)}</text>`;
+  out+=`<text x="${dataEndX.toFixed(2)}" y="143" text-anchor="end" fill="#7a6e7a" font-size="10" font-family="DM Mono, monospace">${formatClock(segment.end)}</text>`;
+  out+='</svg>';
+  return out;
+}
+
 function renderTimeline(){
   const chart=document.getElementById('timelineChart');
   const width=800,height=150,left=38,right=12,top=18,bottom=124;
@@ -1864,77 +2001,37 @@ function renderTimeline(){
   const quizErrors=timelineEvents.filter(event=>event.type==='quiz-error');
   const taskCompletions=timelineEvents.filter(event=>event.type==='task');
   const smoothWpmSeries=prepareSmoothSeries(wpmSamples,sessionElapsedMs);
+  // Computed once over the whole session and shared by every hour-chart below
+  // so speed is visually comparable across hours instead of each rescaling.
   const maxSpeed=timelineAxisMax(smoothWpmSeries);
-  const xFor=at=>left+(Math.min(maxAt,Math.max(0,at))/maxAt)*(width-left-right);
-  const yFor=wpm=>bottom-(Math.min(maxSpeed,Math.max(0,wpm||0))/maxSpeed)*(bottom-top);
-  let markup=`<svg viewBox="0 0 ${width} ${height}" role="img" aria-label="Typing speed timeline">`;
-  markup+=`<defs><linearGradient id="tlFill" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#ff4da6" stop-opacity="0.28"/><stop offset="100%" stop-color="#ff4da6" stop-opacity="0"/></linearGradient><filter id="tlGlow" x="-8%" y="-40%" width="116%" height="180%"><feGaussianBlur stdDeviation="3" result="blur"/><feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge></filter></defs>`;
-  [0,0.25,0.5,0.75,1].forEach(ratio=>{
-    const y=bottom-ratio*(bottom-top);
-    const major=ratio===0||ratio===0.5||ratio===1;
-    markup+=`<line x1="${left}" y1="${y}" x2="${width-right}" y2="${y}" stroke="rgba(240,232,240,${major?0.11:0.05})" stroke-width="1"/>`;
-    if(major)markup+=`<text x="0" y="${y+4}" fill="#7a6e7a" font-size="10" font-family="DM Mono, monospace">${Math.round(maxSpeed*ratio)}</text>`;
+  const hasData=wpmSamples.length>0;
+  const segments=hasData?computeTimelineSegments(maxAt):[{start:0,end:maxAt}];
+  const segCtx={width,height,left,right,top,bottom,maxSpeed,taskCompletions,punishmentErrors,timeErrors,quizErrors,errorEvents,punishmentActive,multi:segments.length>1,smoothWpmSeries,hasData};
+  let markup='';
+  segments.forEach((segment,segIndex)=>{
+    markup+=renderTimelineSegmentSvg(segment,{...segCtx,segIndex,isLast:segIndex===segments.length-1});
   });
-  if(wpmSamples.length){
-    const curvePoints=smoothWpmSeries.map(point=>({x:xFor(point.at),y:yFor(point.wpm)}));
-    const curve=buildSmoothSvgPath(curvePoints);
-    const first=curvePoints[0],last=curvePoints[curvePoints.length-1];
-    markup+=`<path d="${curve} L${last.x.toFixed(2)},${bottom} L${first.x.toFixed(2)},${bottom} Z" fill="url(#tlFill)" stroke="none"/>`;
-    markup+=`<path d="${curve}" fill="none" stroke="#ff4da6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" filter="url(#tlGlow)"/>`;
-    taskCompletions.forEach(event=>{
-      const x=xFor(event.at),y=yFor(interpolateSeriesAt(smoothWpmSeries,event.at));
-      markup+=`<line x1="${x}" y1="${y}" x2="${x}" y2="${bottom}" stroke="rgba(255,77,166,0.28)" stroke-width="1" stroke-dasharray="2 3"/>`;
-      markup+=`<circle cx="${x}" cy="${y}" r="4" fill="${TASK_DOT_COLOR}" stroke="#111014" stroke-width="2"/>`;
-      markup+=`<circle cx="${x}" cy="${y}" r="1.4" fill="#ffffff"/>`;
-    });
-    // Plain mistakes only show as their own dot when Punishments mode is off —
-    // when Punishments is active every counted mistake already produces a
-    // punishment-penalty event, so the punishment dot takes priority instead.
-    if(!punishmentActive){
-      errorEvents.forEach(event=>{
-        const x=xFor(event.at),y=yFor(interpolateSeriesAt(smoothWpmSeries,event.at));
-        markup+=`<circle cx="${x}" cy="${y}" r="4.5" fill="${ERROR_DOT_COLORS.mistake}" stroke="#111014" stroke-width="1.5"/>`;
-      });
-    }
-    punishmentErrors.forEach(event=>{
-      const x=xFor(event.at),y=yFor(interpolateSeriesAt(smoothWpmSeries,event.at));
-      markup+=`<circle cx="${x}" cy="${y}" r="4.5" fill="${ERROR_DOT_COLORS.punishment}" stroke="#111014" stroke-width="1.5"/>`;
-    });
-    timeErrors.forEach(event=>{
-      const x=xFor(event.at),y=yFor(interpolateSeriesAt(smoothWpmSeries,event.at));
-      markup+=`<circle cx="${x}" cy="${y}" r="4.5" fill="${ERROR_DOT_COLORS.time}" stroke="#111014" stroke-width="1.5"/>`;
-    });
-    quizErrors.forEach(event=>{
-      const x=xFor(event.at),y=yFor(interpolateSeriesAt(smoothWpmSeries,event.at));
-      markup+=`<circle cx="${x}" cy="${y}" r="4.5" fill="${ERROR_DOT_COLORS.quiz}" stroke="#111014" stroke-width="1.5"/>`;
-    });
-  }else{
-    markup+=`<text x="${width/2}" y="78" text-anchor="middle" fill="#7a6e7a" font-size="12" font-family="DM Mono, monospace">No typing data recorded</text>`;
-  }
-  markup+=`<line x1="${left}" y1="${bottom}" x2="${width-right}" y2="${bottom}" stroke="rgba(240,232,240,0.24)" stroke-width="1"/>`;
-  markup+=`<text x="${left}" y="143" fill="#7a6e7a" font-size="10" font-family="DM Mono, monospace">0:00</text>`;
-  markup+=`<text x="${width-right}" y="143" text-anchor="end" fill="#7a6e7a" font-size="10" font-family="DM Mono, monospace">${formatClock(sessionElapsedMs)}</text>`;
-  markup+='</svg>';
   chart.innerHTML=markup;
 
+  // Legend only lists the categories that actually occurred this session.
   const legend=document.getElementById('timelineLegend');
   legend.innerHTML='';
-  const legendKeys=punishmentActive?['punishment','time','quiz']:['mistake','time','quiz'];
-  legendKeys.forEach(key=>{
+  const entries=[];
+  if(punishmentActive){ if(punishmentErrors.length)entries.push([ERROR_DOT_COLORS.punishment,ERROR_DOT_LABELS.punishment]); }
+  else{ if(errorEvents.length)entries.push([ERROR_DOT_COLORS.mistake,ERROR_DOT_LABELS.mistake]); }
+  if(timeErrors.length)entries.push([ERROR_DOT_COLORS.time,ERROR_DOT_LABELS.time]);
+  if(quizErrors.length)entries.push([ERROR_DOT_COLORS.quiz,ERROR_DOT_LABELS.quiz]);
+  if(taskCompletions.length)entries.push([TASK_DOT_COLOR,TASK_DOT_LABEL]);
+  entries.forEach(([color,label])=>{
     const item=document.createElement('span');item.className='legend-item';
-    const dot=document.createElement('span');dot.className='legend-dot';dot.style.background=ERROR_DOT_COLORS[key];
-    const label=document.createElement('span');label.textContent=ERROR_DOT_LABELS[key];
-    item.append(dot,label);legend.appendChild(item);
+    const dot=document.createElement('span');dot.className='legend-dot';dot.style.background=color;
+    const lbl=document.createElement('span');lbl.textContent=label;
+    item.append(dot,lbl);legend.appendChild(item);
   });
-  const taskItem=document.createElement('span');taskItem.className='legend-item';
-  const taskDot=document.createElement('span');taskDot.className='legend-dot';taskDot.style.background=TASK_DOT_COLOR;
-  const taskLabel=document.createElement('span');taskLabel.textContent=TASK_DOT_LABEL;
-  taskItem.append(taskDot,taskLabel);legend.appendChild(taskItem);
 
   const penalties=[...punishmentErrors,...timeErrors];
-  const tasks=timelineEvents.filter(event=>event.type==='task');
   const peakSpeed=Math.max(0,...smoothWpmSeries.map(point=>point.wpm||0));
-  document.getElementById('timelineMeta').textContent=tasks.length+' task'+(tasks.length!==1?'s':'')+' · peak '+Math.round(peakSpeed)+' WPM · '+penalties.length+' event'+(penalties.length!==1?'s':'');
+  document.getElementById('timelineMeta').textContent=taskCompletions.length+' task'+(taskCompletions.length!==1?'s':'')+' · peak '+Math.round(peakSpeed)+' WPM · '+penalties.length+' event'+(penalties.length!==1?'s':'');
 }
 
 function addModeStatCard(title,html){
@@ -1983,14 +2080,18 @@ function renderTaskList(){
     if(!grouped.has(key))grouped.set(key,{record,count:0});
     grouped.get(key).count++;
   });
+  // A short list has room to spare, so let each row show its full text
+  // instead of truncating to a single line.
+  list.classList.toggle('roomy',grouped.size>0&&grouped.size<5);
   if(!grouped.size){
     const empty=document.createElement('div');empty.className='task-list-empty';empty.textContent='No complete texts were recorded.';
     list.appendChild(empty);
   }else [...grouped.values()].forEach((item,index)=>{
     const row=document.createElement('div');row.className='task-row';
     const number=document.createElement('div');number.className='task-number';number.textContent=String(index+1).padStart(2,'0');
-    const copy=document.createElement('div');
-    const title=document.createElement('div');title.className='task-row-title';title.textContent=customLineTexts.length?item.record.content:item.record.label;
+    const copy=document.createElement('div');copy.className='task-row-copy';
+    const title=document.createElement('div');title.className='task-row-title';
+    title.textContent=customLineTexts.length?(redactCustomLineText?'Task content redacted':item.record.content):item.record.label;
     const detail=document.createElement('div');detail.className='task-row-detail';
     detail.textContent=customLineTexts.length?'Custom line · '+item.record.content.trim().split(/\s+/).length+' words':item.record.content.trim().split(/\s+/).length+' words · '+item.record.wpm+' WPM average';
     copy.append(title,detail);
